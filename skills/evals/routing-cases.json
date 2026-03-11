@@ -136,6 +136,12 @@
       "forbidden_skills": ["using-git-worktrees"]
     },
     {
+      "id": "greenfield_prototype_path",
+      "prompt": "This is a new internal workflow tool with unclear UX and integration shape. Inspect constraints, then prototype the thinnest useful path before locking the implementation plan.",
+      "expected_skill": "writing-software",
+      "forbidden_skills": ["designing-with-patterns", "testing-software"]
+    },
+    {
       "id": "file_backed_exec_plan",
       "prompt": "This will take multiple sessions and several agents. Inspect first, then create a durable exec plan in the repo before implementing.",
       "expected_skill": "writing-software",

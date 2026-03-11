@@ -2,6 +2,9 @@ Read this when the change is too large to hold in one pass and needs a compact i
 
 Rules:
 - start by documenting current reality before debating what to change
+- choose the mode early:
+  - greenfield: prototype or tracer-bullet unclear workflow, UX, or integration choices first
+  - brownfield: inspect seams, invariants, migration order, and compatibility pressure first
 - if design choices are genuinely unclear, resolve them before writing implementation steps
 - plan in vertical slices, not layer-by-layer batches
 - use inline plans for ordinary work; use a file-backed exec plan for large, multi-session, or multi-agent work

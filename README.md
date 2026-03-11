@@ -73,6 +73,7 @@ Current top-level routers:
 
 For larger features:
 - start with `writing-software`
+- let `writing-software` branch into greenfield or brownfield mode based on whether the main uncertainty is new shape or existing invariants
 - use narrower routers only when they clearly dominate
 - pull in references only when the problem actually needs them
 - use a file-backed exec plan under `docs/exec-plans/active/` when the work is large, multi-session, or multi-agent
