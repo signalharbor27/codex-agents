@@ -36,6 +36,10 @@ Current top-level routers:
   - final evidence gate before claiming success
 - `designing-with-patterns`
   - pattern-vs-no-pattern architecture decisions
+- `improve-codebase-architecture`
+  - critical repo or subsystem review for simpler structure, clearer seams, and a phased agent-friendly improvement plan
+- `improve-test-suite`
+  - critical test-suite review for removing bad or redundant tests and planning stronger seam-level proof
 - `designing-data-intensive-systems`
   - workload, storage, consistency, partitioning, and Timescale/Postgres decisions
 - `writing-rust`
@@ -71,6 +75,7 @@ For larger features:
 - start with `writing-software`
 - use narrower routers only when they clearly dominate
 - pull in references only when the problem actually needs them
+- use a file-backed exec plan under `docs/exec-plans/active/` when the work is large, multi-session, or multi-agent
 
 ## Skill Families
 
@@ -84,6 +89,8 @@ For larger features:
 ### Architecture and systems
 
 - `designing-with-patterns`
+- `improve-codebase-architecture`
+- `improve-test-suite`
 - `designing-data-intensive-systems`
 - `writing-rust`
 - `effect-ts`
@@ -115,6 +122,16 @@ It currently covers:
 - description shape
 - banned legacy terms
 - routing cases for representative prompts
+
+## Exec Plans
+
+Long-running work can use local exec-plan files under [docs/exec-plans](docs/exec-plans).
+
+- `active/`: current plans
+- `completed/`: archived finished plans
+- [TEMPLATE.md](docs/exec-plans/TEMPLATE.md): minimal plan shape
+
+Use them for large, multi-session, or multi-agent work. Keep them local by default; commit only when the plan has durable team value.
 
 Run:
 

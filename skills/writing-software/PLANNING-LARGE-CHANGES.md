@@ -4,6 +4,7 @@ Rules:
 - start by documenting current reality before debating what to change
 - if design choices are genuinely unclear, resolve them before writing implementation steps
 - plan in vertical slices, not layer-by-layer batches
+- use inline plans for ordinary work; use a file-backed exec plan for large, multi-session, or multi-agent work
 - make each phase independently verifiable where practical
 - for each slice, capture: goal, owner (`main` or delegated), scope/files, dependencies, and verification
 - make delegation explicit when tracks are independent enough to run in parallel

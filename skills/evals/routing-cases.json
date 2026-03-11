@@ -8,6 +8,8 @@
     "effect-ts",
     "finishing-a-development-branch",
     "frontend-design",
+    "improve-codebase-architecture",
+    "improve-test-suite",
     "receiving-code-review",
     "seo-audit",
     "systematic-debugging",
@@ -48,6 +50,18 @@
       "prompt": "Should this plugin system stay simple, or should we introduce a strategy pattern?",
       "expected_skill": "designing-with-patterns",
       "forbidden_skills": ["writing-software"]
+    },
+    {
+      "id": "repo_architecture_review",
+      "prompt": "Critically review this codebase and create a phased plan to simplify the architecture, make it more agent friendly, and improve testing at the right seams.",
+      "expected_skill": "improve-codebase-architecture",
+      "forbidden_skills": ["writing-software", "designing-with-patterns", "testing-software"]
+    },
+    {
+      "id": "test_suite_review",
+      "prompt": "Critically review this repo's tests, remove bad or redundant coverage, suggest better seam-level tests, and create a phased plan aligned with behavior-first TDD.",
+      "expected_skill": "improve-test-suite",
+      "forbidden_skills": ["testing-software", "systematic-debugging", "writing-software"]
     },
     {
       "id": "data-workload",
@@ -120,6 +134,12 @@
       "prompt": "Implement a larger feature with one backend slice, one docs slice, and one test-fixture slice; preserve context and split independent work where it makes sense.",
       "expected_skill": "writing-software",
       "forbidden_skills": ["using-git-worktrees"]
+    },
+    {
+      "id": "file_backed_exec_plan",
+      "prompt": "This will take multiple sessions and several agents. Inspect first, then create a durable exec plan in the repo before implementing.",
+      "expected_skill": "writing-software",
+      "forbidden_skills": ["testing-software"]
     },
     {
       "id": "finish-branch",

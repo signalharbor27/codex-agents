@@ -11,6 +11,8 @@ expected=(
   effect-ts
   finishing-a-development-branch
   frontend-design
+  improve-codebase-architecture
+  improve-test-suite
   receiving-code-review
   seo-audit
   systematic-debugging
@@ -45,6 +47,8 @@ active_paths=(
   "$ROOT/describe-pr"
   "$ROOT/designing-data-intensive-systems"
   "$ROOT/designing-with-patterns"
+  "$ROOT/improve-codebase-architecture"
+  "$ROOT/improve-test-suite"
   "$ROOT/effect-ts"
   "$ROOT/finishing-a-development-branch"
   "$ROOT/frontend-design"

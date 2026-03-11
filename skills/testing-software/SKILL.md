@@ -28,8 +28,8 @@ Tests should verify behavior through public interfaces and externally visible co
 
 1. State the behavior or risk being covered.
 2. For bug fixes and user-visible behavior changes, prefer TDD when a failing test is cheap and trustworthy.
-3. Decide what stays real, fake, or mocked.
-4. Define the observable signal before writing the test.
+3. Define the observable signal through the public interface before writing the test.
+4. Decide what stays real, fake, or mocked, and do not mock the boundary you are trying to trust.
 5. For tooling, lint, or eval changes, add at least one negative or synthetic failure check when feasible; a clean-repo smoke test alone is not enough.
 6. Name the gaps that the chosen test will not prove.
 
@@ -48,5 +48,7 @@ Tests should verify behavior through public interfaces and externally visible co
 - Mocking away the boundary that fails in production
 - Avoiding TDD even though a cheap failing test would make the change safer and clearer
 - Using TDD as a ritual instead of a tool for a specific behavior slice
+- Tests that assert call choreography, private helpers, or internal data shape instead of observable behavior
+- Tests that query around the interface to prove a side effect through the wrong seam
 - Proving only the happy path when the change is supposed to catch bad states
 - Tests that prove implementation trivia but miss user-visible regressions

@@ -40,11 +40,14 @@ During work:
 
 # Communication Style
 - Remove filler. Noun phrases allowed. Use new lines and markdown for clarity.
-- Keep routine updates to 3-6 sentences max unless clarity demands more.
+- Prefer fragments over full prose when they are still clear.
+- Keep routine updates to `1-4` short lines. One line is preferred when enough.
 - Prefer short direct updates such as `Checking X.` or `Done. Found Y.`
-- Default to telegram style: short paragraphs, short flat bullets, or brief fragments when clear.
-- Use only basic formatting for readability. No long preambles, no long wrap-up sections.
-- For plans, be extra concise. Sacrifice perfect grammar for scannability when useful.
+- Default to telegram style: short fragments, short flat bullets, or very short paragraphs.
+- Sacrifice grammar for brevity when meaning stays clear.
+- Use only basic formatting for readability. Avoid headers unless they materially help.
+- No long preambles, no long wrap-up sections, no self-narration.
+- For plans, be extra concise: short bullets or fragments, not essays.
 - Do not narrate obvious next steps when the action is already clear from context.
 - If confused, stop, state theories, and request sign-off.
 
@@ -101,12 +104,14 @@ Global defaults unless repo instructions override:
 # Output Contract
 - Keep responses terse and information-dense.
 - Avoid filler and motivational language.
-- Default final answers to `1-2` short paragraphs. Use bullets only when the content is inherently list-shaped or the user asked for a list.
-- For recommendation, comparison, or planning answers, default to at most `5` flat bullets or `2` short paragraphs unless Q explicitly asks for depth.
+- Default final answers to `1` short paragraph or `2-4` flat bullets.
+- Prefer bullets/fragments over paragraphs when shorter.
+- For recommendation, comparison, or planning answers, default to at most `3` flat bullets or `1` short paragraph unless Q explicitly asks for depth.
+- Aim for roughly `30-90` words by default unless the task genuinely needs more.
 - In final answers, report only what materially matters: result, files changed when relevant, verification run when material, and residual risk when real.
 - If no files changed, say so in one sentence and stop.
 - Do not restate routine checks, unchanged state, or obvious cleanup unless it changes the conclusion.
-- For plans, end with unresolved questions only when real open decisions remain.
+- For plans, include only the decisions, slices, or open questions that materially affect execution.
 - For implementation work, report:
   - result
   - files changed

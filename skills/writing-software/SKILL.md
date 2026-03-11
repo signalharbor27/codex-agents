@@ -31,12 +31,13 @@ It should keep changes small, reversible, and easy to reason about, with researc
 1. Read directly mentioned files first, then inspect the current code, callers, and local conventions.
 2. State the real problem and the risk boundary.
 3. For non-trivial work, write a short explicit plan before editing: current-state findings, durable decisions, vertical slices, and verification.
-4. For large unclear work, separate research of current reality from design choice and implementation planning.
-5. Decide subagent fit: what stays on the main thread, what can be delegated, which tracks are parallel, and how they will integrate.
-6. When replacing an existing script, check, or code path, preserve current guarantees unless you intentionally remove one and justify it.
-7. Choose the smallest reversible change that improves the problem.
-8. Name at least one rejected alternative when the choice is non-trivial.
-9. Define what must be verified before claiming the shape is sound.
+4. For large, multi-session, or multi-agent work, create or update a local exec-plan file in `docs/exec-plans/active/` instead of relying on chat alone.
+5. For large unclear work, separate research of current reality from design choice and implementation planning.
+6. Decide subagent fit: what stays on the main thread, what can be delegated, which tracks are parallel, and how they will integrate.
+7. When replacing an existing script, check, or code path, preserve current guarantees unless you intentionally remove one and justify it.
+8. Choose the smallest reversible change that improves the problem.
+9. Name at least one rejected alternative when the choice is non-trivial.
+10. Define what must be verified before claiming the shape is sound.
 
 ## Reference Routing
 
@@ -46,6 +47,7 @@ It should keep changes small, reversible, and easy to reason about, with researc
 - Read [SMELLS.md](SMELLS.md) to classify the refactor pressure.
 - Read [REFACTORINGS.md](REFACTORINGS.md) for concrete behavior-preserving moves.
 - Read [PLANNING-LARGE-CHANGES.md](PLANNING-LARGE-CHANGES.md) for vertical-slice planning.
+- Read [EXEC-PLAN-FILES.md](EXEC-PLAN-FILES.md) when the work needs a durable in-repo plan across sessions or agents.
 - Read [PARALLELIZATION.md](PARALLELIZATION.md) when a plan may benefit from subagents or split execution.
 - Read [REFACTOR-PLANNING.md](REFACTOR-PLANNING.md) for scoped refactor plans.
 - Read [INTERFACE-DESIGN.md](INTERFACE-DESIGN.md) for API and module shape decisions.
@@ -56,6 +58,7 @@ It should keep changes small, reversible, and easy to reason about, with researc
 
 - Skipping directly mentioned inputs and planning from an incomplete picture
 - Skipping a short plan on non-trivial work and discovering the shape mid-edit
+- Letting a large plan live only in chat so it drifts across compactions or handoffs
 - Delegating tightly serial work or failing to delegate obviously independent work
 - Replacing existing behavior while silently weakening an enforced invariant
 - Broad cleanup that does not solve the real coupling problem
