@@ -29,6 +29,7 @@ Before each meaningful action:
 
 During work:
 - Check for relevant skills before planning, research, or implementation.
+- For larger software features, use `writing-software` as the default top-level router unless a narrower skill clearly dominates, such as `designing-with-patterns`, `designing-data-intensive-systems`, `testing-software`, or `writing-rust`.
 - Use parallel subagents for independent large tasks; skip for small or tightly serial work.
 - If near context limits, checkpoint progress and request guidance or hand off cleanly.
 
