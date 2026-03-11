@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "top_level_skills": [
+    "copywriting",
+    "designing-data-intensive-systems",
+    "designing-with-patterns",
+    "effect-ts",
+    "finishing-a-development-branch",
+    "frontend-design",
+    "receiving-code-review",
+    "seo-audit",
+    "systematic-debugging",
+    "testing-software",
+    "using-git-worktrees",
+    "verification-before-completion",
+    "writing-rust",
+    "writing-skills",
+    "writing-software"
+  ],
+  "cases": [
+    {
+      "id": "simple-bugfix-shape",
+      "prompt": "Refactor this handler to remove duplication and make the error semantics clearer.",
+      "expected_skill": "writing-software",
+      "forbidden_skills": ["testing-software", "systematic-debugging", "designing-with-patterns"]
+    },
+    {
+      "id": "explicit-tdd-request",
+      "prompt": "I want to fix this checkout bug with TDD. Start with the most important behavior slice.",
+      "expected_skill": "testing-software",
+      "forbidden_skills": ["writing-software", "systematic-debugging"]
+    },
+    {
+      "id": "unknown-flaky-failure",
+      "prompt": "This test fails only in CI and I do not understand why yet.",
+      "expected_skill": "systematic-debugging",
+      "forbidden_skills": ["testing-software", "writing-software"]
+    },
+    {
+      "id": "pattern-debate",
+      "prompt": "Should this plugin system stay simple, or should we introduce a strategy pattern?",
+      "expected_skill": "designing-with-patterns",
+      "forbidden_skills": ["writing-software"]
+    },
+    {
+      "id": "data-workload",
+      "prompt": "We ingest append-only events and query them by time range; should we keep plain Postgres or move toward Timescale?",
+      "expected_skill": "designing-data-intensive-systems",
+      "forbidden_skills": ["writing-software"]
+    },
+    {
+      "id": "effect-wrapper",
+      "prompt": "Wrap this third-party billing SDK in Effect without leaking the raw client everywhere.",
+      "expected_skill": "effect-ts",
+      "forbidden_skills": ["writing-software", "testing-software"]
+    },
+    {
+      "id": "rust-api",
+      "prompt": "This Rust API keeps borrowing data too long. I need a cleaner ownership boundary.",
+      "expected_skill": "writing-rust",
+      "forbidden_skills": ["writing-software"]
+    },
+    {
+      "id": "ui-build",
+      "prompt": "Build a striking React marketing page that still feels production-ready on mobile.",
+      "expected_skill": "frontend-design",
+      "forbidden_skills": ["writing-software", "seo-audit"]
+    },
+    {
+      "id": "seo-diagnosis",
+      "prompt": "This landing page is not ranking and I need to know whether the real problem is crawlability, content, or schema.",
+      "expected_skill": "seo-audit",
+      "forbidden_skills": ["copywriting", "frontend-design"]
+    },
+    {
+      "id": "copy-revision",
+      "prompt": "Rewrite this pricing page copy so the positioning is sharper and the CTA is clearer.",
+      "expected_skill": "copywriting",
+      "forbidden_skills": ["seo-audit", "frontend-design"]
+    },
+    {
+      "id": "review-feedback",
+      "prompt": "I got code review feedback and I am not sure whether it is technically correct for this codebase.",
+      "expected_skill": "receiving-code-review",
+      "forbidden_skills": ["writing-software", "verification-before-completion"]
+    },
+    {
+      "id": "verify-completion",
+      "prompt": "Before I say this fix is done, what do I need to run to prove it?",
+      "expected_skill": "verification-before-completion",
+      "forbidden_skills": ["testing-software", "writing-software"]
+    },
+    {
+      "id": "worktree-isolation",
+      "prompt": "This refactor is risky and I want a separate branch workspace before touching the current tree.",
+      "expected_skill": "using-git-worktrees",
+      "forbidden_skills": ["writing-software"]
+    },
+    {
+      "id": "finish-branch",
+      "prompt": "The branch is done and I need to decide whether to merge it, open a PR, or keep it around.",
+      "expected_skill": "finishing-a-development-branch",
+      "forbidden_skills": ["using-git-worktrees", "verification-before-completion"]
+    },
+    {
+      "id": "skill-authoring",
+      "prompt": "Create a new skill and keep the entrypoint small while moving heavy material into references.",
+      "expected_skill": "writing-skills",
+      "forbidden_skills": ["writing-software"]
+    }
+  ]
+}
