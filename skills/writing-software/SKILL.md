@@ -36,13 +36,15 @@ Use a more exploratory path for greenfield work and a more conservative path for
    - Greenfield: prototype early when the uncertainty is workflow, UX, integration shape, or developer experience.
    - Brownfield: inspect existing seams, invariants, callers, and migrations before proposing change.
 4. For non-trivial work, write a short explicit plan before editing: current-state findings, durable decisions, vertical slices, and verification.
-5. For large, multi-session, or multi-agent work, create or update a local exec-plan file in `docs/exec-plans/active/` instead of relying on chat alone.
-6. For large unclear work, separate research of current reality from design choice and implementation planning.
-7. Decide subagent fit: what stays on the main thread, what can be delegated, which tracks are parallel, and how they will integrate.
-8. When replacing an existing script, check, or code path, preserve current guarantees unless you intentionally remove one and justify it.
-9. Choose the smallest reversible change that improves the problem.
-10. Name at least one rejected alternative when the choice is non-trivial.
-11. Define what must be verified before claiming the shape is sound.
+5. Grill every real plan before execution: challenge assumptions, dependency order, verification gaps, and rejected alternatives. Scale the intensity to the task size and risk.
+6. For large, multi-session, or multi-agent work, create or update a local exec-plan file in `docs/exec-plans/active/` instead of relying on chat alone.
+7. For large unclear work, separate research of current reality from design choice and implementation planning.
+8. Decide subagent fit: what stays on the main thread, what can be delegated, which tracks are parallel, and how they will integrate.
+9. When replacing an existing script, check, or code path, preserve current guarantees unless you intentionally remove one and justify it.
+10. Choose the smallest reversible change that improves the problem.
+11. If the task includes commits or a branch workflow, group work into logical commits along slice boundaries instead of one large mixed commit.
+12. Name at least one rejected alternative when the choice is non-trivial.
+13. Define what must be verified before claiming the shape is sound.
 
 ## Reference Routing
 
@@ -58,15 +60,17 @@ Use a more exploratory path for greenfield work and a more conservative path for
 - Read [REFACTOR-PLANNING.md](REFACTOR-PLANNING.md) for scoped refactor plans.
 - Read [INTERFACE-DESIGN.md](INTERFACE-DESIGN.md) for API and module shape decisions.
 - Read [TYPESCRIPT-ADVANCED.md](TYPESCRIPT-ADVANCED.md) when advanced type design is central to the change.
-- Read [CHALLENGE-MODE.md](CHALLENGE-MODE.md) when the plan still has unresolved tradeoffs.
+- Read [CHALLENGE-MODE.md](CHALLENGE-MODE.md) to grill the plan before execution; use a light pass for small plans and a hard pass for risky ones.
 
 ## Failure Modes
 
 - Skipping directly mentioned inputs and planning from an incomplete picture
 - Using greenfield prototype-first behavior on brownfield invariants that require migration discipline
 - Skipping a short plan on non-trivial work and discovering the shape mid-edit
+- Executing an ungrilled plan with hidden assumption, dependency, or verification gaps
 - Letting a large plan live only in chat so it drifts across compactions or handoffs
 - Delegating tightly serial work or failing to delegate obviously independent work
+- Batching unrelated slice work into one opaque commit when the task is being committed incrementally
 - Replacing existing behavior while silently weakening an enforced invariant
 - Broad cleanup that does not solve the real coupling problem
 - More abstraction without more leverage

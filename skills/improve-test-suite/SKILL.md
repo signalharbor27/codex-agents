@@ -33,7 +33,8 @@ It should bias toward fewer, more trustworthy tests tied to real behavior throug
 5. For large repos, split evidence gathering by subsystem or test layer and use subagents for bounded independent review tracks.
 6. For repo-wide, multi-layer, or multi-session reviews, write the phased plan to a local file under `docs/exec-plans/active/` instead of leaving it only in chat.
 7. Produce a phased plan covering what to remove, what to keep, what to rewrite, and what new tests would materially increase trust.
-8. Call out at least one rejected alternative when the tradeoff is non-trivial, especially when removing broad suites or end-to-end coverage.
+8. Grill the phased plan before finalizing it: challenge weak assumptions, removal risk, missing seams, and verification gaps.
+9. Call out at least one rejected alternative when the tradeoff is non-trivial, especially when removing broad suites or end-to-end coverage.
 
 ## Reference Routing
 

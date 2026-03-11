@@ -34,7 +34,8 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 5. For large repos or monorepos, split evidence gathering by subsystem and use subagents for bounded independent review tracks such as frontend, backend, shared packages, or build and CI.
 6. For repo-wide, monorepo, or multi-session reviews, write the phased plan to a local file under `docs/exec-plans/active/` instead of leaving it only in chat.
 7. Produce a phased plan with scope, expected payoff, dependencies, and verification for each phase.
-8. Call out what should not change, what should be deferred, and at least one rejected alternative when the tradeoff is non-trivial.
+8. Grill the phased plan before finalizing it: walk the design tree, resolve dependencies, challenge assumptions, and tighten verification.
+9. Call out what should not change, what should be deferred, and at least one rejected alternative when the tradeoff is non-trivial.
 
 ## Reference Routing
 
