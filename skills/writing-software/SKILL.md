@@ -28,11 +28,12 @@ It should keep changes small, reversible, and easy to reason about.
 
 ## Minimal Workflow
 
-1. Inspect the current code, callers, and local conventions.
+1. Read directly mentioned files first, then inspect the current code, callers, and local conventions.
 2. State the real problem and the risk boundary.
-3. Choose the smallest reversible change that improves the problem.
-4. Name at least one rejected alternative when the choice is non-trivial.
-5. Define what must be verified before claiming the shape is sound.
+3. For large unclear work, separate research of current reality from design choice and implementation planning.
+4. Choose the smallest reversible change that improves the problem.
+5. Name at least one rejected alternative when the choice is non-trivial.
+6. Define what must be verified before claiming the shape is sound.
 
 ## Reference Routing
 
@@ -49,6 +50,7 @@ It should keep changes small, reversible, and easy to reason about.
 
 ## Failure Modes
 
+- Skipping directly mentioned inputs and planning from an incomplete picture
 - Broad cleanup that does not solve the real coupling problem
 - More abstraction without more leverage
 - Plans that script every tiny action instead of making key decisions explicit

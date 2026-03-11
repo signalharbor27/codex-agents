@@ -5,6 +5,7 @@ ROOT="${1:-/Users/me/.agents/skills}"
 
 expected=(
   copywriting
+  describe-pr
   designing-data-intensive-systems
   designing-with-patterns
   effect-ts
@@ -41,6 +42,7 @@ done
 
 active_paths=(
   "$ROOT/copywriting"
+  "$ROOT/describe-pr"
   "$ROOT/designing-data-intensive-systems"
   "$ROOT/designing-with-patterns"
   "$ROOT/effect-ts"

@@ -24,13 +24,16 @@ This is optional setup, not a universal prerequisite.
 ## Minimal Workflow
 
 1. Check whether a worktree is actually needed.
-2. Prefer an existing `.worktrees/` or `worktrees/` directory when present.
-3. Verify project-local worktree directories are ignored before using them.
-4. Create the worktree and report the location.
-5. If baseline checks fail, report the state before proceeding.
+2. Prefer a repo-provided worktree or bootstrap script when one exists.
+3. Prefer an existing `.worktrees/` or `worktrees/` directory when present.
+4. Verify project-local worktree directories are ignored before using them.
+5. Collect the branch, path, and setup command explicitly before creating the worktree.
+6. Create the worktree and report the location.
+7. If baseline checks fail, report the state before proceeding.
 
 ## Failure Modes
 
 - Treating worktrees as mandatory for trivial work
+- Ignoring a repo bootstrap script and recreating setup by hand
 - Editing ignore files or committing setup changes without consent
 - Using broken path expansion or stale runtime-specific paths

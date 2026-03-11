@@ -2,6 +2,7 @@
   "version": 1,
   "top_level_skills": [
     "copywriting",
+    "describe-pr",
     "designing-data-intensive-systems",
     "designing-with-patterns",
     "effect-ts",
@@ -77,6 +78,12 @@
       "prompt": "Rewrite this pricing page copy so the positioning is sharper and the CTA is clearer.",
       "expected_skill": "copywriting",
       "forbidden_skills": ["seo-audit", "frontend-design"]
+    },
+    {
+      "id": "describe-pr",
+      "prompt": "Write a clear PR description that explains the problem, the user-facing changes, the implementation, and how to verify it.",
+      "expected_skill": "describe-pr",
+      "forbidden_skills": ["writing-software", "verification-before-completion"]
     },
     {
       "id": "review-feedback",
