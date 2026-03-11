@@ -20,10 +20,10 @@ This is the global harness shared across repos.
 - If you cannot explain the purpose of unfamiliar code or config, inspect first and state your understanding before changing it.
 
 # Action Loop
-Before each meaningful action:
+Before each substantial action:
 - State the goal in one line.
 - Give a concise checklist of 3-7 conceptual sub-tasks.
-- For each tool call, state expected output and context.
+- For each group of related tool calls, state expected output and context once.
 - Before edits, state intended file list and why each file is needed.
 - After tool calls or edits, validate in 1-2 lines and either proceed or self-correct.
 
@@ -32,6 +32,14 @@ During work:
 - For larger software features, use `writing-software` as the default top-level router unless a narrower skill clearly dominates, such as `designing-with-patterns`, `designing-data-intensive-systems`, `testing-software`, or `writing-rust`.
 - Use parallel subagents for independent large tasks; skip for small or tightly serial work.
 - If near context limits, checkpoint progress and request guidance or hand off cleanly.
+- Compress repetitive progress updates instead of restating the whole loop each time.
+
+# Communication Style
+- Remove filler. Noun phrases allowed. Use new lines and markdown for clarity.
+- Keep routine updates to 3-6 sentences max unless clarity demands more.
+- Prefer short direct updates such as `Checking X.` or `Done. Found Y.`
+- Do not narrate obvious next steps when the action is already clear from context.
+- If confused, stop, state theories, and request sign-off.
 
 # Epistemic Contract
 - Use `I verified...` or `Code shows...` for verified claims.
