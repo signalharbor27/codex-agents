@@ -74,6 +74,15 @@ if rg -n "Claude|Anthropic|CLAUDE\\.md|superpowers:|TodoWrite|Task tool|Task\\("
 fi
 
 for file in "$ROOT"/*/SKILL.md; do
+  line_count="$(wc -l < "$file" | tr -d ' ')"
+  if [[ "$line_count" -gt 120 ]]; then
+    echo "SKILL.md too long ($line_count lines) in $file" >&2
+    exit 1
+  fi
+  if ! rg -q "^## Overview$" "$file"; then
+    echo "missing '## Overview' in $file" >&2
+    exit 1
+  fi
   if ! rg -q "^## When to Use$" "$file"; then
     echo "missing '## When to Use' in $file" >&2
     exit 1
@@ -82,9 +91,22 @@ for file in "$ROOT"/*/SKILL.md; do
     echo "missing '## When Not to Use' in $file" >&2
     exit 1
   fi
+  if ! rg -q "^## Minimal Workflow$" "$file"; then
+    echo "missing '## Minimal Workflow' in $file" >&2
+    exit 1
+  fi
+  if ! rg -q "^## Reference Routing$" "$file"; then
+    echo "missing '## Reference Routing' in $file" >&2
+    exit 1
+  fi
   desc="$(awk '/^description:/{sub(/^description:[[:space:]]*/, ""); print; exit}' "$file")"
   if [[ "$desc" != *"Use when"* ]]; then
     echo "description missing 'Use when' in $file" >&2
+    exit 1
+  fi
+  desc_len="${#desc}"
+  if [[ "$desc_len" -lt 140 || "$desc_len" -gt 320 ]]; then
+    echo "description length out of range ($desc_len chars) in $file" >&2
     exit 1
   fi
 done

@@ -31,6 +31,11 @@ This is optional setup, not a universal prerequisite.
 6. Create the worktree and report the location.
 7. If baseline checks fail, report the state before proceeding.
 
+## Reference Routing
+
+- Use `writing-software` once the isolated workspace is ready and the real task becomes implementation.
+- Use `finishing-a-development-branch` when the isolated branch is complete and needs an integration decision.
+
 ## Failure Modes
 
 - Treating worktrees as mandatory for trivial work

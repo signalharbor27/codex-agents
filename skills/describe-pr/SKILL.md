@@ -31,6 +31,11 @@ Focus on what changed, why it changed, what users will notice, and how someone c
 4. Call out meaningful deviations from the original plan when they matter to review.
 5. End with the concrete verification someone else can run or observe.
 
+## Reference Routing
+
+- Use the repo PR template when one exists.
+- Use `verification-before-completion` first if the verification state is still unclear.
+
 ## Failure Modes
 
 - Summarizing file churn instead of the change rationale

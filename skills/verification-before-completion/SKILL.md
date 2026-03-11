@@ -29,6 +29,11 @@ Fresh evidence in the current turn is required for completion claims.
 3. Read the actual result, not the expected result.
 4. Report the state that the evidence supports.
 
+## Reference Routing
+
+- Use `testing-software` when you still need to decide what proof is cheapest and most trustworthy.
+- Use `describe-pr` when the work is already proven and the remaining task is reviewer communication.
+
 ## Failure Modes
 
 - Claiming completion from confidence instead of evidence

@@ -28,6 +28,11 @@ The goal is technical correctness for this codebase.
 3. Apply, reject, or escalate with technical reasoning.
 4. Test changes before closing the loop.
 
+## Reference Routing
+
+- Use `writing-software` after the review feedback has been validated and the main task becomes implementation.
+- Use `verification-before-completion` before claiming the review-driven changes are done.
+
 ## Failure Modes
 
 - Implementing feedback before checking the codebase reality

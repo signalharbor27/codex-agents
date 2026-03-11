@@ -27,6 +27,11 @@ Verify the current state, present clear options, and do not delete work by accid
 3. Require explicit confirmation before destructive actions.
 4. Preserve the worktree for PR and keep-as-is flows.
 
+## Reference Routing
+
+- Use `verification-before-completion` if completion claims still need fresh proof.
+- Use `describe-pr` when the next step is writing or updating the PR summary.
+
 ## Failure Modes
 
 - Offering completion choices without verification
