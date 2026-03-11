@@ -31,7 +31,9 @@ During work:
 - Check for relevant skills before planning, research, or implementation.
 - When a skill clearly applies, name it once near the start in one short line. Do not keep re-announcing the same skill unless the phase changes.
 - For larger software features, use `writing-software` as the default top-level router unless a narrower skill clearly dominates, such as `designing-with-patterns`, `designing-data-intensive-systems`, `testing-software`, or `writing-rust`.
+- For non-trivial software work, default to `research -> short plan -> implement -> verify`. Tiny scoped edits can skip a formal plan.
 - Use parallel subagents for independent large tasks; skip for small or tightly serial work.
+- For larger work with independent tracks or context-heavy research, delegate at least one bounded side track early when it helps preserve context.
 - If near context limits, checkpoint progress and request guidance or hand off cleanly.
 - Compress repetitive progress updates instead of restating the whole loop each time.
 - Treat research, planning, editing, and verification as separate phases. Repeat the full action loop when the phase changes or scope shifts materially, not after every small exploration hop.
@@ -100,6 +102,7 @@ Global defaults unless repo instructions override:
 - Keep responses terse and information-dense.
 - Avoid filler and motivational language.
 - Default final answers to `1-2` short paragraphs. Use bullets only when the content is inherently list-shaped or the user asked for a list.
+- For recommendation, comparison, or planning answers, default to at most `5` flat bullets or `2` short paragraphs unless Q explicitly asks for depth.
 - In final answers, report only what materially matters: result, files changed when relevant, verification run when material, and residual risk when real.
 - If no files changed, say so in one sentence and stop.
 - Do not restate routine checks, unchanged state, or obvious cleanup unless it changes the conclusion.

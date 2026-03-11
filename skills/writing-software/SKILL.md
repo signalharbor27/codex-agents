@@ -8,7 +8,7 @@ description: Shape software changes with minimal scope, clear module boundaries,
 ## Overview
 
 Use this as the default software-engineering skill when no narrower skill dominates.
-It should keep changes small, reversible, and easy to reason about.
+It should keep changes small, reversible, and easy to reason about, with research and short planning made explicit for non-trivial work.
 
 ## When to Use
 
@@ -30,11 +30,13 @@ It should keep changes small, reversible, and easy to reason about.
 
 1. Read directly mentioned files first, then inspect the current code, callers, and local conventions.
 2. State the real problem and the risk boundary.
-3. For large unclear work, separate research of current reality from design choice and implementation planning.
-4. When replacing an existing script, check, or code path, preserve current guarantees unless you intentionally remove one and justify it.
-5. Choose the smallest reversible change that improves the problem.
-6. Name at least one rejected alternative when the choice is non-trivial.
-7. Define what must be verified before claiming the shape is sound.
+3. For non-trivial work, write a short explicit plan before editing: current-state findings, durable decisions, vertical slices, and verification.
+4. For large unclear work, separate research of current reality from design choice and implementation planning.
+5. Decide subagent fit: what stays on the main thread, what can be delegated, which tracks are parallel, and how they will integrate.
+6. When replacing an existing script, check, or code path, preserve current guarantees unless you intentionally remove one and justify it.
+7. Choose the smallest reversible change that improves the problem.
+8. Name at least one rejected alternative when the choice is non-trivial.
+9. Define what must be verified before claiming the shape is sound.
 
 ## Reference Routing
 
@@ -44,6 +46,7 @@ It should keep changes small, reversible, and easy to reason about.
 - Read [SMELLS.md](SMELLS.md) to classify the refactor pressure.
 - Read [REFACTORINGS.md](REFACTORINGS.md) for concrete behavior-preserving moves.
 - Read [PLANNING-LARGE-CHANGES.md](PLANNING-LARGE-CHANGES.md) for vertical-slice planning.
+- Read [PARALLELIZATION.md](PARALLELIZATION.md) when a plan may benefit from subagents or split execution.
 - Read [REFACTOR-PLANNING.md](REFACTOR-PLANNING.md) for scoped refactor plans.
 - Read [INTERFACE-DESIGN.md](INTERFACE-DESIGN.md) for API and module shape decisions.
 - Read [TYPESCRIPT-ADVANCED.md](TYPESCRIPT-ADVANCED.md) when advanced type design is central to the change.
@@ -52,8 +55,11 @@ It should keep changes small, reversible, and easy to reason about.
 ## Failure Modes
 
 - Skipping directly mentioned inputs and planning from an incomplete picture
+- Skipping a short plan on non-trivial work and discovering the shape mid-edit
+- Delegating tightly serial work or failing to delegate obviously independent work
 - Replacing existing behavior while silently weakening an enforced invariant
 - Broad cleanup that does not solve the real coupling problem
 - More abstraction without more leverage
 - Plans that script every tiny action instead of making key decisions explicit
+- Shallow modules and noisy interfaces where a deeper module boundary would simplify the change
 - Interface changes that optimize internals while making callers harder to reason about

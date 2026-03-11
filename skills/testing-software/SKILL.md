@@ -8,7 +8,7 @@ description: Choose the cheapest trustworthy test strategy for the risk in front
 ## Overview
 
 Use this skill to choose reliable tests with the least cost.
-Tests should verify behavior through public interfaces and externally visible contracts.
+Tests should verify behavior through public interfaces and externally visible contracts. When a bug fix or behavior change has a cheap trustworthy failing test, bias toward TDD.
 
 ## When to Use
 
@@ -27,7 +27,7 @@ Tests should verify behavior through public interfaces and externally visible co
 ## Minimal Workflow
 
 1. State the behavior or risk being covered.
-2. Choose the cheapest test that gives trustworthy signal.
+2. For bug fixes and user-visible behavior changes, prefer TDD when a failing test is cheap and trustworthy.
 3. Decide what stays real, fake, or mocked.
 4. Define the observable signal before writing the test.
 5. For tooling, lint, or eval changes, add at least one negative or synthetic failure check when feasible; a clean-repo smoke test alone is not enough.
@@ -40,12 +40,13 @@ Tests should verify behavior through public interfaces and externally visible co
 - Read [EXPLORATORY.md](EXPLORATORY.md) when requirements are unclear and discovery comes first.
 - Read [TEST-DESIGN.md](TEST-DESIGN.md) for partitions, state transitions, and combinatorics.
 - Read [AGILE.md](AGILE.md) for team-level testing balance.
-- Read [TDD.md](TDD.md) when the user explicitly wants TDD or test-first development.
+- Read [TDD.md](TDD.md) when a bug fix or behavior change is a good fit for test-first development.
 
 ## Failure Modes
 
 - Jumping to end-to-end tests because the real risk was never stated
 - Mocking away the boundary that fails in production
+- Avoiding TDD even though a cheap failing test would make the change safer and clearer
 - Using TDD as a ritual instead of a tool for a specific behavior slice
 - Proving only the happy path when the change is supposed to catch bad states
 - Tests that prove implementation trivia but miss user-visible regressions

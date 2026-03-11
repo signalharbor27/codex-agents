@@ -32,6 +32,12 @@
       "forbidden_skills": ["writing-software", "systematic-debugging"]
     },
     {
+      "id": "cheap-bugfix-tdd-default",
+      "prompt": "This regression changes the API response body. The endpoint is covered by a fast integration test, and I want the safest fix.",
+      "expected_skill": "testing-software",
+      "forbidden_skills": ["systematic-debugging"]
+    },
+    {
       "id": "unknown-flaky-failure",
       "prompt": "This test fails only in CI and I do not understand why yet.",
       "expected_skill": "systematic-debugging",
@@ -102,6 +108,18 @@
       "prompt": "This refactor is risky and I want a separate branch workspace before touching the current tree.",
       "expected_skill": "using-git-worktrees",
       "forbidden_skills": ["writing-software"]
+    },
+    {
+      "id": "non_trivial_feature_plan",
+      "prompt": "Add a new admin export workflow across the API, queue worker, and dashboard UI. Start by inspecting the repo and give me a short plan before editing.",
+      "expected_skill": "writing-software",
+      "forbidden_skills": ["testing-software"]
+    },
+    {
+      "id": "parallel_tracks_feature",
+      "prompt": "Implement a larger feature with one backend slice, one docs slice, and one test-fixture slice; preserve context and split independent work where it makes sense.",
+      "expected_skill": "writing-software",
+      "forbidden_skills": ["using-git-worktrees"]
     },
     {
       "id": "finish-branch",
