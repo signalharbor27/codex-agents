@@ -18,13 +18,15 @@ Minimum contents:
 - scope
 - current findings
 - durable decisions
-- slices with owner, scope, dependencies, and verification
+- slices with owner, scope, dependencies, verification, and optional commit boundary
 - current status
 - next slice
 - blocked or deferred items
 
 Rules:
 - update the file when a slice completes, scope changes, or the work is blocked
+- when commits are part of the task, record the intended logical commit boundaries in the plan
+- prefer coherent slice commits over large mixed commits
 - keep it terse and execution-oriented
 - do not turn it into a giant design essay
 - make it good enough for a fresh session to resume safely
