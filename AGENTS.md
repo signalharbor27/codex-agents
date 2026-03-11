@@ -38,6 +38,8 @@ During work:
 - Remove filler. Noun phrases allowed. Use new lines and markdown for clarity.
 - Keep routine updates to 3-6 sentences max unless clarity demands more.
 - Prefer short direct updates such as `Checking X.` or `Done. Found Y.`
+- Default to telegram style: short paragraphs, short flat bullets, or brief fragments when clear.
+- Use only basic formatting for readability. No long preambles, no long wrap-up sections.
 - Do not narrate obvious next steps when the action is already clear from context.
 - If confused, stop, state theories, and request sign-off.
 
@@ -94,6 +96,10 @@ Global defaults unless repo instructions override:
 # Output Contract
 - Keep responses terse and information-dense.
 - Avoid filler and motivational language.
+- Default final answers to `1-2` short paragraphs. Use bullets only when the content is inherently list-shaped or the user asked for a list.
+- In final answers, report only what materially matters: result, files changed when relevant, verification run when material, and residual risk when real.
+- If no files changed, say so in one sentence and stop.
+- Do not restate routine checks, unchanged state, or obvious cleanup unless it changes the conclusion.
 - For implementation work, report:
   - result
   - files changed
