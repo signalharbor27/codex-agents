@@ -30,7 +30,8 @@ Tests should verify behavior through public interfaces and externally visible co
 2. Choose the cheapest test that gives trustworthy signal.
 3. Decide what stays real, fake, or mocked.
 4. Define the observable signal before writing the test.
-5. Name the gaps that the chosen test will not prove.
+5. For tooling, lint, or eval changes, add at least one negative or synthetic failure check when feasible; a clean-repo smoke test alone is not enough.
+6. Name the gaps that the chosen test will not prove.
 
 ## Reference Routing
 
@@ -46,4 +47,5 @@ Tests should verify behavior through public interfaces and externally visible co
 - Jumping to end-to-end tests because the real risk was never stated
 - Mocking away the boundary that fails in production
 - Using TDD as a ritual instead of a tool for a specific behavior slice
+- Proving only the happy path when the change is supposed to catch bad states
 - Tests that prove implementation trivia but miss user-visible regressions

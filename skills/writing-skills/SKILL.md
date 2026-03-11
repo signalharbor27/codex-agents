@@ -27,9 +27,10 @@ Keep the entrypoint short, the description trigger-focused, and the deep materia
 
 1. Decide whether the capability deserves a top-level router or only a reference.
 2. Write the description for routing, not for workflow narration.
-3. Keep the entrypoint small and move heavy material into references.
-4. Test the routing and output shape with representative prompts.
-5. Merge or delete overlapping skills instead of preserving every niche router.
+3. Preserve existing guarantees when replacing a skill, script, or check, unless you explicitly retire one and justify it.
+4. Keep the entrypoint small and move heavy material into references.
+5. Test the routing and output shape with representative prompts.
+6. Merge or delete overlapping skills instead of preserving every niche router.
 
 ## Reference Routing
 
@@ -39,6 +40,7 @@ Keep the entrypoint short, the description trigger-focused, and the deep materia
 ## Failure Modes
 
 - Descriptions that summarize workflow instead of trigger conditions
+- Replacing an existing check or router while silently dropping one of its guarantees
 - Keeping every niche router instead of merging overlapping skills
 - Giant `SKILL.md` files that should have become references
 - Preserving stale platform-specific assumptions in supposedly portable skills

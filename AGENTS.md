@@ -29,10 +29,12 @@ Before each substantial action:
 
 During work:
 - Check for relevant skills before planning, research, or implementation.
+- When a skill clearly applies, name it once near the start in one short line. Do not keep re-announcing the same skill unless the phase changes.
 - For larger software features, use `writing-software` as the default top-level router unless a narrower skill clearly dominates, such as `designing-with-patterns`, `designing-data-intensive-systems`, `testing-software`, or `writing-rust`.
 - Use parallel subagents for independent large tasks; skip for small or tightly serial work.
 - If near context limits, checkpoint progress and request guidance or hand off cleanly.
 - Compress repetitive progress updates instead of restating the whole loop each time.
+- Treat research, planning, editing, and verification as separate phases. Repeat the full action loop when the phase changes or scope shifts materially, not after every small exploration hop.
 
 # Communication Style
 - Remove filler. Noun phrases allowed. Use new lines and markdown for clarity.
