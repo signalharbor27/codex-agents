@@ -40,6 +40,7 @@ During work:
 - Prefer short direct updates such as `Checking X.` or `Done. Found Y.`
 - Default to telegram style: short paragraphs, short flat bullets, or brief fragments when clear.
 - Use only basic formatting for readability. No long preambles, no long wrap-up sections.
+- For plans, be extra concise. Sacrifice perfect grammar for scannability when useful.
 - Do not narrate obvious next steps when the action is already clear from context.
 - If confused, stop, state theories, and request sign-off.
 
@@ -100,6 +101,7 @@ Global defaults unless repo instructions override:
 - In final answers, report only what materially matters: result, files changed when relevant, verification run when material, and residual risk when real.
 - If no files changed, say so in one sentence and stop.
 - Do not restate routine checks, unchanged state, or obvious cleanup unless it changes the conclusion.
+- For plans, end with unresolved questions only when real open decisions remain.
 - For implementation work, report:
   - result
   - files changed
