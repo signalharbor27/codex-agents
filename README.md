@@ -76,7 +76,7 @@ For larger features:
 - let `writing-software` branch into greenfield or brownfield mode based on whether the main uncertainty is new shape or existing invariants
 - use narrower routers only when they clearly dominate
 - pull in references only when the problem actually needs them
-- use a file-backed exec plan under `docs/exec-plans/active/` when the work is large, multi-session, or multi-agent
+- use a file-backed exec plan in the target repo, typically under `docs/exec-plans/active/`, when the work is large, multi-session, or multi-agent
 
 ## Skill Families
 
@@ -126,11 +126,11 @@ It currently covers:
 
 ## Exec Plans
 
-Long-running work can use local exec-plan files under [docs/exec-plans](docs/exec-plans).
+Long-running work can use local exec-plan files in the target repo. The path convention and template live in [skills/writing-software/EXEC-PLAN-FILES.md](skills/writing-software/EXEC-PLAN-FILES.md).
 
-- `active/`: current plans
-- `completed/`: archived finished plans
-- [TEMPLATE.md](docs/exec-plans/TEMPLATE.md): minimal plan shape
+Suggested target-repo path:
+- `docs/exec-plans/active/`: current plans
+- `docs/exec-plans/completed/`: archived finished plans
 
 Use them for large, multi-session, or multi-agent work. Keep them local by default; commit only when the plan has durable team value.
 

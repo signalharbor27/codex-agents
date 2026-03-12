@@ -6,7 +6,9 @@ Use a local exec-plan file for:
 - repo-wide review or migration work
 - plans likely to survive compaction or handoff
 
-Location:
+Create the plan file in the target repo you are working on, not in this skills repo.
+
+Suggested location in the target repo:
 - active plans: `docs/exec-plans/active/`
 - completed plans: `docs/exec-plans/completed/`
 
@@ -30,3 +32,42 @@ Rules:
 - keep it terse and execution-oriented
 - do not turn it into a giant design essay
 - make it good enough for a fresh session to resume safely
+
+Minimal template:
+
+```md
+# Title
+
+## Scope
+- what this work covers
+- what is explicitly out of scope
+
+## Current Findings
+- current-state facts
+- confirmed constraints
+
+## Durable Decisions
+- decisions that shape execution
+
+## Slices
+
+### Slice 1
+- owner:
+- goal:
+- scope:
+- depends on:
+- verification:
+- commit boundary:
+- status:
+
+## Current Status
+- current phase
+- latest verified point
+
+## Next Slice
+- next concrete step
+
+## Deferred Or Blocked
+- deferred work
+- blockers
+```

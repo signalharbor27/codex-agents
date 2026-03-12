@@ -37,7 +37,7 @@ Use a more exploratory path for greenfield work and a more conservative path for
    - Brownfield: inspect existing seams, invariants, callers, and migrations before proposing change.
 4. For non-trivial work, write a short explicit plan before editing: current-state findings, durable decisions, vertical slices, and verification.
 5. Grill every real plan before execution: challenge assumptions, dependency order, verification gaps, and rejected alternatives. Scale the intensity to the task size and risk.
-6. For large, multi-session, or multi-agent work, create or update a local exec-plan file in `docs/exec-plans/active/` instead of relying on chat alone.
+6. For large, multi-session, or multi-agent work, create or update a local exec-plan file in the target repo, typically under `docs/exec-plans/active/`, instead of relying on chat alone.
 7. For large unclear work, separate research of current reality from design choice and implementation planning.
 8. Decide subagent fit: what stays on the main thread, what can be delegated, which tracks are parallel, and how they will integrate.
 9. When replacing an existing script, check, or code path, preserve current guarantees unless you intentionally remove one and justify it.
