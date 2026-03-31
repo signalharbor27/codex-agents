@@ -2,6 +2,8 @@
 
 Use this when the task is to review a codebase or subsystem and produce a practical architecture-improvement plan.
 
+Treat the friction you hit while trying to understand the codebase as evidence, not noise.
+
 ## Review Axes
 
 - module boundaries: deep modules, simple public interfaces, low change amplification
@@ -22,6 +24,9 @@ Keep it short and critical.
 5. Phased plan
 6. Verification approach
 
+Be opinionated: recommend a strongest target shape, not just a menu of options.
+If the target shape is genuinely unclear, compare 2-3 realistic shapes first, then recommend the strongest one.
+
 For each phase, include:
 
 - goal
@@ -33,6 +38,7 @@ For each phase, include:
 ## Good Review Questions
 
 - Which modules are shallow wrappers instead of deep boundaries?
+- Where does understanding one concept require bouncing across too many files, types, or helper layers?
 - Which interfaces leak internal choices into too many callers?
 - Where do tests lock down internals instead of behavior at the seam?
 - Which conventions make the repo harder for an agent to inspect and change safely?
@@ -72,4 +78,5 @@ Call out:
 - greenfield rewrites by default
 - giant architecture essays
 - broad “adopt pattern X” advice without concrete problem mapping
+- forcing a single target shape when the best boundary is still genuinely ambiguous
 - test expansion that does not improve trust at a real seam

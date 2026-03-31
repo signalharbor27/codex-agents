@@ -27,9 +27,10 @@ The goal is evidence, not activity.
 
 1. Reproduce and read the actual failure carefully.
 2. Gather evidence at the relevant boundary or call path.
-3. Compare working and broken cases.
-4. Form one concrete hypothesis and test it minimally.
-5. Implement only after the failure mode is understood.
+3. Check recent relevant changes when a regression is plausible.
+4. Compare working and broken cases.
+5. Form one concrete hypothesis and test it minimally.
+6. Implement only after the failure mode is understood.
 
 ## Reference Routing
 
@@ -40,6 +41,7 @@ The goal is evidence, not activity.
 ## Failure Modes
 
 - Proposing fixes before identifying the failing boundary
+- Ignoring recent change history when the breakage may be a regression
 - Bundling several speculative changes into one test
 - Treating repeated bad hypotheses as proof of an architectural flaw
 - Turning mitigation work into a rewrite without evidence

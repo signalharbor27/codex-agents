@@ -34,6 +34,8 @@ Current top-level routers:
   - root-cause work when the failure mode is not understood yet
 - `verification-before-completion`
   - final evidence gate before claiming success
+- `grill-me`
+  - standalone router for stress-testing a plan or design before execution
 - `designing-with-patterns`
   - pattern-vs-no-pattern architecture decisions
 - `improve-codebase-architecture`
@@ -86,6 +88,7 @@ For larger features:
 - `testing-software`
 - `systematic-debugging`
 - `verification-before-completion`
+- `grill-me`
 
 ### Architecture and systems
 

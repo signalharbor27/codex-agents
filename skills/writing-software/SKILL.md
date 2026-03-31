@@ -10,6 +10,7 @@ description: Shape software changes with minimal scope, clear module boundaries,
 Use this as the default software-engineering skill when no narrower skill dominates.
 It should keep changes small, reversible, and easy to reason about, with research and short planning made explicit for non-trivial work.
 Use a more exploratory path for greenfield work and a more conservative path for brownfield work.
+For larger unclear work, separate fact-finding, design alignment, structure, and tactical planning instead of collapsing them into one monolithic plan step.
 
 ## When to Use
 
@@ -36,15 +37,21 @@ Use a more exploratory path for greenfield work and a more conservative path for
    - Greenfield: prototype early when the uncertainty is workflow, UX, integration shape, or developer experience.
    - Brownfield: inspect existing seams, invariants, callers, and migrations before proposing change.
 4. For non-trivial work, write a short explicit plan before editing: current-state findings, durable decisions, vertical slices, and verification.
-5. Grill every real plan before execution: challenge assumptions, dependency order, verification gaps, and rejected alternatives. Scale the intensity to the task size and risk.
-6. For large, multi-session, or multi-agent work, create or update a local exec-plan file in the target repo, typically under `docs/exec-plans/active/`, instead of relying on chat alone.
-7. For large unclear work, separate research of current reality from design choice and implementation planning.
+5. For large or ambiguous work, split planning into staged artifacts:
+   - research questions: what must be learned
+   - factual research: current reality only
+   - design discussion: decisions and patterns to follow
+   - structure outline: vertical slices and checkpoints
+   - tactical plan: execution details only after the prior choices are stable
+6. Grill every real plan before execution: challenge assumptions, dependency order, verification gaps, and rejected alternatives. Scale the intensity to the task size and risk.
+7. For large, multi-session, or multi-agent work, create or update a local exec-plan file in the target repo, typically under `docs/exec-plans/active/`, instead of relying on chat alone.
 8. Decide subagent fit: what stays on the main thread, what can be delegated, which tracks are parallel, and how they will integrate.
 9. When replacing an existing script, check, or code path, preserve current guarantees unless you intentionally remove one and justify it.
 10. Choose the smallest reversible change that improves the problem.
 11. If the task includes commits or a branch workflow, group work into logical commits along slice boundaries instead of one large mixed commit.
 12. Name at least one rejected alternative when the choice is non-trivial.
 13. Define what must be verified before claiming the shape is sound.
+14. Read the code before trusting the change; plan review helps alignment but does not replace code review.
 
 ## Reference Routing
 
@@ -54,6 +61,7 @@ Use a more exploratory path for greenfield work and a more conservative path for
 - Read [SMELLS.md](SMELLS.md) to classify the refactor pressure.
 - Read [REFACTORINGS.md](REFACTORINGS.md) for concrete behavior-preserving moves.
 - Read [PLANNING-LARGE-CHANGES.md](PLANNING-LARGE-CHANGES.md) for vertical-slice planning.
+- Read [PLANNING-ARTIFACTS.md](PLANNING-ARTIFACTS.md) when the work needs staged research/design/outline/plan artifacts instead of one short inline plan.
 - Read [EXEC-PLAN-FILES.md](EXEC-PLAN-FILES.md) when the work needs a durable in-repo plan across sessions or agents.
 - Read [PARALLELIZATION.md](PARALLELIZATION.md) when a plan may benefit from subagents or split execution.
 - Read [PRACTICES.md](PRACTICES.md) for tracer bullets, prototypes, reversibility, and early product-shape learning.
@@ -67,8 +75,10 @@ Use a more exploratory path for greenfield work and a more conservative path for
 - Skipping directly mentioned inputs and planning from an incomplete picture
 - Using greenfield prototype-first behavior on brownfield invariants that require migration discipline
 - Skipping a short plan on non-trivial work and discovering the shape mid-edit
+- Collapsing research, design, structure, and planning into one giant prompt that only works with special phrasing
 - Executing an ungrilled plan with hidden assumption, dependency, or verification gaps
 - Letting a large plan live only in chat so it drifts across compactions or handoffs
+- Treating review of a long plan file as a substitute for reading the resulting code
 - Delegating tightly serial work or failing to delegate obviously independent work
 - Batching unrelated slice work into one opaque commit when the task is being committed incrementally
 - Replacing existing behavior while silently weakening an enforced invariant

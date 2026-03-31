@@ -8,6 +8,7 @@
     "effect-ts",
     "finishing-a-development-branch",
     "frontend-design",
+    "grill-me",
     "improve-codebase-architecture",
     "improve-test-suite",
     "receiving-code-review",
@@ -21,6 +22,12 @@
     "writing-software"
   ],
   "cases": [
+    {
+      "id": "grill-a-plan",
+      "prompt": "Grill me on this implementation plan until the risky branch decisions and verification gaps are fully resolved.",
+      "expected_skill": "grill-me",
+      "forbidden_skills": ["writing-software", "verification-before-completion"]
+    },
     {
       "id": "simple-bugfix-shape",
       "prompt": "Refactor this handler to remove duplication and make the error semantics clearer.",

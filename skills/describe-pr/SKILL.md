@@ -26,10 +26,11 @@ Focus on what changed, why it changed, what users will notice, and how someone c
 ## Minimal Workflow
 
 1. Read the final diff, the relevant context, and any plan or ticket that explains intent.
-2. State the problem being solved before listing the code changes.
-3. Separate user-facing impact from internal implementation detail.
-4. Call out meaningful deviations from the original plan when they matter to review.
-5. End with the concrete verification someone else can run or observe.
+2. If staged planning artifacts exist, read the durable decisions and phase intent before summarizing the implementation.
+3. State the problem being solved before listing the code changes.
+4. Separate user-facing impact from internal implementation detail.
+5. Call out meaningful deviations from the original plan or durable decisions when they matter to review.
+6. End with the concrete verification someone else can run or observe.
 
 ## Reference Routing
 
