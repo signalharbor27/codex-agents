@@ -27,10 +27,12 @@ The goal is shared understanding, not implementation.
 
 1. Read the plan, design, or directly mentioned files fully before questioning it.
 2. If the codebase can answer a question, inspect the code before asking the user.
-3. Walk the design tree one branch at a time instead of spraying unrelated questions.
-4. For each important question, give a recommended answer or tradeoff, not just the question.
-5. Tighten dependencies, rejected alternatives, scope edges, and verification until the plan is stable.
-6. Stop when the major branch decisions are resolved or the user wants to return to planning.
+3. Pick the single highest-leverage unresolved branch decision.
+4. Ask exactly one question per turn. Do not batch multiple branches, preview the rest of the questionnaire, or dump a full report.
+5. For that one question, include a recommended answer, the key tradeoff, and what changes if the answer goes the other way.
+6. Stop and wait for the user's answer. On the next turn, briefly mark the prior branch as resolved, then move to the next single highest-leverage question.
+7. Tighten dependencies, rejected alternatives, scope edges, and verification until the plan is stable.
+8. Stop when the major branch decisions are resolved or the user wants to return to planning.
 
 ## Reference Routing
 
@@ -40,6 +42,8 @@ The goal is shared understanding, not implementation.
 ## Failure Modes
 
 - Asking broad unrelated questions instead of resolving one branch at a time
+- Asking multiple questions in one turn or presenting the whole design tree at once
+- Turning the grill into a report, memo, or questionnaire instead of an interactive state machine
 - Using user questions as a substitute for code inspection
 - Grilling forever without converging on stable decisions
 - Stress-testing tiny low-risk work that does not need a standalone grill

@@ -55,6 +55,25 @@ Constraints below are essential. Any violation is a failure.
 - Default final answer: `1` short paragraph or `2-4` flat bullets.
 - Include only result, changed files when relevant, verification, and real residual risk.
 
+# MemPalace
+Persistent memory via `mempalace`. One global palace, no per-project config.
+
+**MCP (retrieval + writes during chat):** Available as `mempalace` MCP server. Use for search, KG queries, filing drawers, diary read/write. Agent decides when to query the palace.
+
+**Hooks (automatic ingestion):** Stop hook auto-saves every 15 messages. PreCompact hook emergency-saves before context compression. SessionStart loads wake-up context (L0+L1).
+
+**When a save hook fires:**
+- Use `mempalace_add_drawer` to file key topics, decisions, quotes, and code.
+- Set `wing` from current project context (e.g. `birdfeed`, `polysink`). New wings are created automatically.
+- Never file secrets, credentials, API keys, or tokens.
+
+**CLI (manual ops):**
+- `~/.mempalace/.venv/bin/python3 -m mempalace search "query"`
+- `~/.mempalace/.venv/bin/python3 -m mempalace wake-up`
+- `~/.mempalace/.venv/bin/python3 -m mempalace status`
+
+Palace at `~/.mempalace/palace`. Venv at `~/.mempalace/.venv/`.
+
 # Preferences
 - Match repo style.
 - Prefer concise idioms.
