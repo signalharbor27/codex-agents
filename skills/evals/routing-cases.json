@@ -1,7 +1,6 @@
 {
   "version": 1,
-  "top_level_skills": [
-    "copywriting",
+  "engineering_skills": [
     "describe-pr",
     "designing-data-intensive-systems",
     "designing-with-patterns",
@@ -12,7 +11,6 @@
     "improve-codebase-architecture",
     "improve-test-suite",
     "receiving-code-review",
-    "seo-audit",
     "systematic-debugging",
     "testing-software",
     "using-git-worktrees",
@@ -93,18 +91,6 @@
       "prompt": "Build a striking React marketing page that still feels production-ready on mobile.",
       "expected_skill": "frontend-design",
       "forbidden_skills": ["writing-software", "seo-audit"]
-    },
-    {
-      "id": "seo-diagnosis",
-      "prompt": "This landing page is not ranking and I need to know whether the real problem is crawlability, content, or schema.",
-      "expected_skill": "seo-audit",
-      "forbidden_skills": ["copywriting", "frontend-design"]
-    },
-    {
-      "id": "copy-revision",
-      "prompt": "Rewrite this pricing page copy so the positioning is sharper and the CTA is clearer.",
-      "expected_skill": "copywriting",
-      "forbidden_skills": ["seo-audit", "frontend-design"]
     },
     {
       "id": "describe-pr",

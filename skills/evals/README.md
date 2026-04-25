@@ -1,12 +1,11 @@
 # Skill Evals
 
-This directory holds the lightweight eval suite for the active Codex skill surface.
+This directory holds the lightweight eval suite for the active Codex engineering skill surface.
 
 It covers two things:
 
 - structural checks
-  - top-level skill count
-  - expected router names
+  - expected engineering router names
   - required sections
   - banned legacy terms
   - description shape
@@ -25,4 +24,4 @@ Then review:
 
 - `skills/evals/routing-cases.json`
 
-Use the routing cases for manual or agent-driven behavioral checks after major skill edits.
+Use the routing cases for manual or agent-driven behavioral checks after major engineering skill edits.

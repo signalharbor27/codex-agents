@@ -153,6 +153,19 @@ digraph principle {
 
 **NEVER fix just where the error appears.** Trace back to find the original trigger.
 
+## Durable Triage Output
+
+When the result needs to become an issue, incident note, or implementation plan, write it in behavior language that survives refactors:
+
+- expected behavior
+- actual behavior
+- reproduction or triggering condition
+- affected public contract or user-visible workflow
+- root cause as a violated invariant or contract
+- fix plan as one or more behavior-first test/fix slices
+
+Avoid coupling durable notes to line numbers, helper names, or temporary file layout unless the task is specifically a code review.
+
 ## Stack Trace Tips
 
 **In tests:** Use `console.error()` not logger - logger may be suppressed

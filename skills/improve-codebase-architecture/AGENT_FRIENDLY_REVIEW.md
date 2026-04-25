@@ -11,6 +11,9 @@ Treat the friction you hit while trying to understand the codebase as evidence, 
 - seam quality: boundaries where behavior can be tested or replaced without wide edits
 - testing shape: boundary-focused tests, fast trustworthy proof, low mock theater
 - complexity drag: indirection, duplicated policy, speculative helpers, dead branches
+- domain fit: code names, workflows, and module ownership match the business language
+- decision memory: durable tradeoffs are captured in docs or ADRs instead of rediscovered
+- operability: timeouts, retries, idempotency, backpressure, observability, and recovery are explicit where failure matters
 - workflow fit: whether the repo supports research, planning, delegation, and verification cleanly
 
 ## What Good Output Looks Like
@@ -43,6 +46,21 @@ For each phase, include:
 - Where do tests lock down internals instead of behavior at the seam?
 - Which conventions make the repo harder for an agent to inspect and change safely?
 - Which improvements are high leverage versus just cleanup theater?
+- Which domain terms conflict across code, docs, and user language?
+- Which decisions should be captured because future agents will otherwise re-litigate them?
+- Which failure modes are treated as happy-path exceptions instead of designed states?
+
+## Domain and Decision Capture
+
+Use existing domain docs first: `CONTEXT.md`, `CONTEXT-MAP.md`, `docs/adr/`, architecture notes, or equivalent repo-local files.
+
+Create or update durable docs only when useful:
+
+- add a term when it resolves a real naming ambiguity
+- add an ADR when the choice is hard to reverse, surprising without context, and based on a real tradeoff
+- avoid documenting implementation trivia that will go stale faster than the code
+
+Good architecture plans should leave future agents with better names, clearer entrypoints, and fewer repeated discovery loops.
 
 ## Delegation Fit
 

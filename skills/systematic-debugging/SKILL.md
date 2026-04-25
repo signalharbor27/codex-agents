@@ -16,6 +16,7 @@ The goal is evidence, not activity.
 - Flaky, intermittent, or environment-sensitive failures
 - Multi-component issues where the failing boundary is unclear
 - Situations where several speculative fixes have already been tried
+- QA reports or user-visible issues that need durable triage before implementation
 
 ## When Not to Use
 
@@ -30,7 +31,10 @@ The goal is evidence, not activity.
 3. Check recent relevant changes when a regression is plausible.
 4. Compare working and broken cases.
 5. Form one concrete hypothesis and test it minimally.
-6. Implement only after the failure mode is understood.
+6. State the root cause in terms of behavior and contract, not just the line that crashed.
+7. For user-reported issues, capture expected behavior, actual behavior, and reproduction in durable language that survives refactors.
+8. Implement only after the failure mode is understood.
+9. When a fix plan is needed, make it a sequence of behavior-first test/fix slices through public interfaces.
 
 ## Reference Routing
 

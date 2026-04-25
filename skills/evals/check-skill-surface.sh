@@ -3,8 +3,7 @@ set -euo pipefail
 
 ROOT="${1:-/Users/me/.agents/skills}"
 
-expected=(
-  copywriting
+engineering_expected=(
   describe-pr
   designing-data-intensive-systems
   designing-with-patterns
@@ -15,7 +14,6 @@ expected=(
   improve-codebase-architecture
   improve-test-suite
   receiving-code-review
-  seo-audit
   systematic-debugging
   testing-software
   using-git-worktrees
@@ -26,25 +24,23 @@ expected=(
 )
 
 actual=()
-while IFS= read -r line; do
-  actual+=("$line")
-done < <(find "$ROOT" -maxdepth 2 -name 'SKILL.md' -print | sed 's#/SKILL.md$##' | xargs -n1 basename | sort)
+missing=()
 
-if [[ "${#actual[@]}" -ne "${#expected[@]}" ]]; then
-  echo "expected ${#expected[@]} top-level skills, found ${#actual[@]}" >&2
-  printf '%s\n' "${actual[@]}" >&2
-  exit 1
-fi
-
-for i in "${!expected[@]}"; do
-  if [[ "${expected[$i]}" != "${actual[$i]}" ]]; then
-    echo "top-level skill mismatch at index $i: expected ${expected[$i]}, found ${actual[$i]}" >&2
-    exit 1
+for skill in "${engineering_expected[@]}"; do
+  if [[ -f "$ROOT/$skill/SKILL.md" ]]; then
+    actual+=("$skill")
+  else
+    missing+=("$skill")
   fi
 done
 
-active_paths=(
-  "$ROOT/copywriting"
+if [[ "${#missing[@]}" -ne 0 ]]; then
+  echo "missing expected engineering skills:" >&2
+  printf '%s\n' "${missing[@]}" >&2
+  exit 1
+fi
+
+engineering_paths=(
   "$ROOT/describe-pr"
   "$ROOT/designing-data-intensive-systems"
   "$ROOT/designing-with-patterns"
@@ -55,7 +51,6 @@ active_paths=(
   "$ROOT/frontend-design"
   "$ROOT/grill-me"
   "$ROOT/receiving-code-review"
-  "$ROOT/seo-audit"
   "$ROOT/systematic-debugging"
   "$ROOT/testing-software"
   "$ROOT/using-git-worktrees"
@@ -66,20 +61,18 @@ active_paths=(
   "$ROOT/writing-software/"*.md
   "$ROOT/testing-software/TDD.md"
   "$ROOT/effect-ts/CLIENT_WRAPPERS.md"
-  "$ROOT/frontend-design/UI_REVIEW.md"
-  "$ROOT/copywriting/EDITING.md"
-  "$ROOT/seo-audit/SCHEMA.md"
   "$ROOT/designing-data-intensive-systems/POSTGRES_TIMESCALE.md"
   "$ROOT/writing-skills/"*.md
 )
 
-if rg -n "Claude|Anthropic|CLAUDE\\.md|superpowers:|TodoWrite|Task tool|Task\\(" "${active_paths[@]}" >/dev/null; then
+if rg -n "Claude|Anthropic|CLAUDE\\.md|superpowers:|TodoWrite|Task tool|Task\\(" "${engineering_paths[@]}" >/dev/null; then
   echo "found banned legacy terms in active skill surface" >&2
-  rg -n "Claude|Anthropic|CLAUDE\\.md|superpowers:|TodoWrite|Task tool|Task\\(" "${active_paths[@]}" >&2
+  rg -n "Claude|Anthropic|CLAUDE\\.md|superpowers:|TodoWrite|Task tool|Task\\(" "${engineering_paths[@]}" >&2
   exit 1
 fi
 
-for file in "$ROOT"/*/SKILL.md; do
+for skill in "${engineering_expected[@]}"; do
+  file="$ROOT/$skill/SKILL.md"
   line_count="$(wc -l < "$file" | tr -d ' ')"
   if [[ "$line_count" -gt 120 ]]; then
     echo "SKILL.md too long ($line_count lines) in $file" >&2

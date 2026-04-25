@@ -17,6 +17,7 @@ Tests should verify behavior through public interfaces and externally visible co
 - Writing acceptance criteria or concrete assertions
 - Evaluating whether a suite is over-mocked, brittle, or too expensive
 - Using TDD deliberately for a slice of behavior
+- Designing characterization, contract, property, state-machine, or golden tests for risky behavior
 
 ## When Not to Use
 
@@ -27,11 +28,13 @@ Tests should verify behavior through public interfaces and externally visible co
 ## Minimal Workflow
 
 1. State the behavior or risk being covered.
-2. For bug fixes and user-visible behavior changes, prefer TDD when a failing test is cheap and trustworthy.
-3. Define the observable signal through the public interface before writing the test.
-4. Decide what stays real, fake, or mocked, and do not mock the boundary you are trying to trust.
-5. For tooling, lint, or eval changes, add at least one negative or synthetic failure check when feasible; a clean-repo smoke test alone is not enough.
-6. Name the gaps that the chosen test will not prove.
+2. Choose the cheapest trustworthy proof: characterization for legacy behavior, contract tests for seams, property or state-machine tests for broad input spaces, golden tests for stable snapshots, or exploratory checks for unclear requirements.
+3. For bug fixes and user-visible behavior changes, prefer practical TDD when a failing test is cheap and trustworthy.
+4. In TDD, watch one behavior test fail for the right reason before implementation, then make the smallest change that passes it.
+5. Define the observable signal through the public interface before writing the test.
+6. Decide what stays real, fake, or mocked, and do not mock the boundary you are trying to trust.
+7. For tooling, lint, or eval changes, add at least one negative or synthetic failure check when feasible; a clean-repo smoke test alone is not enough.
+8. Name the gaps that the chosen test will not prove.
 
 ## Reference Routing
 

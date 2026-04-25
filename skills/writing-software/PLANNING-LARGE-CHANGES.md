@@ -11,12 +11,17 @@ Rules:
 - use [PLANNING-ARTIFACTS.md](PLANNING-ARTIFACTS.md) for the compact shape of each staged artifact
 - later artifacts override earlier ones; if new feedback changes branch decisions, update the right earlier stage before rewriting the tactical plan
 - choose the mode early:
+  - new feature in existing codebase: inspect current seams and callers first, design the interface from caller examples, then choose the smallest vertical slice
   - greenfield: prototype or tracer-bullet unclear workflow, UX, or integration choices first
-  - brownfield: inspect seams, invariants, migration order, and compatibility pressure first
+  - greenfield codebase: name the domain terms, choose the first deep modules, define verification commands, then build a thin tracer bullet
+  - brownfield: inspect seams, invariants, migration order, compatibility pressure, and existing decisions first
+  - complex existing codebase: map ownership, domain language, entrypoints, and verification pain before planning refactors
+  - refactor request: verify the pain in code, define in/out scope, then plan tiny behavior-preserving commits
 - if design choices are genuinely unclear, resolve them before writing implementation steps
 - keep research objective; do not mix "how it works" with "what we should build"
 - do not finalize the tactical plan with unresolved branch decisions or open questions
 - plan in vertical slices, not layer-by-layer batches
+- make each slice useful and verifiable through behavior, not just a file-edit batch
 - review the design discussion and structure outline deeply; spot-check the tactical plan and save deep review for the code
 - use inline plans for ordinary work; use a file-backed exec plan for large, multi-session, or multi-agent work
 - grill the plan before execution:
@@ -25,6 +30,7 @@ Rules:
 - make each phase independently verifiable where practical
 - for each slice, capture: goal, owner (`main` or delegated), scope/files, dependencies, verification, and commit boundary when commits are expected
 - capture durable cross-slice decisions near the top of the plan when they are unlikely to change: routes, schema shape, key models, auth boundary, third-party service boundary
+- capture domain terms and accepted module names when they guide future agents
 - for each slice, prefer acceptance criteria stated as observable behavior, not implementation steps
 - make delegation explicit when tracks are independent enough to run in parallel
 - capture decisions, interfaces, risks, and verification

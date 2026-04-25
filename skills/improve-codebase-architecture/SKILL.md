@@ -17,6 +17,7 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 - Planning codebase simplification, boundary cleanup, or test-shape improvements
 - Auditing whether a codebase aligns with the current skill system and agent-friendly practices
 - Identifying what should be preserved versus refactored before larger modernization work
+- Mapping domain language, ownership boundaries, and decisions in a complex existing codebase
 
 ## When Not to Use
 
@@ -28,14 +29,17 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 ## Minimal Workflow
 
 1. Inspect the current reality first: structure, major seams, build/test shape, and directly mentioned problem areas.
-2. Identify the highest-cost architecture and testing issues, not every possible cleanup.
-3. Preserve existing guarantees and constraints unless there is evidence they are part of the problem.
-4. Compare the current shape against simpler, deeper module boundaries with clearer public interfaces.
-5. For large repos or monorepos, split evidence gathering by subsystem and use subagents for bounded independent review tracks such as frontend, backend, shared packages, or build and CI.
-6. For repo-wide, monorepo, or multi-session reviews, write the phased plan to a local file in the target repo, typically under `docs/exec-plans/active/`, instead of leaving it only in chat.
-7. Produce a phased plan with scope, expected payoff, dependencies, and verification for each phase.
-8. Grill the phased plan before finalizing it: walk the design tree, resolve dependencies, challenge assumptions, and tighten verification.
-9. Call out what should not change, what should be deferred, and at least one rejected alternative when the tradeoff is non-trivial.
+2. Map the business/domain terms the code uses, where they conflict, and which docs or decisions already exist.
+3. Identify the highest-cost architecture and testing issues, not every possible cleanup.
+4. Preserve existing guarantees and constraints unless there is evidence they are part of the problem.
+5. Compare the current shape against simpler, deeper module boundaries with clearer public interfaces.
+6. Check agent-friendliness directly: entrypoints, local reasoning, verification commands, implicit side effects, and navigability.
+7. For large repos or monorepos, split evidence gathering by subsystem and use subagents for bounded independent review tracks such as frontend, backend, shared packages, or build and CI.
+8. For repo-wide, monorepo, or multi-session reviews, write the phased plan to a local file in the target repo, typically under `docs/exec-plans/active/`, instead of leaving it only in chat.
+9. Produce a phased plan with scope, expected payoff, dependencies, and verification for each phase.
+10. Offer to record durable terms in `CONTEXT.md` or durable tradeoffs in ADRs only when the decision will guide future work.
+11. Grill the phased plan before finalizing it: walk the design tree, resolve dependencies, challenge assumptions, and tighten verification.
+12. Call out what should not change, what should be deferred, and at least one rejected alternative when the tradeoff is non-trivial.
 
 ## Reference Routing
 
