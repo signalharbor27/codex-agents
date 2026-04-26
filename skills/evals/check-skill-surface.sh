@@ -6,7 +6,6 @@ ROOT="${1:-/Users/me/.agents/skills}"
 engineering_expected=(
   describe-pr
   designing-data-intensive-systems
-  designing-with-patterns
   effect-ts
   finishing-a-development-branch
   frontend-design
@@ -14,6 +13,8 @@ engineering_expected=(
   improve-codebase-architecture
   improve-test-suite
   receiving-code-review
+  review-and-simplify-changes
+  software-engineering-flow
   systematic-debugging
   testing-software
   using-git-worktrees
@@ -43,7 +44,6 @@ fi
 engineering_paths=(
   "$ROOT/describe-pr"
   "$ROOT/designing-data-intensive-systems"
-  "$ROOT/designing-with-patterns"
   "$ROOT/improve-codebase-architecture"
   "$ROOT/improve-test-suite"
   "$ROOT/effect-ts"
@@ -51,6 +51,8 @@ engineering_paths=(
   "$ROOT/frontend-design"
   "$ROOT/grill-me"
   "$ROOT/receiving-code-review"
+  "$ROOT/review-and-simplify-changes"
+  "$ROOT/software-engineering-flow"
   "$ROOT/systematic-debugging"
   "$ROOT/testing-software"
   "$ROOT/using-git-worktrees"
@@ -109,5 +111,78 @@ for skill in "${engineering_expected[@]}"; do
     exit 1
   fi
 done
+
+if ! rg -q "Bug flow:.*testing-software.*writing-software.*verification-before-completion" "$ROOT/software-engineering-flow/SKILL.md"; then
+  echo "software-engineering-flow missing explicit bug handoff sequence" >&2
+  exit 1
+fi
+
+if ! rg -q "Implementation stops only after focused proof passes" "$ROOT/writing-software/SKILL.md"; then
+  echo "writing-software missing implementation stop rule" >&2
+  exit 1
+fi
+
+if ! rg -q "ownership, callers, entrypoints, or verification commands are unknown" "$ROOT/writing-software/WORKFLOW-MODES.md"; then
+  echo "writing-software workflow modes missing zoom-out rule" >&2
+  exit 1
+fi
+
+if ! rg -q "Local Agent Brief" "$ROOT/writing-software/EXEC-PLAN-FILES.md"; then
+  echo "exec plan docs missing local agent brief" >&2
+  exit 1
+fi
+
+if ! rg -q "hard to reverse, surprising without context, and based on a real tradeoff" "$ROOT/writing-software/EXEC-PLAN-FILES.md"; then
+  echo "exec plan docs missing ADR promotion filter" >&2
+  exit 1
+fi
+
+if ! rg -q "CONTEXT-MAP.md" "$ROOT/writing-software/DOMAIN-MODELING.md"; then
+  echo "domain modeling docs missing context map guidance" >&2
+  exit 1
+fi
+
+if [[ ! -f "$ROOT/writing-software/TRACER-BULLETS.md" ]]; then
+  echo "writing-software missing compact tracer bullets reference" >&2
+  exit 1
+fi
+
+if ! rg -q "Every review pass must use brand-new subagents" "$ROOT/review-and-simplify-changes/SKILL.md"; then
+  echo "review-and-simplify-changes missing fresh subagent review rule" >&2
+  exit 1
+fi
+
+if ! rg -q "Architecture Alignment" "$ROOT/review-and-simplify-changes/SKILL.md"; then
+  echo "review-and-simplify-changes missing architecture alignment section" >&2
+  exit 1
+fi
+
+if ! rg -q "writing-software/COMPLEXITY.md" "$ROOT/review-and-simplify-changes/SKILL.md"; then
+  echo "review-and-simplify-changes missing complexity reference" >&2
+  exit 1
+fi
+
+if ! rg -q "improve-codebase-architecture/AGENT_FRIENDLY_REVIEW.md" "$ROOT/review-and-simplify-changes/SKILL.md"; then
+  echo "review-and-simplify-changes missing architecture-review reference" >&2
+  exit 1
+fi
+
+for skill in designing-data-intensive-systems effect-ts writing-rust; do
+  if ! rg -q "hand back to .*\`writing-software\`.*\`testing-software\`.*\`verification-before-completion\`" "$ROOT/$skill/SKILL.md"; then
+    echo "$skill missing implementation/proof handback" >&2
+    exit 1
+  fi
+done
+
+if ! rg -q "\"forbidden_initial_skills\"" "$ROOT/evals/routing-cases.json"; then
+  echo "routing cases must use forbidden_initial_skills" >&2
+  exit 1
+fi
+
+if rg -q "designing-with-patterns|\"forbidden_skills\"" "${engineering_paths[@]}" "$ROOT/evals/routing-cases.json"; then
+  echo "found stale designing-with-patterns or forbidden_skills in active routing surface" >&2
+  rg -n "designing-with-patterns|\"forbidden_skills\"" "${engineering_paths[@]}" "$ROOT/evals/routing-cases.json" >&2
+  exit 1
+fi
 
 echo "skill surface checks passed"

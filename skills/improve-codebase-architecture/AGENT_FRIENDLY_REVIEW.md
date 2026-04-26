@@ -58,6 +58,7 @@ Create or update durable docs only when useful:
 
 - add a term when it resolves a real naming ambiguity
 - add an ADR when the choice is hard to reverse, surprising without context, and based on a real tradeoff
+- for local handoff, capture current behavior, desired behavior, key interfaces, acceptance criteria, and out-of-scope in the exec plan instead of a GitHub issue
 - avoid documenting implementation trivia that will go stale faster than the code
 
 Good architecture plans should leave future agents with better names, clearer entrypoints, and fewer repeated discovery loops.

@@ -20,7 +20,7 @@ Keep the entrypoint focused on pressure; push detailed tactics into references.
 ## When Not to Use
 
 - Use `writing-software` for ordinary implementation and refactoring questions
-- Use `designing-with-patterns` for module-local architecture debates
+- Use `writing-software/INTERFACE-DESIGN.md` for module-local architecture debates
 - Do not jump to Postgres or Timescale specifics before workload shape is clear
 
 ## Minimal Workflow
@@ -29,6 +29,7 @@ Keep the entrypoint focused on pressure; push detailed tactics into references.
 2. Name the system roles involved.
 3. Compare 2-3 viable shapes, including a simpler option.
 4. State what should be benchmarked or tested next.
+5. For implementation, hand back to `writing-software` when generic change shape matters, `testing-software` for proof choice, and `verification-before-completion` before claiming done.
 
 ## Reference Routing
 

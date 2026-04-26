@@ -29,6 +29,7 @@ It should balance visual quality, usability, and implementation realism.
 2. Choose a clear visual or UX direction.
 3. Keep implementation aligned with the existing design system when one exists.
 4. Verify the result works on desktop and mobile.
+5. Use `testing-software` for proof choice beyond visual checks and `verification-before-completion` before claiming done.
 
 ## Reference Routing
 

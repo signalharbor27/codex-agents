@@ -29,6 +29,7 @@ Keep the entrypoint small and load only the references needed for the active tas
 1. State the active Effect boundary: service, runtime, wrapper, stream, or UI integration.
 2. Keep interface shape and error strategy consistent with the rest of the system.
 3. Load only the reference files needed for that boundary.
+4. For implementation, hand back to `writing-software` when generic change shape matters, `testing-software` for proof choice, and `verification-before-completion` before claiming done.
 
 ## Reference Routing
 

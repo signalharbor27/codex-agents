@@ -23,7 +23,7 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 
 - Ordinary feature implementation or local refactors
 - Root-cause debugging of one failure path
-- Narrow pattern debates better handled by `designing-with-patterns`
+- Narrow pattern debates better handled by `writing-software/INTERFACE-DESIGN.md`
 - Storage or distributed-systems reviews driven mainly by workload shape
 
 ## Minimal Workflow

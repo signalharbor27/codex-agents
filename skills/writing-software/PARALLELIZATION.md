@@ -1,6 +1,6 @@
 Read this when the work is large enough that bounded subagents can preserve context or unblock independent tracks.
 
-Use subagents for isolation and parallelism, not for ceremony.
+Use subagents for isolation and parallelism when available, not for ceremony. If subagents are unavailable, parallelize independent reads/checks with local tools where possible and keep synthesis on the main thread.
 
 Good fits:
 - context-heavy research that can run while the main thread plans

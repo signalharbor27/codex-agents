@@ -28,6 +28,7 @@ Keep the entrypoint focused on pressure and route idioms to references.
 2. State the Rust-specific pressure.
 3. Prefer the simplest safe shape that keeps invariants obvious.
 4. Name the soundness, ergonomics, and API-stability tradeoffs.
+5. For implementation, hand back to `writing-software` when generic change shape matters, `testing-software` for proof choice, and `verification-before-completion` before claiming done.
 
 ## Reference Routing
 

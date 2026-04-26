@@ -71,6 +71,7 @@ Prepare for change. Decisions will be wrong.
 ### Tracer Bullets
 
 Build end-to-end skeleton first, then flesh out.
+For software work here, a tracer bullet must use the real entrypoint, real integration boundary, minimal persistence/state when relevant, and one verification command.
 
 **Unlike prototypes**:
 - Prototypes are throwaway

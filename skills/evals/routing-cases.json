@@ -3,7 +3,6 @@
   "engineering_skills": [
     "describe-pr",
     "designing-data-intensive-systems",
-    "designing-with-patterns",
     "effect-ts",
     "finishing-a-development-branch",
     "frontend-design",
@@ -11,6 +10,8 @@
     "improve-codebase-architecture",
     "improve-test-suite",
     "receiving-code-review",
+    "review-and-simplify-changes",
+    "software-engineering-flow",
     "systematic-debugging",
     "testing-software",
     "using-git-worktrees",
@@ -24,133 +25,154 @@
       "id": "grill-a-plan",
       "prompt": "Grill me on this implementation plan until the risky branch decisions and verification gaps are fully resolved.",
       "expected_skill": "grill-me",
-      "forbidden_skills": ["writing-software", "verification-before-completion"]
+      "forbidden_initial_skills": ["writing-software", "verification-before-completion"]
     },
     {
       "id": "simple-bugfix-shape",
       "prompt": "Refactor this handler to remove duplication and make the error semantics clearer.",
       "expected_skill": "writing-software",
-      "forbidden_skills": ["testing-software", "systematic-debugging", "designing-with-patterns"]
+      "forbidden_initial_skills": ["testing-software", "systematic-debugging"]
     },
     {
       "id": "explicit-tdd-request",
       "prompt": "I want to fix this checkout bug with TDD. Start with the most important behavior slice.",
       "expected_skill": "testing-software",
-      "forbidden_skills": ["writing-software", "systematic-debugging"]
+      "forbidden_initial_skills": ["writing-software", "systematic-debugging"]
     },
     {
       "id": "cheap-bugfix-tdd-default",
       "prompt": "This regression changes the API response body. The endpoint is covered by a fast integration test, and I want the safest fix.",
       "expected_skill": "testing-software",
-      "forbidden_skills": ["systematic-debugging"]
+      "forbidden_initial_skills": ["systematic-debugging"]
     },
     {
       "id": "unknown-flaky-failure",
       "prompt": "This test fails only in CI and I do not understand why yet.",
       "expected_skill": "systematic-debugging",
-      "forbidden_skills": ["testing-software", "writing-software"]
+      "forbidden_initial_skills": ["testing-software", "writing-software"]
     },
     {
       "id": "pattern-debate",
       "prompt": "Should this plugin system stay simple, or should we introduce a strategy pattern?",
-      "expected_skill": "designing-with-patterns",
-      "forbidden_skills": ["writing-software"]
+      "expected_skill": "writing-software",
+      "forbidden_initial_skills": ["testing-software"]
     },
     {
       "id": "repo_architecture_review",
       "prompt": "Critically review this codebase and create a phased plan to simplify the architecture, make it more agent friendly, and improve testing at the right seams.",
       "expected_skill": "improve-codebase-architecture",
-      "forbidden_skills": ["writing-software", "designing-with-patterns", "testing-software"]
+      "forbidden_initial_skills": ["writing-software", "testing-software"]
     },
     {
       "id": "test_suite_review",
       "prompt": "Critically review this repo's tests, remove bad or redundant coverage, suggest better seam-level tests, and create a phased plan aligned with behavior-first TDD.",
       "expected_skill": "improve-test-suite",
-      "forbidden_skills": ["testing-software", "systematic-debugging", "writing-software"]
+      "forbidden_initial_skills": ["testing-software", "systematic-debugging", "writing-software"]
+    },
+    {
+      "id": "repo_cleanup_quality",
+      "prompt": "Clean up this codebase: deduplicate code, remove unused code, fix weak types, untangle cycles, remove legacy fallbacks and AI slop, then implement high-confidence recommendations.",
+      "expected_skill": "review-and-simplify-changes",
+      "forbidden_initial_skills": ["improve-codebase-architecture"]
     },
     {
       "id": "data-workload",
       "prompt": "We ingest append-only events and query them by time range; should we keep plain Postgres or move toward Timescale?",
       "expected_skill": "designing-data-intensive-systems",
-      "forbidden_skills": ["writing-software"]
+      "forbidden_initial_skills": ["writing-software"],
+      "secondary_skills_allowed": ["writing-software", "testing-software", "verification-before-completion"]
     },
     {
       "id": "effect-wrapper",
       "prompt": "Wrap this third-party billing SDK in Effect without leaking the raw client everywhere.",
       "expected_skill": "effect-ts",
-      "forbidden_skills": ["writing-software", "testing-software"]
+      "forbidden_initial_skills": ["writing-software", "testing-software"],
+      "secondary_skills_allowed": ["writing-software", "testing-software", "verification-before-completion"]
     },
     {
       "id": "rust-api",
       "prompt": "This Rust API keeps borrowing data too long. I need a cleaner ownership boundary.",
       "expected_skill": "writing-rust",
-      "forbidden_skills": ["writing-software"]
+      "forbidden_initial_skills": ["writing-software"],
+      "secondary_skills_allowed": ["writing-software", "testing-software", "verification-before-completion"]
     },
     {
       "id": "ui-build",
       "prompt": "Build a striking React marketing page that still feels production-ready on mobile.",
       "expected_skill": "frontend-design",
-      "forbidden_skills": ["writing-software", "seo-audit"]
+      "forbidden_initial_skills": ["writing-software", "seo-audit"],
+      "secondary_skills_allowed": ["testing-software", "verification-before-completion"]
     },
     {
       "id": "describe-pr",
       "prompt": "Write a clear PR description that explains the problem, the user-facing changes, the implementation, and how to verify it.",
       "expected_skill": "describe-pr",
-      "forbidden_skills": ["writing-software", "verification-before-completion"]
+      "forbidden_initial_skills": ["writing-software"],
+      "secondary_skills_allowed": ["verification-before-completion"]
     },
     {
       "id": "review-feedback",
       "prompt": "I got code review feedback and I am not sure whether it is technically correct for this codebase.",
       "expected_skill": "receiving-code-review",
-      "forbidden_skills": ["writing-software", "verification-before-completion"]
+      "forbidden_initial_skills": ["writing-software", "verification-before-completion"]
     },
     {
       "id": "verify-completion",
       "prompt": "Before I say this fix is done, what do I need to run to prove it?",
       "expected_skill": "verification-before-completion",
-      "forbidden_skills": ["testing-software", "writing-software"]
+      "forbidden_initial_skills": ["testing-software", "writing-software"]
     },
     {
       "id": "worktree-isolation",
       "prompt": "This refactor is risky and I want a separate branch workspace before touching the current tree.",
       "expected_skill": "using-git-worktrees",
-      "forbidden_skills": ["writing-software"]
+      "forbidden_initial_skills": ["writing-software"]
     },
     {
       "id": "non_trivial_feature_plan",
       "prompt": "Add a new admin export workflow across the API, queue worker, and dashboard UI. Start by inspecting the repo and give me a short plan before editing.",
       "expected_skill": "writing-software",
-      "forbidden_skills": ["testing-software"]
+      "forbidden_initial_skills": ["testing-software"],
+      "secondary_skills_allowed": ["testing-software", "verification-before-completion"]
     },
     {
       "id": "parallel_tracks_feature",
       "prompt": "Implement a larger feature with one backend slice, one docs slice, and one test-fixture slice; preserve context and split independent work where it makes sense.",
       "expected_skill": "writing-software",
-      "forbidden_skills": ["using-git-worktrees"]
+      "forbidden_initial_skills": ["using-git-worktrees"]
     },
     {
       "id": "greenfield_prototype_path",
       "prompt": "This is a new internal workflow tool with unclear UX and integration shape. Inspect constraints, then prototype the thinnest useful path before locking the implementation plan.",
       "expected_skill": "writing-software",
-      "forbidden_skills": ["designing-with-patterns", "testing-software"]
+      "forbidden_initial_skills": ["testing-software"],
+      "secondary_skills_allowed": ["testing-software", "verification-before-completion"]
     },
     {
       "id": "file_backed_exec_plan",
       "prompt": "This will take multiple sessions and several agents. Inspect first, then create a durable exec plan in the repo before implementing.",
       "expected_skill": "writing-software",
-      "forbidden_skills": ["testing-software"]
+      "forbidden_initial_skills": ["testing-software"],
+      "secondary_skills_allowed": ["testing-software", "verification-before-completion"]
     },
     {
       "id": "finish-branch",
       "prompt": "The branch is done and I need to decide whether to merge it, open a PR, or keep it around.",
       "expected_skill": "finishing-a-development-branch",
-      "forbidden_skills": ["using-git-worktrees", "verification-before-completion"]
+      "forbidden_initial_skills": ["using-git-worktrees"],
+      "secondary_skills_allowed": ["verification-before-completion", "describe-pr"]
+    },
+    {
+      "id": "e2e_review_feedback_to_finish",
+      "prompt": "Address this review feedback, implement the valid changes, prove the branch is ready, describe the PR, and finish the branch workflow.",
+      "expected_sequence": ["receiving-code-review", "writing-software", "verification-before-completion", "describe-pr", "finishing-a-development-branch"],
+      "forbidden_initial_skills": ["describe-pr", "finishing-a-development-branch"]
     },
     {
       "id": "skill-authoring",
       "prompt": "Create a new skill and keep the entrypoint small while moving heavy material into references.",
       "expected_skill": "writing-skills",
-      "forbidden_skills": ["writing-software"]
+      "forbidden_initial_skills": ["writing-software"]
     }
   ]
 }

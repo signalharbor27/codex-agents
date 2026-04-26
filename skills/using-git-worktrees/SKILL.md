@@ -27,7 +27,7 @@ This is optional setup, not a universal prerequisite.
 2. Prefer a repo-provided worktree or bootstrap script when one exists.
 3. Prefer an existing `.worktrees/` or `worktrees/` directory when present.
 4. Verify project-local worktree directories are ignored before using them.
-5. Collect the branch, path, and setup command explicitly before creating the worktree.
+5. Infer routine branch, path, and setup choices from repo conventions; ask only when missing, destructive, shared-state, or scope-changing.
 6. Create the worktree and report the location.
 7. If baseline checks fail, report the state before proceeding.
 

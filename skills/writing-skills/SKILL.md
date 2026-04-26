@@ -29,10 +29,12 @@ Keep the entrypoint short, the description trigger-focused, and the deep materia
 2. Write the description for routing, not for workflow narration.
 3. Preserve existing guarantees when replacing a skill, script, or check, unless you explicitly retire one and justify it.
 4. Keep the entrypoint small and move heavy material into references.
-5. If the workflow has distinct stages, use explicit control flow and stage docs instead of one monolithic prompt blob.
-6. Avoid skills that depend on magic words to trigger critical behavior; make the important steps explicit in the workflow.
-7. Test the routing and output shape with representative prompts.
-8. Merge or delete overlapping skills instead of preserving every niche router.
+5. Follow GPT-5.5 prompt guidance: define outcomes, success evidence, constraints, and output shape; avoid process-heavy scripts unless order is required.
+6. Use strict absolutes only for real invariants: safety, permissions, honesty, verification, output contracts, and explicit user rules.
+7. If the workflow has distinct stages, use explicit control flow and stage docs instead of one monolithic prompt blob.
+8. Avoid skills that depend on magic words to trigger critical behavior; make the important steps explicit in the workflow.
+9. Test the routing and output shape with representative prompts.
+10. Merge or delete overlapping skills instead of preserving every niche router.
 
 ## Reference Routing
 
@@ -46,6 +48,7 @@ Keep the entrypoint short, the description trigger-focused, and the deep materia
 - Keeping every niche router instead of merging overlapping skills
 - Giant `SKILL.md` files that should have become references
 - Monolithic multi-stage prompts that exceed the instruction budget and skip critical steps unpredictably
+- Process-heavy instructions that replace clear outcomes and stop conditions
 - Skills that only work when the user knows special phrasing to force the right sequence
 - One artifact trying to do factual research, design alignment, structure, and tactical execution all at once
 - Preserving stale platform-specific assumptions in supposedly portable skills

@@ -40,4 +40,4 @@ Rules:
 - prefer stable contracts over file-by-file guesswork
 - verify user corrections against code before updating the plan
 - do not let a giant plan file become the main review surface; plans align the work, code review proves the work
-- after drafting the plan, run [CHALLENGE-MODE.md](CHALLENGE-MODE.md) and revise before execution
+- after drafting a risky, large, or ambiguous plan, run [CHALLENGE-MODE.md](CHALLENGE-MODE.md) and revise before execution

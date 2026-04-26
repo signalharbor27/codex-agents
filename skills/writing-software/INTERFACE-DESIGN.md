@@ -11,6 +11,12 @@ Compare materially different designs:
 - one flexibility-oriented interface only if future variation is real
 - one existing-code-compatible option when migration pressure matters
 
+Use pattern vocabulary only after pressure is proven:
+- construction pressure: factory or builder only if setup/product-family variation is real
+- interface mismatch: adapter, facade, or wrapper only if it hides real external or subsystem complexity
+- behavior variation: strategy, command, or state only if conditionals/policies are recurring
+- composition before inheritance unless substitutability is stable and useful
+
 Judge them on:
 - method count and parameter complexity
 - what the interface hides internally

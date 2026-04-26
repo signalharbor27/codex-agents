@@ -5,6 +5,9 @@ Use a local exec-plan file for:
 - multi-agent work
 - repo-wide review or migration work
 - plans likely to survive compaction or handoff
+- work with 3+ slices, delegation, schema/API decisions, or expected resume
+
+Otherwise keep the plan inline.
 
 Create the plan file in the target repo you are working on, not in this skills repo.
 
@@ -20,6 +23,7 @@ Minimum contents:
 - scope
 - current findings
 - durable decisions
+- local agent brief when another session or subagent must resume: current behavior, desired behavior, key interfaces, acceptance criteria, out-of-scope
 - slices with owner, scope, dependencies, verification, and optional commit boundary
 - current status
 - next slice
@@ -32,6 +36,8 @@ Rules:
 - keep it terse and execution-oriented
 - do not turn it into a giant design essay
 - make it good enough for a fresh session to resume safely
+- do not couple local briefs to file paths or line numbers unless the task is explicitly about those files
+- promote a durable decision to `docs/adr/` only when it is hard to reverse, surprising without context, and based on a real tradeoff; otherwise keep it in the plan
 
 Minimal template:
 
@@ -48,6 +54,13 @@ Minimal template:
 
 ## Durable Decisions
 - decisions that shape execution
+
+## Local Agent Brief
+- current behavior:
+- desired behavior:
+- key interfaces:
+- acceptance criteria:
+- out of scope:
 
 ## Slices
 

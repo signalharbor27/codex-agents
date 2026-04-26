@@ -11,6 +11,7 @@ Use this as the default software-engineering skill when no narrower skill domina
 It should keep changes small, reversible, and easy to reason about, with research and short planning made explicit for non-trivial work.
 Use a more exploratory path for greenfield work and a more conservative path for brownfield work.
 For larger unclear work, separate fact-finding, design alignment, structure, and tactical planning instead of collapsing them into one monolithic plan step.
+Use decision rules, not process scripts: make the key outcome, risk, and verification choices explicit, then let the implementation path stay efficient.
 
 ## When to Use
 
@@ -27,17 +28,20 @@ For larger unclear work, separate fact-finding, design alignment, structure, and
 - Use `testing-software` for test selection or suite design
 - Use `systematic-debugging` for root-cause investigation
 - Use `writing-rust` for Rust-specific API or ownership decisions
-- Use `designing-with-patterns` for pattern-vs-no-pattern debates
+- Use `INTERFACE-DESIGN.md` for pattern-vs-no-pattern or module-shape debates
 - Use `designing-data-intensive-systems` for workload, storage, or consistency questions
 
 ## Minimal Workflow
 
-1. Read directly mentioned files first, then inspect the current code, callers, and local conventions.
+1. After required routing skills are loaded, read directly mentioned files first, then inspect the current code, callers, and local conventions.
 2. State the real problem and the risk boundary.
 3. Pick the path explicitly:
    - New feature: inspect callers and current seams, design the public interface from caller examples, then slice vertically.
    - Greenfield: name the domain, sketch the first deep modules, and build a tracer bullet before locking architecture.
    - Brownfield: inspect existing seams, invariants, callers, migrations, and compatibility pressure before proposing change.
+   - Existing complex codebase: find characterization seams, preserve behavior, then make the smallest safe change.
+   - New feature in an existing complex codebase: use existing-complex-codebase safety posture, then new-change vertical slicing.
+   - Unfamiliar area: zoom out first when ownership, callers, entrypoints, or verification commands are unknown.
    - Refactor: verify the pain in code, define in/out scope, and plan tiny behavior-preserving steps.
 4. For non-trivial work, write a short explicit plan before editing: current-state findings, durable decisions, vertical slices, and verification.
 5. For large or ambiguous work, split planning into staged artifacts:
@@ -46,17 +50,18 @@ For larger unclear work, separate fact-finding, design alignment, structure, and
    - design discussion: decisions and patterns to follow
    - structure outline: vertical slices and checkpoints
    - tactical plan: execution details only after the prior choices are stable
-6. For interface-heavy work, compare at least two materially different module shapes before choosing; include caller usage, hidden complexity, and misuse risk.
+6. For material interface choices, compare at least two different module shapes before choosing; include caller usage, hidden complexity, and misuse risk.
 7. Favor deep modules: small, stable interfaces that hide real complexity and reduce caller knowledge. Delete or inline shallow pass-through modules unless they protect a real seam.
-8. Grill every real plan before execution: challenge assumptions, dependency order, verification gaps, and rejected alternatives. Scale the intensity to the task size and risk.
-9. For large, multi-session, or multi-agent work, create or update a local exec-plan file in the target repo, typically under `docs/exec-plans/active/`, instead of relying on chat alone.
-10. Decide subagent fit: what stays on the main thread, what can be delegated, which tracks are parallel, and how they will integrate.
+8. For risky, large, or ambiguous plans, run challenge mode before execution. For small plans, do a one-line assumption and verification check.
+9. For work with 3+ slices, delegation, schema/API decisions, compaction risk, or expected resume, create or update a local exec-plan file in the target repo.
+10. Delegate only independent research, test, docs, fixture, or disjoint code tracks; the main thread owns synthesis, integration, edits when scopes overlap, and verification.
 11. When replacing an existing script, check, or code path, preserve current guarantees unless you intentionally remove one and justify it.
 12. Choose the smallest reversible change that improves the problem.
 13. If the task includes commits or a branch workflow, group work into logical commits along slice boundaries instead of one large mixed commit.
 14. Name at least one rejected alternative when the choice is non-trivial.
 15. Define what must be verified before claiming the shape is sound.
-16. Read the code before trusting the change; plan review helps alignment but does not replace code review.
+16. Implementation stops only after focused proof passes, a blocker is recorded, or approval is required.
+17. Read the code before trusting the change; plan review helps alignment but does not replace code review.
 
 ## Reference Routing
 
@@ -66,10 +71,18 @@ For larger unclear work, separate fact-finding, design alignment, structure, and
 - Read [SMELLS.md](SMELLS.md) to classify the refactor pressure.
 - Read [REFACTORINGS.md](REFACTORINGS.md) for concrete behavior-preserving moves.
 - Read [PLANNING-LARGE-CHANGES.md](PLANNING-LARGE-CHANGES.md) for vertical-slice planning.
+- Read [WORKFLOW-MODES.md](WORKFLOW-MODES.md) to choose behavior for new changes, new codebases, and existing complex codebases.
+- Read [LEGACY-CODE.md](LEGACY-CODE.md) when safe change depends on seams, characterization tests, or dependency-breaking.
+- Read [DOMAIN-MODELING.md](DOMAIN-MODELING.md) when terms, ownership, bounded contexts, or aggregates are unclear.
+- Read [API-COMPATIBILITY.md](API-COMPATIBILITY.md) for public APIs, versioning, idempotency, pagination, and error contracts.
+- Read [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) when timeouts, retries, backpressure, health checks, or observability matter.
+- Read [SECURITY-DESIGN.md](SECURITY-DESIGN.md) when trust boundaries, auth, secrets, or attacker paths matter.
+- Read [DELIVERY.md](DELIVERY.md) for deploy gates, rollback, migrations, and small-batch delivery.
 - Read [PLANNING-ARTIFACTS.md](PLANNING-ARTIFACTS.md) when the work needs staged research/design/outline/plan artifacts instead of one short inline plan.
 - Read [EXEC-PLAN-FILES.md](EXEC-PLAN-FILES.md) when the work needs a durable in-repo plan across sessions or agents.
 - Read [PARALLELIZATION.md](PARALLELIZATION.md) when a plan may benefit from subagents or split execution.
-- Read [PRACTICES.md](PRACTICES.md) for tracer bullets, prototypes, reversibility, and early product-shape learning.
+- Read [TRACER-BULLETS.md](TRACER-BULLETS.md) for greenfield or large-feature first slices.
+- Read [PRACTICES.md](PRACTICES.md) for prototypes, reversibility, and broader engineering habits.
 - Read [REFACTOR-PLANNING.md](REFACTOR-PLANNING.md) for scoped refactor plans.
 - Read [INTERFACE-DESIGN.md](INTERFACE-DESIGN.md) for API and module shape decisions.
 - Read [TYPESCRIPT-ADVANCED.md](TYPESCRIPT-ADVANCED.md) when advanced type design is central to the change.
@@ -92,3 +105,4 @@ For larger unclear work, separate fact-finding, design alignment, structure, and
 - Plans that script every tiny action instead of making key decisions explicit
 - Shallow modules and noisy interfaces where a deeper module boundary would simplify the change
 - Interface changes that optimize internals while making callers harder to reason about
+- Editing unfamiliar code before zooming out to map ownership, callers, entrypoints, and proof

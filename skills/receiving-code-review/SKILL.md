@@ -23,7 +23,7 @@ The goal is technical correctness for this codebase.
 
 ## Minimal Workflow
 
-1. Restate or clarify the technical requirement.
+1. Infer routine intent from the review comment; ask only for missing acceptance criteria, destructive/live/shared-state, or scope changes.
 2. Verify it against the actual codebase.
 3. Apply, reject, or escalate with technical reasoning.
 4. Test changes before closing the loop.
