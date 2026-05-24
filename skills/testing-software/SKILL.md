@@ -31,7 +31,7 @@ Producer standard: tests shaped by this skill should not create new `improve-tes
 1. State the behavior or risk being covered.
 2. Choose the cheapest trustworthy proof: characterization for legacy behavior, contract tests for seams, property or state-machine tests for broad input spaces, golden tests for stable snapshots, or exploratory checks for unclear requirements.
 3. For bug fixes and user-visible behavior changes, prefer practical TDD when a failing test is cheap and trustworthy.
-4. In TDD, watch one behavior test fail for the right reason before implementation, then make the smallest change that passes it.
+4. In TDD, use vertical slices: watch one behavior test fail for the right reason, make the smallest change that passes it, then repeat. Do not write all tests first and all implementation later.
 5. Define the observable signal through the public interface before writing the test.
 6. Decide what stays real, fake, or mocked, and do not mock the boundary you are trying to trust.
 7. Apply the test no-regression gate: prefer behavior specs that survive refactors, avoid internal call choreography, avoid duplicate higher-cost coverage, and keep feedback fast enough to trust.
@@ -53,6 +53,7 @@ Producer standard: tests shaped by this skill should not create new `improve-tes
 - Mocking away the boundary that fails in production
 - Avoiding TDD even though a cheap failing test would make the change safer and clearer
 - Using TDD as a ritual instead of a tool for a specific behavior slice
+- Horizontal TDD: writing all tests first, then all implementation, before learning from each slice
 - Tests that assert call choreography, private helpers, or internal data shape instead of observable behavior
 - Tests that query around the interface to prove a side effect through the wrong seam
 - Proving only the happy path when the change is supposed to catch bad states

@@ -9,6 +9,7 @@ description: Create or revise skills with clear routing, small entrypoints, and 
 
 Use this skill to design skills as routers first and references second.
 Keep the entrypoint short, the description trigger-focused, and the deep material offloaded into references.
+Treat the `description` as the only routing signal available before the skill loads: it must say what the skill does and when to use it.
 
 ## When to Use
 
@@ -28,7 +29,7 @@ Keep the entrypoint short, the description trigger-focused, and the deep materia
 1. Decide whether the capability deserves a top-level router or only a reference.
 2. Write the description for routing, not for workflow narration.
 3. Preserve existing guarantees when replacing a skill, script, or check, unless you explicitly retire one and justify it.
-4. Keep the entrypoint small and move heavy material into references.
+4. Keep the entrypoint small, ideally near 100 lines for new skills when practical, and move heavy material into references.
 5. Follow GPT-5.5 prompt guidance: define outcomes, success evidence, constraints, and output shape; avoid process-heavy scripts unless order is required.
 6. Use strict absolutes only for real invariants: safety, permissions, honesty, verification, output contracts, and explicit user rules.
 7. If the workflow has distinct stages, use explicit control flow and stage docs instead of one monolithic prompt blob.

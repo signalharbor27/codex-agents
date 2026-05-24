@@ -26,15 +26,17 @@ The goal is evidence, not activity.
 
 ## Minimal Workflow
 
-1. Reproduce and read the actual failure carefully.
-2. Gather evidence at the relevant boundary or call path.
-3. Check recent relevant changes when a regression is plausible.
-4. Compare working and broken cases.
-5. Form one concrete hypothesis and test it minimally.
-6. State the root cause in terms of behavior and contract, not just the line that crashed.
-7. For user-reported issues, capture expected behavior, actual behavior, and reproduction in durable language that survives refactors.
-8. Implement only after the failure mode is understood.
-9. When a fix plan is needed, make it a sequence of behavior-first test/fix slices through public interfaces.
+1. Build the fastest trustworthy pass/fail loop first: focused test, CLI/curl script, browser script, replayed trace, throwaway harness, fuzz/property loop, or bisection harness.
+2. Reproduce and read the actual failure carefully. If no loop can be built, say what was tried and ask for the missing artifact, access, or permission before hypothesizing.
+3. Sharpen the loop until it is specific, deterministic enough, and cheap enough to guide changes; for flakes, raise the reproduction rate with repetition, stress, seeds, or timing probes.
+4. Gather evidence at the relevant boundary or call path.
+5. Check relevant domain/decision docs and recent changes when a regression is plausible.
+6. Compare working and broken cases.
+7. Form one concrete hypothesis and test it minimally.
+8. State the root cause in terms of behavior and contract, not just the line that crashed.
+9. For user-reported issues, capture expected behavior, actual behavior, and reproduction in durable language that survives refactors.
+10. Implement only after the failure mode is understood.
+11. When a fix plan is needed, make it a sequence of behavior-first test/fix slices through public interfaces.
 
 ## Reference Routing
 
@@ -44,8 +46,10 @@ The goal is evidence, not activity.
 
 ## Failure Modes
 
+- Staring at code or proposing fixes before a reproducible feedback loop exists
 - Proposing fixes before identifying the failing boundary
 - Ignoring recent change history when the breakage may be a regression
 - Bundling several speculative changes into one test
 - Treating repeated bad hypotheses as proof of an architectural flaw
 - Turning mitigation work into a rewrite without evidence
+- Leaving debug instrumentation or throwaway harnesses behind after verification

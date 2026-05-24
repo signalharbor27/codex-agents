@@ -38,16 +38,20 @@ For GPT-5.5, keep prompts outcome-first: name the goal, success evidence, constr
 - Bug flow: root cause first when unknown -> `testing-software` when proof shape matters -> `writing-software` only for non-trivial change shape -> `verification-before-completion` before handoff. Ask Q only for missing repro/expected behavior, destructive/live actions, or scope changes.
 - Test strategy, flaky tests, coverage shape: `testing-software`
 - Implementation/refactor/change shape: `writing-software`
+- Skill creation, skill editing, or routing drift: `writing-skills`
 - New codebase, existing complex codebase, or long-running change: `writing-software`, then read its `WORKFLOW-MODES.md`
 - New feature in an existing complex codebase: use existing-complex-codebase safety posture, then new-change vertical slicing.
 - Pattern vs no-pattern or interface-shape debate: `writing-software`, then `INTERFACE-DESIGN.md`
+- Plan/design pressure-test or explicit "grill me": `grill-me`
 - Storage, distributed systems, consistency, retention, recovery: `designing-data-intensive-systems`
 - Rust ownership, traits, async, errors, unsafe: `writing-rust`
 - Effect code: `effect-ts`
 - Review feedback: `receiving-code-review`
-- Diff quality/simplification review: `review-and-simplify-changes`
+- Post-commit, PR, branch, or WIP quality/simplification review: `review-and-simplify-changes`
 - Codebase/test-suite audit: `improve-codebase-architecture` or `improve-test-suite`
 - Branch isolation: `using-git-worktrees`
+- Completed branch integration choice: `finishing-a-development-branch`
+- PR description after code is in place: `describe-pr`
 - Final proof before claiming done: `verification-before-completion`
 
 ## Failure Modes

@@ -32,15 +32,16 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 2. Map the business/domain terms the code uses, where they conflict, and which docs or decisions already exist.
 3. Identify the highest-cost architecture and testing issues, not every possible cleanup.
 4. Preserve existing guarantees and constraints unless there is evidence they are part of the problem.
-5. Compare the current shape against simpler, deeper module boundaries with clearer public interfaces.
-6. Check agent-friendliness directly: entrypoints, local reasoning, verification commands, implicit side effects, and navigability.
-7. Classify findings as pre-existing debt, regression from the current change, preventable by `software-engineering-flow`, preventable by `writing-software`, preventable by `testing-software`, or repo-doc/memory candidate.
-8. For large repos or monorepos, split evidence gathering by subsystem and use subagents for bounded independent review tracks such as frontend, backend, shared packages, or build and CI.
-9. For repo-wide, monorepo, or multi-session reviews, write the phased plan to a local file in the target repo, typically under `docs/exec-plans/active/`, instead of leaving it only in chat.
-10. Produce a phased plan with scope, expected payoff, dependencies, and verification for each phase.
-11. Offer to record durable terms in `CONTEXT.md` or durable tradeoffs in ADRs only when the decision will guide future work.
-12. Grill the phased plan before finalizing it: walk the design tree, resolve dependencies, challenge assumptions, and tighten verification.
-13. Call out what should not change, what should be deferred, and at least one rejected alternative when the tradeoff is non-trivial.
+5. Compare the current shape against simpler, deeper modules with clearer interfaces; use module/interface/seam/depth/leverage/locality vocabulary and the deletion test.
+6. Treat a one-adapter seam as hypothetical unless it hides real external complexity, policy variation, or a second adapter such as tests.
+7. Check agent-friendliness directly: entrypoints, local reasoning, verification commands, implicit side effects, and navigability.
+8. Classify findings as pre-existing debt, regression from the current change, preventable by `software-engineering-flow`, preventable by `writing-software`, preventable by `testing-software`, or repo-doc/memory candidate.
+9. For large repos or monorepos, split evidence gathering by subsystem and use subagents for bounded independent review tracks such as frontend, backend, shared packages, or build and CI.
+10. For repo-wide, monorepo, or multi-session reviews, write the phased plan to a local file in the target repo, typically under `docs/exec-plans/active/`, instead of leaving it only in chat.
+11. Produce a phased plan with scope, expected payoff, dependencies, and verification for each phase.
+12. Offer to record durable terms in `CONTEXT.md` or durable tradeoffs in ADRs only when the decision will guide future work.
+13. Grill the phased plan before finalizing it: walk the design tree, resolve dependencies, challenge assumptions, and tighten verification.
+14. Call out what should not change, what should be deferred, and at least one rejected alternative when the tradeoff is non-trivial.
 
 ## Reference Routing
 

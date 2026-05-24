@@ -34,7 +34,7 @@ Producer standard: code shaped by this skill should not create new findings for 
 
 ## Minimal Workflow
 
-1. After required routing skills are loaded, read directly mentioned files first, then inspect the current code, callers, and local conventions.
+1. After required routing skills are loaded, read directly mentioned files first, then inspect the current code, callers, local conventions, and relevant domain/decision docs such as `CONTEXT.md`, `CONTEXT-MAP.md`, or ADRs when present.
 2. State the real problem and the risk boundary.
 3. Pick the path explicitly:
    - New feature: inspect callers and current seams, design the public interface from caller examples, then slice vertically.

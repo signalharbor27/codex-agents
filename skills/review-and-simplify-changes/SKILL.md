@@ -1,19 +1,21 @@
 ---
 name: review-and-simplify-changes
-description: "Use when the user asks to review, simplify, clean up, refactor, deduplicate, de-slop, remove dead code, improve code quality, or run a repo-wide cleanup. Covers scoped diffs and broad codebase cleanup with parallel agents."
+description: "Review and simplify committed, PR, branch, or WIP changes with eight fresh read-only review tracks every time. Use when the user asks to review, clean up, de-slop, deduplicate, remove dead code, or improve code quality after changes are made."
 ---
 
 # Review and Simplify Changes
 
 ## Overview
 
-Use this to improve code quality without speculative churn. Choose the smallest mode that matches the request.
+Use this after a commit, PR, branch, or WIP diff to improve code quality without speculative churn.
+Every run uses the same eight fresh read-only review tracks; do not select a smaller review mode.
 
 ## When to Use
 
-- Reviewing or simplifying a git diff, explicit files, or recent changes
-- Cleaning up a whole repo or subsystem for duplication, weak types, dead code, cycles, fallbacks, comments, or code quality
-- Applying high-confidence, behavior-preserving cleanup and then validating it
+- Reviewing or simplifying changes after a commit, PR, branch, or work-in-progress diff
+- Checking changed code against documented standards and an originating issue, PRD, or spec
+- Finding duplication, weak types, dead code, cycles, fallbacks, comments, or code quality issues introduced or exposed by the change
+- Applying high-confidence, behavior-preserving cleanup when the user asks for fixes, then validating it
 
 ## When Not to Use
 
@@ -24,13 +26,11 @@ Use this to improve code quality without speculative churn. Choose the smallest 
 ## Minimal Workflow
 
 1. Load `software-engineering-flow`, then this skill. Load narrower skills as needed: `writing-software`, `testing-software`, `effect-ts`, `writing-rust`, and `verification-before-completion`.
-2. Select mode:
-   - `scoped-review`: diff or named files, review-only unless user asks fixes
-   - `scoped-fix`: diff or named files, apply high-confidence safe fixes
-   - `repo-cleanup`: explicit broad cleanup/codebase-quality request
-3. Read repo-local `AGENTS.md`, docs, package scripts, and conventions before judging.
-4. State scope, mode, allowed side effects, validation target, and whether subagents will edit or only research.
-5. Implement only findings with clear evidence and low behavior risk. Do not stage, commit, push, or add new dependencies unless explicitly asked.
+2. Pin the review scope: commit, PR, branch, fixed point, or WIP diff. Prefer `git diff <fixed-point>...HEAD` and `git log <fixed-point>..HEAD --oneline` when a fixed point is provided; otherwise choose the safest obvious comparison or ask only when it materially changes the review.
+3. Read repo-local `AGENTS.md`, docs, package scripts, conventions, and any originating issue, PRD, spec, or commit references before judging.
+4. State scope, allowed side effects, validation target, and that all subagents are read-only.
+5. Launch all eight review tracks every time. The main agent owns synthesis, judgment, edits, validation, and completion claims.
+6. Implement only findings with clear evidence and low behavior risk when the user asked for fixes. Do not stage, commit, push, or add new dependencies unless explicitly asked.
 
 ## Fresh Review Agents
 
@@ -42,20 +42,9 @@ Every review pass must use brand-new subagents so current-thread bias does not s
 - If subagents are unavailable, stop and say the required review method is blocked.
 - The main agent owns synthesis, judgment, edits, validation, and completion claims.
 
-## Scoped Review
+## Eight Review Tracks
 
-For diff or explicit-file review, launch four fresh read-only subagents:
-
-- reuse/deduplication
-- quality/types/boundaries
-- efficiency/hot paths
-- clarity/standards/comments
-
-Return findings as: file/symbol, category, issue, fix, confidence. In fix mode, the main agent applies only high-confidence behavior-preserving fixes.
-
-## Repo Cleanup
-
-For explicit broad cleanup, launch eight fresh parallel track agents. Default them to read-only research. Use worker subagents only after ownership can be made disjoint; otherwise integrate locally. Tell workers they are not alone in the codebase, must not revert others' work, and must list changed files.
+Launch all eight fresh parallel track agents for every review. Tell them they are not alone in the codebase, must stay read-only, must not revert others' work, and should inspect the diff plus relevant callers, tests, standards, and spec context. A track may report "no finding".
 
 1. **DRY/deduplication**: consolidate duplication only when it reduces complexity; reject shallow abstractions.
 2. **Shared types/contracts**: find duplicate or drifting type definitions; consolidate only where ownership is genuinely shared.
@@ -66,13 +55,7 @@ For explicit broad cleanup, launch eight fresh parallel track agents. Default th
 7. **Legacy/fallback paths**: remove only after proving no live caller, config, migration, or rollout dependency remains.
 8. **AI slop/comments/stubs**: remove stubs, stale migration notes, and filler comments; keep concise intent comments.
 
-Each track must produce:
-
-- evidence gathered, including commands/tools used
-- critical assessment of current code
-- candidate fixes, or implemented fixes only for explicitly assigned worker tracks
-- remaining medium/low-confidence recommendations
-- validation needed for its changes
+Each track must produce file/symbol, category, issue, recommended fix, confidence, evidence gathered, and validation needed. Keep standards and spec findings on their own axis in synthesis; if no spec exists, say that instead of inventing requirements.
 
 ## Reference Routing
 
