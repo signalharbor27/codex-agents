@@ -29,14 +29,15 @@ Producer standard: tests shaped by this skill should not create new `improve-tes
 ## Minimal Workflow
 
 1. State the behavior or risk being covered.
-2. Choose the cheapest trustworthy proof: characterization for legacy behavior, contract tests for seams, property or state-machine tests for broad input spaces, golden tests for stable snapshots, or exploratory checks for unclear requirements.
-3. For bug fixes and user-visible behavior changes, prefer practical TDD when a failing test is cheap and trustworthy.
-4. In TDD, use vertical slices: watch one behavior test fail for the right reason, make the smallest change that passes it, then repeat. Do not write all tests first and all implementation later.
-5. Define the observable signal through the public interface before writing the test.
-6. Decide what stays real, fake, or mocked, and do not mock the boundary you are trying to trust.
-7. Apply the test no-regression gate: prefer behavior specs that survive refactors, avoid internal call choreography, avoid duplicate higher-cost coverage, and keep feedback fast enough to trust.
-8. For tooling, lint, or eval changes, add at least one negative or synthetic failure check when feasible; a clean-repo smoke test alone is not enough.
-9. Name the gaps that the chosen test will not prove.
+2. Read existing `CONTEXT.md`, `CONTEXT-MAP.md`, ADRs, or equivalent docs when domain language, ownership, or prior decisions affect the behavior under test.
+3. Choose the cheapest trustworthy proof: characterization for legacy behavior, contract tests for seams, property or state-machine tests for broad input spaces, golden tests for stable snapshots, or exploratory checks for unclear requirements.
+4. For bug fixes and user-visible behavior changes, prefer practical TDD when a failing test is cheap and trustworthy.
+5. In TDD, use vertical slices: watch one behavior test fail for the right reason, make the smallest change that passes it, then repeat. Do not write all tests first and all implementation later.
+6. Define the observable signal through the public interface before writing the test.
+7. Decide what stays real, fake, or mocked, and do not mock the boundary you are trying to trust.
+8. Apply the test no-regression gate: prefer behavior specs that survive refactors, avoid internal call choreography, avoid duplicate higher-cost coverage, and keep feedback fast enough to trust.
+9. For tooling, lint, or eval changes, add at least one negative or synthetic failure check when feasible; a clean-repo smoke test alone is not enough.
+10. Name the gaps that the chosen test will not prove.
 
 ## Reference Routing
 

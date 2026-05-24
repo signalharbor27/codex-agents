@@ -32,11 +32,12 @@ The goal is evidence, not activity.
 4. Gather evidence at the relevant boundary or call path.
 5. Check relevant domain/decision docs and recent changes when a regression is plausible.
 6. Compare working and broken cases.
-7. Form one concrete hypothesis and test it minimally.
+7. When the cause is unclear, list 3-5 ranked falsifiable hypotheses, then test the highest-signal one with one variable changed.
 8. State the root cause in terms of behavior and contract, not just the line that crashed.
 9. For user-reported issues, capture expected behavior, actual behavior, and reproduction in durable language that survives refactors.
 10. Implement only after the failure mode is understood.
 11. When a fix plan is needed, make it a sequence of behavior-first test/fix slices through public interfaces.
+12. Before completion, remove debug instrumentation and delete or clearly mark throwaway harnesses.
 
 ## Reference Routing
 
