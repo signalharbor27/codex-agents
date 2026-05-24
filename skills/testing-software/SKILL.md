@@ -9,6 +9,7 @@ description: Choose the cheapest trustworthy test strategy for the risk in front
 
 Use this skill to choose reliable tests with the least cost.
 Tests should verify behavior through public interfaces and externally visible contracts. When a bug fix or behavior change has a cheap trustworthy failing test, bias toward TDD.
+Producer standard: tests shaped by this skill should not create new `improve-test-suite` findings for brittleness, mock theater, redundancy, or low signal unless the tradeoff is explicit.
 
 ## When to Use
 
@@ -33,8 +34,9 @@ Tests should verify behavior through public interfaces and externally visible co
 4. In TDD, watch one behavior test fail for the right reason before implementation, then make the smallest change that passes it.
 5. Define the observable signal through the public interface before writing the test.
 6. Decide what stays real, fake, or mocked, and do not mock the boundary you are trying to trust.
-7. For tooling, lint, or eval changes, add at least one negative or synthetic failure check when feasible; a clean-repo smoke test alone is not enough.
-8. Name the gaps that the chosen test will not prove.
+7. Apply the test no-regression gate: prefer behavior specs that survive refactors, avoid internal call choreography, avoid duplicate higher-cost coverage, and keep feedback fast enough to trust.
+8. For tooling, lint, or eval changes, add at least one negative or synthetic failure check when feasible; a clean-repo smoke test alone is not enough.
+9. Name the gaps that the chosen test will not prove.
 
 ## Reference Routing
 

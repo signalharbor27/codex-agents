@@ -7,7 +7,7 @@ It is designed around a small global harness in [AGENTS.md](AGENTS.md), a small 
 ## Design Goals
 
 - keep the top-level skill surface small
-- route large software work through `writing-software` by default
+- route software work through `software-engineering-flow` first, then into the narrowest producer or reviewer skill
 - use narrower skills only when the problem is really about tests, debugging, Rust, data systems, UI, or other specialized domains
 - keep prompts compact and explicit
 - require fresh verification before completion claims
@@ -15,21 +15,26 @@ It is designed around a small global harness in [AGENTS.md](AGENTS.md), a small 
 
 This repo is intentionally aligned with current OpenAI prompt-guidance themes:
 - keep instructions specific and compact
+- prefer outcome-first prompts over process-heavy scaffolding
 - separate complex work into clear stages only when it improves reliability
 - prefer small reusable prompt components over one giant always-on prompt
 - make success and verification criteria explicit where they matter
+- scale verification to risk and blast radius
 
 Reference:
 - OpenAI prompt guidance: https://developers.openai.com/api/docs/guides/prompt-guidance/
+- Amp GPT-5.5 findings: https://ampcode.com/models/gpt-5.5
 
 ## Top-Level Skills
 
 Current top-level routers:
 
+- `software-engineering-flow`
+  - first router for engineering work; selects the right producer, reviewer, debugging, testing, branch, or verification skill
 - `writing-software`
-  - default router for larger software changes, refactors, interface design, and implementation planning
+  - default producer for larger software changes, refactors, interface design, and implementation planning
 - `testing-software`
-  - test strategy, proof choice, TDD, and keeping tests trustworthy
+  - proof producer for test strategy, proof choice, TDD, and keeping tests trustworthy
 - `systematic-debugging`
   - root-cause work when the failure mode is not understood yet
 - `verification-before-completion`
@@ -74,7 +79,7 @@ Current top-level routers:
 5. Structural evals catch accidental sprawl and stale prompt drift.
 
 For larger features:
-- start with `writing-software`
+- start with `software-engineering-flow`
 - let `writing-software` branch into greenfield or brownfield mode based on whether the main uncertainty is new shape or existing invariants
 - use narrower routers only when they clearly dominate
 - pull in references only when the problem actually needs them

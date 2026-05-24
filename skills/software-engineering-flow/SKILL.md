@@ -8,6 +8,7 @@ description: "Use when starting software-engineering work: coding, debugging, re
 ## Overview
 
 Use this as the first engineering router. Keep it short: pick the right narrower skill, then execute.
+For GPT-5.5, keep prompts outcome-first: name the goal, success evidence, constraints, and stop condition, then let the narrower skill choose the efficient path.
 
 ## When to Use
 
@@ -25,9 +26,10 @@ Use this as the first engineering router. Keep it short: pick the right narrower
 1. Load this skill before inspecting, planning, editing, or verifying.
 2. Choose and load any narrower skill whose trigger fits.
 3. If no narrower skill fits, use `writing-software` as the default.
-4. First line: chosen skill names and task mode. For non-trivial work, add one compact outcome frame: goal, success evidence, allowed side effects, and output shape.
-5. Keep the task mode explicit: new change, new codebase, existing complex codebase, bug, review, or verification.
-6. Before handoff, know the exact verification command or observation and the stop condition.
+4. First line: chosen skill names and task mode. For non-trivial work, add one compact outcome frame: goal, success evidence, constraints/side effects, and output shape.
+5. For implementation or refactor work, ensure the producer gates are covered: `writing-software` for architecture/change shape and `testing-software` for proof shape when behavior risk exists.
+6. Keep the task mode explicit: new change, new codebase, existing complex codebase, bug, review, or verification.
+7. Before handoff, know the exact verification command or observation and the stop condition.
 
 ## Reference Routing
 

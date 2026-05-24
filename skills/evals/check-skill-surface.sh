@@ -117,8 +117,33 @@ if ! rg -q "Bug flow:.*testing-software.*writing-software.*verification-before-c
   exit 1
 fi
 
+if ! rg -q "outcome-first" "$ROOT/software-engineering-flow/SKILL.md"; then
+  echo "software-engineering-flow missing GPT-5.5 outcome-first routing guidance" >&2
+  exit 1
+fi
+
 if ! rg -q "Implementation stops only after focused proof passes" "$ROOT/writing-software/SKILL.md"; then
   echo "writing-software missing implementation stop rule" >&2
+  exit 1
+fi
+
+if ! rg -q "architecture no-regression" "$ROOT/writing-software/SKILL.md"; then
+  echo "writing-software missing architecture no-regression gate" >&2
+  exit 1
+fi
+
+if ! rg -q "test no-regression" "$ROOT/testing-software/SKILL.md"; then
+  echo "testing-software missing test no-regression gate" >&2
+  exit 1
+fi
+
+if ! rg -q "Classify findings as pre-existing debt, regression from the current change" "$ROOT/improve-codebase-architecture/SKILL.md"; then
+  echo "improve-codebase-architecture missing producer feedback classification" >&2
+  exit 1
+fi
+
+if ! rg -q "Classify findings as pre-existing test debt, regression from the current change" "$ROOT/improve-test-suite/SKILL.md"; then
+  echo "improve-test-suite missing producer feedback classification" >&2
   exit 1
 fi
 
@@ -154,6 +179,11 @@ fi
 
 if ! rg -q "Architecture Alignment" "$ROOT/review-and-simplify-changes/SKILL.md"; then
   echo "review-and-simplify-changes missing architecture alignment section" >&2
+  exit 1
+fi
+
+if ! rg -q "Upstream Prevention" "$ROOT/review-and-simplify-changes/SKILL.md"; then
+  echo "review-and-simplify-changes missing upstream prevention section" >&2
   exit 1
 fi
 

@@ -100,6 +100,12 @@ Each review must judge changes against the active SWE principles, not generic cl
 
 Flag a finding only when it improves one of those principles with evidence. Do not recommend DRY, type consolidation, patterns, or cleanup unless the linked skill would support the move.
 
+## Upstream Prevention
+
+Before finalizing, classify important findings as pre-existing debt, regression from current changes, preventable by `software-engineering-flow`, preventable by `writing-software`, preventable by `testing-software`, repo-doc candidate, or memory candidate.
+If a producer skill should have prevented a repeated or high-cost issue, propose the smallest skill/reference update instead of expanding this review skill.
+Do not auto-edit memory, repo docs, or skills unless the user asked for that mutation.
+
 ## Validation
 
 Run the smallest trustworthy validation for touched scope: focused tests, typecheck/compile, lint/format, and dead-code or cycle tool reruns when those tracks changed code.
