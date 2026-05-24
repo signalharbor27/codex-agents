@@ -8,7 +8,7 @@ It is designed around a small global harness in [AGENTS.md](AGENTS.md), a small 
 
 - keep the top-level skill surface small
 - route software work through `software-engineering-flow` first, then into the narrowest producer or reviewer skill
-- use narrower skills only when the problem is really about tests, debugging, Rust, data systems, UI, or other specialized domains
+- use narrower skills only when the problem is really about tests, debugging, Rust, data systems, or other specialized engineering domains
 - keep prompts compact and explicit
 - require fresh verification before completion claims
 - avoid stale Claude/Anthropic/runtime-specific assumptions
@@ -53,12 +53,6 @@ Current top-level routers:
   - Rust-specific API, ownership, and refactor guidance
 - `effect-ts`
   - Effect-specific service, error, wrapper, and testing guidance
-- `frontend-design`
-  - building and reviewing frontend/UI work
-- `copywriting`
-  - new copy and revision of existing copy
-- `seo-audit`
-  - SEO diagnosis, including schema references
 - `using-git-worktrees`
   - optional branch/workspace isolation for risky or long-running work
 - `finishing-a-development-branch`
@@ -103,12 +97,6 @@ For larger features:
 - `designing-data-intensive-systems`
 - `writing-rust`
 - `effect-ts`
-
-### Product/UI/content
-
-- `frontend-design`
-- `copywriting`
-- `seo-audit`
 
 ### Workflow and handoff
 

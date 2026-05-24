@@ -8,7 +8,6 @@ engineering_expected=(
   designing-data-intensive-systems
   effect-ts
   finishing-a-development-branch
-  frontend-design
   grill-me
   improve-codebase-architecture
   improve-test-suite
@@ -48,7 +47,6 @@ engineering_paths=(
   "$ROOT/improve-test-suite"
   "$ROOT/effect-ts"
   "$ROOT/finishing-a-development-branch"
-  "$ROOT/frontend-design"
   "$ROOT/grill-me"
   "$ROOT/receiving-code-review"
   "$ROOT/review-and-simplify-changes"

@@ -5,7 +5,6 @@
     "designing-data-intensive-systems",
     "effect-ts",
     "finishing-a-development-branch",
-    "frontend-design",
     "grill-me",
     "improve-codebase-architecture",
     "improve-test-suite",
@@ -95,13 +94,6 @@
       "expected_skill": "writing-rust",
       "forbidden_initial_skills": ["writing-software"],
       "secondary_skills_allowed": ["writing-software", "testing-software", "verification-before-completion"]
-    },
-    {
-      "id": "ui-build",
-      "prompt": "Build a striking React marketing page that still feels production-ready on mobile.",
-      "expected_skill": "frontend-design",
-      "forbidden_initial_skills": ["writing-software", "seo-audit"],
-      "secondary_skills_allowed": ["testing-software", "verification-before-completion"]
     },
     {
       "id": "describe-pr",

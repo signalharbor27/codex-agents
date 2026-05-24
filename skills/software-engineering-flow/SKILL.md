@@ -1,6 +1,6 @@
 ---
 name: software-engineering-flow
-description: "Use when starting software-engineering work: coding, debugging, reviews, refactors, architecture, tests, CI, branches, or frontend implementation. Routes to the right narrower engineering skill before planning or edits. Not for marketing, docs-only prose, finance, or simple shell lookups."
+description: "Use when starting software-engineering work: coding, debugging, reviews, refactors, architecture, tests, CI, or branches. Routes to the right narrower engineering skill before planning or edits. Not for marketing, docs-only prose, finance, or simple shell lookups."
 ---
 
 # Software Engineering Flow
@@ -44,7 +44,6 @@ For GPT-5.5, keep prompts outcome-first: name the goal, success evidence, constr
 - Storage, distributed systems, consistency, retention, recovery: `designing-data-intensive-systems`
 - Rust ownership, traits, async, errors, unsafe: `writing-rust`
 - Effect code: `effect-ts`
-- Frontend UI, React layout, interaction polish: `frontend-design`
 - Review feedback: `receiving-code-review`
 - Diff quality/simplification review: `review-and-simplify-changes`
 - Codebase/test-suite audit: `improve-codebase-architecture` or `improve-test-suite`
