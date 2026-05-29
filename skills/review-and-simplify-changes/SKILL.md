@@ -1,6 +1,6 @@
 ---
 name: review-and-simplify-changes
-description: "Review and simplify committed, PR, branch, or WIP changes with eight fresh read-only review tracks every time. Use when the user asks to review, clean up, de-slop, deduplicate, remove dead code, or improve code quality after changes are made."
+description: "Use when reviewing or simplifying committed, PR, branch, or WIP changes: run eight fresh read-only tracks by default; honor explicit user-scoped single-track findings-only reviews."
 ---
 
 # Review and Simplify Changes
@@ -8,7 +8,8 @@ description: "Review and simplify committed, PR, branch, or WIP changes with eig
 ## Overview
 
 Use this after a commit, PR, branch, or WIP diff to improve code quality without speculative churn.
-Every run uses the same eight fresh read-only review tracks; do not select a smaller review mode.
+Broad review runs use the same eight fresh read-only review tracks; do not select a smaller review mode yourself.
+Exception: when the user explicitly names one track and asks for a read-only, findings-only, or single-track review, run only that requested track and state that the scope was user-narrowed.
 
 ## When to Use
 
@@ -26,25 +27,27 @@ Every run uses the same eight fresh read-only review tracks; do not select a sma
 ## Minimal Workflow
 
 1. Load `software-engineering-flow`, then this skill. Load narrower skills as needed: `writing-software`, `testing-software`, `effect-ts`, `writing-rust`, and `verification-before-completion`.
-2. Pin the review scope: commit, PR, branch, fixed point, or WIP diff. Prefer `git diff <fixed-point>...HEAD` and `git log <fixed-point>..HEAD --oneline` when a fixed point is provided; otherwise choose the safest obvious comparison or ask only when it materially changes the review.
+2. Pin the review scope: commit, PR, branch, fixed point, or WIP diff. If the user says WIP, always inspect `git status --short` before choosing the diff. Prefer `git diff <fixed-point>...HEAD` and `git log <fixed-point>..HEAD --oneline` when a fixed point is provided; otherwise choose the safest obvious comparison or ask only when it materially changes the review.
+   - If a fixed-point diff is empty but unstaged changes exist, report the mismatch and include the unstaged diff only when user intent clearly points at WIP; otherwise ask one narrow scope question.
 3. Read repo-local `AGENTS.md`, docs, package scripts, conventions, and any originating issue, PRD, spec, or commit references before judging.
 4. State scope, allowed side effects, validation target, and that all subagents are read-only.
-5. Launch all eight review tracks every time. The main agent owns synthesis, judgment, edits, validation, and completion claims.
+5. Launch all eight review tracks for broad reviews. For the explicit single-track exception, launch only that track. The main agent owns synthesis, judgment, edits, validation, and completion claims.
 6. Implement only findings with clear evidence and low behavior risk when the user asked for fixes. Do not stage, commit, push, or add new dependencies unless explicitly asked.
 
 ## Fresh Review Agents
 
-Every review pass must use brand-new subagents so current-thread bias does not shape findings. This is a hard rule for this skill.
+Every review pass must use brand-new subagents for broad reviews so current-thread bias does not shape findings. This is a hard rule for broad reviews.
 
 - Give each subagent only the review scope, repo instructions, relevant skill requirements, and its role.
 - Keep review subagents read-only. They must not edit, stage, commit, push, or mutate state.
 - Ask for concise structured findings: file/symbol, category, issue, recommended fix, confidence, and evidence.
-- If subagents are unavailable, stop and say the required review method is blocked.
+- If subagents are unavailable for a broad review, stop and say the required review method is blocked.
+- For an explicit single-track read-only review, use one fresh subagent when available; if not, perform that track locally, keep it read-only, and disclose that no fresh subagent was available.
 - The main agent owns synthesis, judgment, edits, validation, and completion claims.
 
 ## Eight Review Tracks
 
-Launch all eight fresh parallel track agents for every review. Tell them they are not alone in the codebase, must stay read-only, must not revert others' work, and should inspect the diff plus relevant callers, tests, standards, and spec context. A track may report "no finding".
+Launch all eight fresh parallel track agents for every broad review. Tell them they are not alone in the codebase, must stay read-only, must not revert others' work, and should inspect the diff plus relevant callers, tests, standards, and spec context. A track may report "no finding".
 
 1. **DRY/deduplication**: consolidate duplication only when it reduces complexity; reject shallow abstractions.
 2. **Shared types/contracts**: find duplicate or drifting type definitions; consolidate only where ownership is genuinely shared.
@@ -56,6 +59,15 @@ Launch all eight fresh parallel track agents for every review. Tell them they ar
 8. **AI slop/comments/stubs**: remove stubs, stale migration notes, and filler comments; keep concise intent comments.
 
 Each track must produce file/symbol, category, issue, recommended fix, confidence, evidence gathered, and validation needed. Keep standards and spec findings on their own axis in synthesis; if no spec exists, say that instead of inventing requirements.
+
+## Change-Specific Checks
+
+When reviewing URL, link, campaign attribution, analytics, or CTA helper changes, check:
+
+- One shared allowlist, predicate, or parser owns which URLs may be mutated; inline scripts and typed helpers must not drift.
+- Non-HTTP schemes such as `mailto:` and `tel:`, protocol-relative URLs, relative URLs, malformed URLs, and hash-only links stay valid.
+- Analytics canonicalization and attribution mutation agree on the same URL contract.
+- Tests cover parity between DOM patchers, typed utilities, and public link helpers when more than one layer handles the same URL.
 
 ## Reference Routing
 
