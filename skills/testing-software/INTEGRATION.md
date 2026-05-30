@@ -15,6 +15,9 @@ Testing across component and system boundaries.
 
 ## Integration Testing
 
+Use integration tests when the risk is the contract between components, persistence, real serialization, provider payload shape, transaction behavior, or cross-process workflow.
+For high-risk workflows, include at least one focused integration test or executable fake that proves the seam used in production; broad E2E coverage does not replace this.
+
 ### What Is Integration Testing?
 
 Testing how components work together. Between unit tests and E2E.
@@ -66,6 +69,12 @@ test('UserService returns user by ID', async () => {
 ```
 
 **Tools**: Pact, Spring Cloud Contract.
+
+Contract test checklist:
+- consumer-visible fields, errors, nullability, ordering, and idempotency
+- duplicate delivery, retry, stale state, and malformed payload behavior where relevant
+- old fixture still accepted after additive changes
+- new fixture rejected or handled predictably by old consumers when mixed versions matter
 
 ---
 
@@ -119,6 +128,8 @@ test('user can login', async () => {
 - Use factories for test data
 - Clean up after tests (or use isolated data)
 - Don't depend on production data
+
+Do not use E2E as the only proof for provider, database, or worker semantics. Keep one smoke path for user confidence, then prove the risky logic at the service, API, persistence, or contract seam.
 
 ### Smoke Tests
 

@@ -23,5 +23,9 @@ Source family: threat modeling and secure-by-design practices.
 - Who can call this path?
 - What input is attacker-controlled?
 - What data or operation needs authorization?
+- What replay, duplicate submission, brute force, quota abuse, trial abuse, payment abuse, invitation abuse, or webhook forgery path exists?
+- What binding proves the request belongs to this user/account/resource and has not already been consumed?
+- Are timestamps, signatures, nonces, idempotency keys, amounts, recipients, filenames, URLs, and redirect targets validated at the boundary?
+- Are privileged operations least-privilege and isolated from user-controlled parameters?
 - What error/log output could leak internals?
 - Does the failure mode deny safely?

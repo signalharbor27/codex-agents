@@ -9,6 +9,7 @@ description: "Use when starting software-engineering work: coding, debugging, re
 
 Use this as the first engineering router. Keep it short: pick the right narrower skill, then execute.
 For GPT-5.5, keep prompts outcome-first: name the goal, success evidence, constraints, and stop condition, then let the narrower skill choose the efficient path.
+Favor explicit, scoped instructions over broad "be thorough" prompts: gather enough context to act safely, make the risk boundary concrete, and keep status/final text compact while keeping code and plans readable.
 
 ## When to Use
 
@@ -27,9 +28,15 @@ For GPT-5.5, keep prompts outcome-first: name the goal, success evidence, constr
 2. Choose and load any narrower skill whose trigger fits.
 3. If no narrower skill fits, use `writing-software` as the default.
 4. First line: chosen skill names and task mode. For non-trivial work, add one compact outcome frame: goal, success evidence, constraints/side effects, and output shape.
-5. For implementation or refactor work, ensure the producer gates are covered: `writing-software` for architecture/change shape and `testing-software` for proof shape when behavior risk exists.
-6. Keep the task mode explicit: new change, new codebase, existing complex codebase, bug, review, or verification.
-7. Before handoff, know the exact verification command or observation and the stop condition.
+5. For implementation or refactor work, classify risk before editing. High risk includes money/credits, auth/security/privacy, external services, live side effects, database schema or migrations, webhooks/events/queues/workers/schedulers, concurrency/idempotency, generated public contracts, or changes spanning 3+ modules/slices.
+6. For high-risk work, the producer preflight is blocking, not advisory:
+   - load `writing-software` and `testing-software`
+   - load relevant references for the risk, especially `INTERFACE-DESIGN.md`, `COMPLEXITY.md`, `API-COMPATIBILITY.md`, `PRODUCTION-READINESS.md`, `SECURITY-DESIGN.md`, and `DELIVERY.md`
+   - state the intended deep module or application boundary, what callers should not know, durable state and side-effect sequence, idempotency/recovery shape, compatibility risk, and test matrix
+   - do not edit until likely architecture/test-suite review findings are either resolved in the plan or explicitly accepted as debt
+7. For lower-risk work, still cover the producer gates lightly: `writing-software` for architecture/change shape and `testing-software` for proof shape when behavior risk exists.
+8. Keep the task mode explicit: new change, new codebase, existing complex codebase, bug, review, or verification.
+9. Before handoff, know the exact verification command or observation and the stop condition.
 
 ## Reference Routing
 
@@ -59,5 +66,7 @@ For GPT-5.5, keep prompts outcome-first: name the goal, success evidence, constr
 - Loading every possible skill instead of the smallest useful set
 - Inspecting files before choosing the engineering workflow
 - Treating routine implementation as architecture review
+- Treating high-risk implementation like routine implementation and discovering architecture or test-suite findings only after the code is written
+- Treating producer standards as vibes instead of blocking pre-edit gates
 - Letting skills override direct user instructions, safety, or repo-local `AGENTS.md`
 - Stopping a bug task before root cause, fix, and fresh verification are complete or a real blocker is recorded

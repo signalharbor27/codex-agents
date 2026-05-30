@@ -94,6 +94,13 @@ Not obvious what you need to know to make a change.
 
 ## Deep vs Shallow Modules
 
+Before editing a non-trivial or high-risk path, set a small complexity budget:
+- What knowledge should become less scattered after this change?
+- What knowledge must stay hidden from callers?
+- How many files should a future small policy change touch?
+- What shallow wrapper, pass-through helper, or duplicate state can be deleted or avoided?
+- What complexity is intentionally accepted because removing it would expand scope?
+
 ### Deep Modules (Good)
 
 ```

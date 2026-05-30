@@ -35,9 +35,16 @@ Producer standard: tests shaped by this skill should not create new `improve-tes
 5. In TDD, use vertical slices: watch one behavior test fail for the right reason, make the smallest change that passes it, then repeat. Do not write all tests first and all implementation later.
 6. Define the observable signal through the public interface before writing the test.
 7. Decide what stays real, fake, or mocked, and do not mock the boundary you are trying to trust.
-8. Apply the test no-regression gate: prefer behavior specs that survive refactors, avoid internal call choreography, avoid duplicate higher-cost coverage, and keep feedback fast enough to trust.
-9. For tooling, lint, or eval changes, add at least one negative or synthetic failure check when feasible; a clean-repo smoke test alone is not enough.
-10. Name the gaps that the chosen test will not prove.
+8. For high-risk work, write a risk-to-test matrix before coding:
+   - behavior or failure mode
+   - public seam that observes it
+   - real dependency, fake, or fixture choice
+   - happy path, duplicate/retry, partial failure, malformed input, auth/permission denied, stale state, concurrency/race, and recovery/reconciliation cases where relevant
+9. Apply the test no-regression gate: prefer behavior specs that survive refactors, avoid internal call choreography, avoid duplicate higher-cost coverage, and keep feedback fast enough to trust.
+10. For tooling, lint, or eval changes, add at least one negative or synthetic failure check when feasible; a clean-repo smoke test alone is not enough.
+11. For UI changes, screenshots are evidence only when paired with an assertion, comparison, or explicit visual QA observation; a screenshot command alone is not a pass/fail test.
+12. Keep E2E tests few and critical. Use stable selectors, avoid broad multi-purpose flows, and push logic coverage down to cheaper seam tests.
+13. Name the gaps that the chosen test will not prove.
 
 ## Reference Routing
 
@@ -59,3 +66,4 @@ Producer standard: tests shaped by this skill should not create new `improve-tes
 - Tests that query around the interface to prove a side effect through the wrong seam
 - Proving only the happy path when the change is supposed to catch bad states
 - Tests that prove implementation trivia but miss user-visible regressions
+- Screenshot-only checks or broad E2E flows used as a substitute for focused behavior, contract, persistence, or failure-mode proof
