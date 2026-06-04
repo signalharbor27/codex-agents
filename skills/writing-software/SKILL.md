@@ -50,7 +50,7 @@ Producer standard: code shaped by this skill should not create new findings for 
    - classify risk domains: money/credits, auth/security/privacy, external services, live side effects, schema/migrations, webhooks/events/queues/workers/schedulers, concurrency/idempotency, generated public contracts, or 3+ modules/slices
    - name the intended deep module or application boundary and what callers should not know
    - write 2-3 caller examples for each material interface
-   - map state transitions, durable records, side effects, retries, duplicate handling, reconciliation, and compatibility pressure
+   - map state transitions, durable records, side effects, retries, duplicate handling, reconciliation, and compatibility pressure; for money/credits include replay, external-success/local-failure, double-charge/no-access, cancel/void, scheduler races, and date bounds
    - define the test matrix with `testing-software`; list likely architecture/test-suite review findings and fix the shape now or record accepted debt
 7. If no clean boundary exists, do a small shaping/refactor slice first or explicitly preserve the bad seam without worsening it.
 8. If the smallest safe change must preserve a bad seam, state why it is out of scope and avoid making it worse.
