@@ -45,6 +45,14 @@ Every review pass must use brand-new subagents for broad reviews so current-thre
 - For an explicit single-track read-only review, use one fresh subagent when available; if not, perform that track locally, keep it read-only, and disclose that no fresh subagent was available.
 - The main agent owns synthesis, judgment, edits, validation, and completion claims.
 
+## Read-Only Branch Reviews
+
+When the requested scope is a branch, PR, or findings-only review, make the read-only contract concrete before launching tracks:
+- Pin base, head, and dirty state with `git status --short`, `git log <base>..HEAD --oneline`, and the relevant diff/stat commands.
+- Pass each track the same pinned scope and require it to trace changed symbols through callers, tests, config, and public contracts before reporting a finding.
+- Compare base vs HEAD before claiming a new dead-code path, fallback removal, cycle, contract drift, or other regression.
+- Do not run validators that write caches, incremental build state, snapshots, or generated artifacts during a read-only review unless the repo provides a no-write mode; disclose skipped validators and the evidence used instead.
+
 ## Eight Review Tracks
 
 Launch all eight fresh parallel track agents for every broad review. Tell them they are not alone in the codebase, must stay read-only, must not revert others' work, and should inspect the diff plus relevant callers, tests, standards, and spec context. A track may report "no finding".
