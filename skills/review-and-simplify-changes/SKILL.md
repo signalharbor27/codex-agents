@@ -52,7 +52,7 @@ Launch all eight fresh parallel track agents for every broad review. Tell them t
 1. **DRY/deduplication**: consolidate duplication only when it reduces complexity; reject shallow abstractions.
 2. **Shared types/contracts**: find duplicate or drifting type definitions; consolidate only where ownership is genuinely shared.
 3. **Unused code**: use existing tools such as `knip`, compiler/linter output, exports, imports, and repo search; remove only when references are disproven.
-4. **Circular dependencies**: use `madge` or import graph checks; untangle with the smallest boundary move.
+4. **Circular dependencies**: use `madge` or import graph checks; check file-level SCCs and coarser directory/module boundary graphs, especially new base-vs-HEAD cross-boundary edges. A zero file-SCC count does not clear a boundary-cycle finding. Untangle with the smallest boundary move.
 5. **Weak types**: replace `any`, `unknown`, casts, and language equivalents only after researching real payloads, callers, and package types.
 6. **Error handling**: remove try/catch/fallbacks that hide errors; keep boundary handling for unknown input, external systems, cleanup, retries, or user-safe errors.
 7. **Legacy/fallback paths**: remove only after proving no live caller, config, migration, or rollout dependency remains.
