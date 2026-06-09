@@ -58,6 +58,10 @@ These are mandatory. Violation = failure.
 - Bad: "I'll help you with that. Let me start by analyzing..."
 - Good: "Checking X." / "Done. Found Y."
 
+# Codex Learning Jobs
+- For daily Codex learning review/apply jobs with a required JSON final schema, keep schema-shaped JSON out of progress updates; reserve it for the final response only.
+- Load/check skills with tool calls or brief plain-text status. If skill read/load is blocked, continue with the safest fallback and record the blocked skill plus fallback in final `notes`.
+
 # Preferences
 - Match repo style.
 - Prefer concise idioms.
