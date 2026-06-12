@@ -51,7 +51,7 @@ When the requested scope is a branch, PR, or findings-only review, make the read
 - Pin base, head, dirty state, relevant untracked source, and ignored generated/artifact dirs with `git status --short`, `git log <base>..HEAD --oneline`, and the relevant diff/stat commands.
 - Pass each track the same pinned scope and require it to trace changed symbols through callers, tests, config, and public contracts before reporting a finding.
 - Compare base vs HEAD before claiming a new dead-code path, fallback removal, cycle, contract drift, or other regression.
-- Do not run validators that write caches, incremental build state, snapshots, or generated artifacts during a read-only review unless the repo provides a no-write mode; disclose skipped validators and the evidence used instead.
+- Do not run validators that write caches, incremental build state, snapshots, or generated artifacts during a read-only review unless the repo provides a no-write mode; after allowed checks, rerun `git status --short`, then disclose skipped validators, evidence used, and any unexpected worktree changes.
 
 ## Eight Review Tracks
 
