@@ -54,6 +54,7 @@ Producer standard: tests shaped by this skill should not create new `improve-tes
 - Read [TEST-DESIGN.md](TEST-DESIGN.md) for partitions, state transitions, and combinatorics.
 - Read [AGILE.md](AGILE.md) for team-level testing balance.
 - Read [TDD.md](TDD.md) when a bug fix or behavior change is a good fit for test-first development.
+- Read [references/PLAYWRIGHT.md](references/PLAYWRIGHT.md) when writing or reviewing Playwright/browser E2E tests, selectors, assertions, isolation, or parallelism.
 
 ## Failure Modes
 
