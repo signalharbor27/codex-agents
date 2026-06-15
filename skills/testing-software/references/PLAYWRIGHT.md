@@ -2,6 +2,17 @@
 
 Use Playwright for a small number of high-value browser behaviors that cheaper tests cannot prove. Prefer focused tests that verify one user story through public UI and network-visible outcomes.
 
+## Progressive Disclosure
+
+Before adding or reviewing Playwright coverage, answer these in order:
+
+1. What user-visible risk cannot be proven by a cheaper unit, contract, or integration test?
+2. What is the decisive observable outcome: URL, visible account/billing state, accessible control state, persisted state shown back to the user, or network-visible completion?
+3. Which mutable state must be unique for this test to run alone and in parallel: user, email/token, DB rows, Stripe/local billing fixtures, browser storage, external fixtures, and cleanup?
+4. Which locator is stable from the user's point of view? Prefer role/name first, then label/placeholder/text when text is the contract, then test id for repeated, translated, or ambiguous UI.
+5. What waits prove progress? Prefer web-first assertions, URL changes, visible UI, or network-observable completion over fixed sleeps or retrying stale controls.
+6. What should not be asserted? Avoid incidental copy, layout trivia, internal helper names, implementation data shape, and private call order.
+
 ## What To Test
 
 - Test critical flows, permissions, payment states, navigation, and browser-only integration behavior.
@@ -22,6 +33,7 @@ Use Playwright for a small number of high-value browser behaviors that cheaper t
 - Avoid fixed sleeps. Wait on visible UI, URL changes, network-observable completion, or known app state.
 - Assert the user-observable outcome, not internal call order.
 - Keep assertions narrow: enough to prove behavior, not enough to make harmless layout/copy edits painful.
+- For redirected checkout or auth flows, wait for the first success boundary the user can observe. Retry only on explicit recoverable errors; do not retry by clicking stale controls after navigation has started.
 
 ## Isolation And Parallelism
 
