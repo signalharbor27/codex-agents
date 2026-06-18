@@ -37,6 +37,7 @@ Favor explicit, scoped instructions over broad "be thorough" prompts: gather eno
 7. For lower-risk work, still cover the producer gates lightly: `writing-software` for architecture/change shape and `testing-software` for proof shape when behavior risk exists.
 8. Keep the task mode explicit: new change, new codebase, existing complex codebase, bug, review, or verification.
 9. Before handoff, know the exact verification command or observation and the stop condition.
+10. Before any intended commit, run `review-and-simplify-changes`, fix high-confidence findings, then rerun the relevant verification.
 
 ## Reference Routing
 
@@ -56,6 +57,7 @@ Favor explicit, scoped instructions over broad "be thorough" prompts: gather eno
 - Review feedback: `receiving-code-review`
 - Post-commit, PR, branch, or WIP quality/simplification review: `review-and-simplify-changes`
 - Codebase/test-suite audit: `improve-codebase-architecture` or `improve-test-suite`
+- In-progress merge or rebase conflict: inspect both intents, preserve both when compatible, run the smallest no-write checks after resolving, and do not abort, stage, commit, or continue without explicit user approval
 - Branch isolation: `using-git-worktrees`
 - Completed branch integration choice: `finishing-a-development-branch`
 - PR description after code is in place: `describe-pr`

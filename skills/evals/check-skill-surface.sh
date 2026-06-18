@@ -1,7 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="${1:-/Users/me/.agents/skills}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="${1:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+REPO_ROOT="$(cd "$ROOT/.." && pwd)"
+README_FILE="$REPO_ROOT/README.md"
+
+require_pattern() {
+  local file="$1"
+  local pattern="$2"
+  local message="$3"
+
+  if ! rg -q "$pattern" "$file"; then
+    echo "$message" >&2
+    exit 1
+  fi
+}
 
 engineering_expected=(
   describe-pr
@@ -110,60 +124,18 @@ for skill in "${engineering_expected[@]}"; do
   fi
 done
 
-if ! rg -q "Bug flow:.*testing-software.*writing-software.*verification-before-completion" "$ROOT/software-engineering-flow/SKILL.md"; then
-  echo "software-engineering-flow missing explicit bug handoff sequence" >&2
-  exit 1
-fi
-
-if ! rg -q "outcome-first" "$ROOT/software-engineering-flow/SKILL.md"; then
-  echo "software-engineering-flow missing GPT-5.5 outcome-first routing guidance" >&2
-  exit 1
-fi
-
-if ! rg -q "Implementation stops only after focused proof passes" "$ROOT/writing-software/SKILL.md"; then
-  echo "writing-software missing implementation stop rule" >&2
-  exit 1
-fi
-
-if ! rg -q "architecture no-regression" "$ROOT/writing-software/SKILL.md"; then
-  echo "writing-software missing architecture no-regression gate" >&2
-  exit 1
-fi
-
-if ! rg -q "test no-regression" "$ROOT/testing-software/SKILL.md"; then
-  echo "testing-software missing test no-regression gate" >&2
-  exit 1
-fi
-
-if ! rg -q "Classify findings as pre-existing debt, regression from the current change" "$ROOT/improve-codebase-architecture/SKILL.md"; then
-  echo "improve-codebase-architecture missing producer feedback classification" >&2
-  exit 1
-fi
-
-if ! rg -q "Classify findings as pre-existing test debt, regression from the current change" "$ROOT/improve-test-suite/SKILL.md"; then
-  echo "improve-test-suite missing producer feedback classification" >&2
-  exit 1
-fi
-
-if ! rg -q "ownership, callers, entrypoints, or verification commands are unknown" "$ROOT/writing-software/WORKFLOW-MODES.md"; then
-  echo "writing-software workflow modes missing zoom-out rule" >&2
-  exit 1
-fi
-
-if ! rg -q "Local Agent Brief" "$ROOT/writing-software/EXEC-PLAN-FILES.md"; then
-  echo "exec plan docs missing local agent brief" >&2
-  exit 1
-fi
-
-if ! rg -q "hard to reverse, surprising without context, and based on a real tradeoff" "$ROOT/writing-software/EXEC-PLAN-FILES.md"; then
-  echo "exec plan docs missing ADR promotion filter" >&2
-  exit 1
-fi
-
-if ! rg -q "CONTEXT-MAP.md" "$ROOT/writing-software/DOMAIN-MODELING.md"; then
-  echo "domain modeling docs missing context map guidance" >&2
-  exit 1
-fi
+require_pattern "$ROOT/software-engineering-flow/SKILL.md" "Bug flow:.*testing-software.*writing-software.*verification-before-completion" "software-engineering-flow missing explicit bug handoff sequence"
+require_pattern "$ROOT/software-engineering-flow/SKILL.md" "outcome-first" "software-engineering-flow missing GPT-5.5 outcome-first routing guidance"
+require_pattern "$ROOT/software-engineering-flow/SKILL.md" "Before any intended commit.*review-and-simplify-changes" "software-engineering-flow missing pre-commit review-and-simplify gate"
+require_pattern "$ROOT/writing-software/SKILL.md" "Implementation stops only after focused proof passes" "writing-software missing implementation stop rule"
+require_pattern "$ROOT/writing-software/SKILL.md" "architecture no-regression" "writing-software missing architecture no-regression gate"
+require_pattern "$ROOT/testing-software/SKILL.md" "test no-regression" "testing-software missing test no-regression gate"
+require_pattern "$ROOT/improve-codebase-architecture/SKILL.md" "Classify findings as pre-existing debt, regression from the current change" "improve-codebase-architecture missing producer feedback classification"
+require_pattern "$ROOT/improve-test-suite/SKILL.md" "Classify findings as pre-existing test debt, regression from the current change" "improve-test-suite missing producer feedback classification"
+require_pattern "$ROOT/writing-software/WORKFLOW-MODES.md" "ownership, callers, entrypoints, or verification commands are unknown" "writing-software workflow modes missing zoom-out rule"
+require_pattern "$ROOT/writing-software/EXEC-PLAN-FILES.md" "Local Agent Brief" "exec plan docs missing local agent brief"
+require_pattern "$ROOT/writing-software/EXEC-PLAN-FILES.md" "hard to reverse, surprising without context, and based on a real tradeoff" "exec plan docs missing ADR promotion filter"
+require_pattern "$ROOT/writing-software/DOMAIN-MODELING.md" "CONTEXT-MAP.md" "domain modeling docs missing context map guidance"
 
 if [[ ! -f "$ROOT/writing-software/TRACER-BULLETS.md" ]]; then
   echo "writing-software missing compact tracer bullets reference" >&2
@@ -207,10 +179,30 @@ if ! rg -q "\"forbidden_initial_skills\"" "$ROOT/evals/routing-cases.json"; then
   exit 1
 fi
 
-if rg -q "designing-with-patterns|\"forbidden_skills\"" "${engineering_paths[@]}" "$ROOT/evals/routing-cases.json"; then
+stale_paths=("${engineering_paths[@]}" "$ROOT/evals/routing-cases.json")
+if [[ -f "$README_FILE" ]]; then
+  stale_paths+=("$README_FILE")
+fi
+
+if rg -q "designing-with-patterns|\"forbidden_skills\"" "${stale_paths[@]}"; then
   echo "found stale designing-with-patterns or forbidden_skills in active routing surface" >&2
-  rg -n "designing-with-patterns|\"forbidden_skills\"" "${engineering_paths[@]}" "$ROOT/evals/routing-cases.json" >&2
+  rg -n "designing-with-patterns|\"forbidden_skills\"" "${stale_paths[@]}" >&2
   exit 1
 fi
+
+require_pattern "$ROOT/writing-skills/DESCRIPTIONS.md" "context load" "writing-skills descriptions missing context load vocabulary"
+require_pattern "$ROOT/writing-skills/DESCRIPTIONS.md" "cognitive load" "writing-skills descriptions missing cognitive load vocabulary"
+require_pattern "$ROOT/writing-skills/EVALUATING-SKILLS.md" "information hierarchy" "writing-skills eval guidance missing information hierarchy vocabulary"
+require_pattern "$ROOT/writing-skills/EVALUATING-SKILLS.md" "completion criterion" "writing-skills eval guidance missing completion criterion vocabulary"
+require_pattern "$ROOT/writing-software/INTERFACE-DESIGN.md" "One adapter means.*hypothetical seam" "interface design missing seam reality rule"
+require_pattern "$ROOT/writing-software/INTERFACE-DESIGN.md" "remote-owned" "interface design missing dependency taxonomy"
+require_pattern "$ROOT/writing-software/DOMAIN-MODELING.md" "Active domain modeling" "domain modeling missing active modeling guidance"
+require_pattern "$ROOT/writing-software/DOMAIN-MODELING.md" "ADR format" "domain modeling missing ADR format guidance"
+require_pattern "$ROOT/systematic-debugging/SKILL.md" "red-capable" "systematic-debugging missing red-capable loop guidance"
+require_pattern "$ROOT/systematic-debugging/SKILL.md" "tagged debug" "systematic-debugging missing tagged debug instrumentation guidance"
+require_pattern "$ROOT/review-and-simplify-changes/SKILL.md" "Standards" "review-and-simplify-changes missing Standards axis"
+require_pattern "$ROOT/review-and-simplify-changes/SKILL.md" "Intent" "review-and-simplify-changes missing Intent axis"
+require_pattern "$ROOT/writing-software/PLANNING-LARGE-CHANGES.md" "decision map" "large-change planning missing decision map guidance"
+require_pattern "$ROOT/writing-software/TRACER-BULLETS.md" "Use a throwaway prototype before a tracer bullet" "tracer bullets missing prototype contrast"
 
 echo "skill surface checks passed"

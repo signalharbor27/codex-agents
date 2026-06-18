@@ -34,6 +34,22 @@ Prefer deep modules:
 - errors and invariants documented at the seam
 - no pass-through wrappers unless they isolate a real external dependency, policy, or test seam
 
+Use the vocabulary consistently:
+- module: anything with an interface and implementation, from a function to a subsystem
+- interface: everything callers must know, including invariants, ordering, errors, config, and performance, not just the type signature
+- seam: where behavior can vary without editing the caller; place it deliberately
+- adapter: an implementation plugged into a seam, usually for production, tests, or an external system
+- depth: leverage at the interface; more behavior behind less caller knowledge
+
+Classify dependencies before adding or deepening a seam:
+- in-process: pure/local logic; deepen directly and test through the new interface
+- local-substitutable: filesystem, local DB, clock, or queue with a real local stand-in; test with the stand-in, not a generic mock
+- remote-owned: internal service across HTTP/RPC/queue; define a port only when production and test adapters both matter
+- true external: third-party service; inject a narrow port and mock or fake that external edge only
+
+One adapter means a hypothetical seam. Two adapters, usually production plus test or provider variant, can make it real.
+The interface is the test surface: once a deeper module is tested through its interface, delete or demote old shallow internal tests instead of layering redundant coverage.
+
 Blocking gate for high-risk work:
 - no new application service, provider wrapper, manager, facade, or workflow object until you can say what callers should not know
 - if deleting the proposed interface would not push meaningful complexity into callers, inline it or keep the existing seam

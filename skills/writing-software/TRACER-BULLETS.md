@@ -8,6 +8,13 @@ Source: Hunt and Thomas, *The Pragmatic Programmer*.
 
 A tracer bullet is not a throwaway prototype. It becomes part of the system.
 
+Use a throwaway prototype before a tracer bullet only when the question cannot be answered in prose or code inspection:
+- logic/state question: tiny runnable harness or terminal flow that exercises hard cases
+- UI question: a clearly marked throwaway route or variant switcher that compares radically different shapes
+- persistence is off by default unless the question is about persistence itself
+- no broad tests by default; the proof is the answered question and the deletion/absorption decision
+- mark it as prototype code and delete or absorb it before completion
+
 ## Shape
 
 - Use the real entrypoint.

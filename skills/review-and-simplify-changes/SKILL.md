@@ -14,7 +14,7 @@ Exception: when the user explicitly names one track and asks for a read-only, fi
 ## When to Use
 
 - Reviewing or simplifying changes after a commit, PR, branch, or work-in-progress diff
-- Checking changed code against documented standards and an originating issue, PRD, or spec
+- Checking changed code against repo Standards and change Intent from the prompt, explicit spec, plan, task notes, issue, or commit message
 - Finding duplication, weak types, dead code, cycles, fallbacks, comments, or code quality issues introduced or exposed by the change
 - Applying high-confidence, behavior-preserving cleanup when the user asks for fixes, then validating it
 
@@ -29,10 +29,11 @@ Exception: when the user explicitly names one track and asks for a read-only, fi
 1. Load `software-engineering-flow`, then this skill. Load narrower skills as needed: `writing-software`, `testing-software`, `effect-ts`, `writing-rust`, and `verification-before-completion`.
 2. Pin the review scope: commit, PR, branch, fixed point, or WIP diff. If the user says WIP, always inspect `git status --short` before choosing the diff. Prefer `git diff <fixed-point>...HEAD` and `git log <fixed-point>..HEAD --oneline` when a fixed point is provided; otherwise choose the safest obvious comparison or ask only when it materially changes the review.
    - If a fixed-point diff is empty but unstaged changes exist, report the mismatch and include the unstaged diff only when user intent clearly points at WIP; otherwise ask one narrow scope question.
-3. Read repo-local `AGENTS.md`, docs, package scripts, conventions, and any originating issue, PRD, spec, or commit references before judging.
+3. Read repo-local `AGENTS.md`, docs, package scripts, conventions, and change Intent sources: prompt, explicit spec, plan, task notes, issue, or commit message. Use the diff as evidence of touched behavior, not as proof of intent.
 4. State scope, allowed side effects, validation target, and that all subagents are read-only.
-5. Launch all eight review tracks for broad reviews. For the explicit single-track exception, launch only that track. The main agent owns synthesis, judgment, edits, validation, and completion claims.
-6. Implement only findings with clear evidence and low behavior risk when the user asked for fixes. Do not stage, commit, push, or add new dependencies unless explicitly asked.
+5. Before cleanup tracks, judge two axes separately: **Standards** (repo rules, skill guidance, local conventions) and **Intent** (what the change was trying to accomplish). Keep those findings separate from cleanup taste.
+6. Launch all eight review tracks for broad reviews. For the explicit single-track exception, launch only that track. The main agent owns synthesis, judgment, edits, validation, and completion claims.
+7. Implement only findings with clear evidence and low behavior risk when the user asked for fixes. Do not stage, commit, push, or add new dependencies unless explicitly asked.
 
 ## Fresh Review Agents
 
@@ -55,7 +56,7 @@ When the requested scope is a branch, PR, or findings-only review, make the read
 
 ## Eight Review Tracks
 
-Launch all eight fresh parallel track agents for every broad review. Tell them they are not alone in the codebase, must stay read-only, must not revert others' work, and should inspect the diff plus relevant callers, tests, standards, and spec context. A track may report "no finding".
+Launch all eight fresh parallel track agents for every broad review. Tell them they are not alone in the codebase, must stay read-only, must not revert others' work, and should inspect the diff plus relevant callers, tests, Standards, and Intent context. A track may report "no finding".
 
 1. **DRY/deduplication**: consolidate duplication only when it reduces complexity; reject shallow abstractions.
 2. **Shared types/contracts**: find duplicate or drifting type definitions; consolidate only where ownership is genuinely shared.
@@ -66,7 +67,7 @@ Launch all eight fresh parallel track agents for every broad review. Tell them t
 7. **Legacy/fallback paths**: remove only after proving no live caller, config, migration, or rollout dependency remains.
 8. **AI slop/comments/stubs**: remove stubs, stale migration notes, and filler comments; keep concise intent comments.
 
-Each track must produce file/symbol, category, issue, recommended fix, confidence, evidence gathered, and validation needed. Keep standards and spec findings on their own axis in synthesis; if no spec exists, say that instead of inventing requirements.
+Each track must produce file/symbol, category, issue, recommended fix, confidence, evidence gathered, and validation needed. Keep Standards and Intent findings on their own axes in synthesis; if Intent is unavailable, say that instead of inventing requirements from the diff.
 
 ## Change-Specific Checks
 
@@ -96,7 +97,7 @@ If a needed skill was missing, call that out in the final summary. If the skill 
 Each review must judge changes against the active SWE principles, not generic cleanup taste:
 
 - Deep modules / information hiding: `writing-software/COMPLEXITY.md`
-- Caller-first interfaces / deletion test: `writing-software/INTERFACE-DESIGN.md`
+- Caller-first interfaces / deletion test / module-interface-depth-seam-adapter vocabulary: `writing-software/INTERFACE-DESIGN.md`
 - Safe brownfield seams: `writing-software/LEGACY-CODE.md` and `WORKFLOW-MODES.md`
 - Navigability, domain language, seam quality, verification pain: `improve-codebase-architecture`
 - Behavior-focused public-interface tests: `testing-software`
@@ -114,7 +115,6 @@ Do not auto-edit memory, repo docs, or skills unless the user asked for that mut
 Run the smallest trustworthy validation for touched scope: focused tests, typecheck/compile, lint/format, and dead-code or cycle tool reruns when those tracks changed code.
 
 If validation is too broad, unavailable, or skipped by instruction, say exactly why.
-
 ## Failure Modes
 
 - Rewrite-by-cleanup; deleting dynamic use after one search; merging different domain types; removing boundary defense; fake precise types; overlapping edits; recs without safe fixes.

@@ -18,6 +18,8 @@ Rules:
   - complex existing codebase: map ownership, domain language, entrypoints, and verification pain before planning refactors
   - refactor request: verify the pain in code, define in/out scope, then plan tiny behavior-preserving commits
 - if design choices are genuinely unclear, resolve them before writing implementation steps
+- when the work is too foggy for a plan, make a lightweight decision map first: open questions, research/prototype/discuss tracks, dependencies between decisions, and the next decision that would unlock the most uncertainty
+- keep the decision map local to chat or the exec plan unless the user asks for tracker issues; do not convert it into PRDs or tickets by default
 - keep research objective; do not mix "how it works" with "what we should build"
 - do not finalize the tactical plan with unresolved branch decisions or open questions
 - plan in vertical slices, not layer-by-layer batches

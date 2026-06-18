@@ -39,6 +39,13 @@ Rules:
 - do not couple local briefs to file paths or line numbers unless the task is explicitly about those files
 - promote a durable decision to `docs/adr/` only when it is hard to reverse, surprising without context, and based on a real tradeoff; otherwise keep it in the plan
 
+Handoff packet option:
+- when the next session needs context but a full plan file would be noise, write a short temp/local handoff instead of duplicating artifacts
+- include suggested skills, current state, next action, verification target, and known risks
+- reference existing plans, diffs, commits, ADRs, or docs by path/URL instead of copying them
+- redact secrets, tokens, credentials, and personal data
+- do not write outside the workspace or durable repo path unless the user asked for that location
+
 Minimal template:
 
 ```md

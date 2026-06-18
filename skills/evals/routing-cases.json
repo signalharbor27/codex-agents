@@ -75,6 +75,12 @@
       "forbidden_initial_skills": ["improve-codebase-architecture"]
     },
     {
+      "id": "review_standards_intent",
+      "prompt": "Review these WIP changes against the repo standards and what this diff was trying to accomplish, then simplify only high-confidence issues.",
+      "expected_skill": "review-and-simplify-changes",
+      "forbidden_initial_skills": ["improve-codebase-architecture", "testing-software"]
+    },
+    {
       "id": "data-workload",
       "prompt": "We ingest append-only events and query them by time range; should we keep plain Postgres or move toward Timescale?",
       "expected_skill": "designing-data-intensive-systems",
@@ -139,6 +145,18 @@
       "expected_skill": "writing-software",
       "forbidden_initial_skills": ["testing-software"],
       "secondary_skills_allowed": ["testing-software", "verification-before-completion"]
+    },
+    {
+      "id": "foggy_decision_map",
+      "prompt": "This idea is too unclear for an implementation plan. Map the open decisions, research/prototype/discuss tracks, and the next uncertainty to resolve without creating issues or a PRD.",
+      "expected_skill": "writing-software",
+      "forbidden_initial_skills": ["testing-software", "review-and-simplify-changes"]
+    },
+    {
+      "id": "merge_conflict_safe_resolution",
+      "prompt": "There is an in-progress rebase conflict. Resolve it by preserving both intents where possible, but do not stage, commit, continue, or abort without asking me.",
+      "expected_skill": "software-engineering-flow",
+      "forbidden_initial_skills": ["finishing-a-development-branch", "verification-before-completion"]
     },
     {
       "id": "file_backed_exec_plan",

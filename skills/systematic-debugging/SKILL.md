@@ -27,17 +27,20 @@ The goal is evidence, not activity.
 ## Minimal Workflow
 
 1. Build the fastest trustworthy pass/fail loop first: focused test, CLI/curl script, browser script, replayed trace, throwaway harness, fuzz/property loop, or bisection harness.
-2. Reproduce and read the actual failure carefully. If no loop can be built, say what was tried and ask for the missing artifact, access, or permission before hypothesizing.
-3. Sharpen the loop until it is specific, deterministic enough, and cheap enough to guide changes; for flakes, raise the reproduction rate with repetition, stress, seeds, or timing probes.
-4. Gather evidence at the relevant boundary or call path.
-5. Check relevant domain/decision docs and recent changes when a regression is plausible.
-6. Compare working and broken cases.
-7. When the cause is unclear, list 3-5 ranked falsifiable hypotheses, then test the highest-signal one with one variable changed.
-8. State the root cause in terms of behavior and contract, not just the line that crashed.
-9. For user-reported issues, capture expected behavior, actual behavior, and reproduction in durable language that survives refactors.
-10. Implement only after the failure mode is understood.
-11. When a fix plan is needed, make it a sequence of behavior-first test/fix slices through public interfaces.
-12. Before completion, remove debug instrumentation and delete or clearly mark throwaway harnesses.
+2. Make the loop red-capable for this bug: it should fail on the current behavior, pass on a known-good case when possible, and be cheap enough to run after each hypothesis.
+3. Reproduce, read the actual failure carefully, then minimize the input, route, fixture, timing, or data shape until irrelevant moving parts are gone.
+4. If no loop can be built, say what was tried and ask for the missing artifact, access, or permission before hypothesizing.
+5. Sharpen the loop until it is specific, deterministic enough, and cheap enough to guide changes; for flakes, raise the reproduction rate with repetition, stress, seeds, or timing probes.
+6. Gather evidence at the relevant boundary or call path; use tagged debug logs, probes, or assertions that are easy to search and remove.
+7. For performance regressions, capture a baseline and a repeated measurement before changing code.
+8. Check relevant domain/decision docs and recent changes when a regression is plausible.
+9. Compare working and broken cases.
+10. When the cause is unclear, list 3-5 ranked falsifiable hypotheses, then test the highest-signal one with one variable changed.
+11. State the root cause in terms of behavior and contract, not just the line that crashed.
+12. For user-reported issues, capture expected behavior, actual behavior, and reproduction in durable language that survives refactors.
+13. Implement only after the failure mode is understood.
+14. When a fix plan is needed, make it a sequence of behavior-first test/fix slices through public interfaces and put the regression proof at the seam where the bug is observable.
+15. Before completion, remove debug instrumentation and delete or clearly mark throwaway harnesses; include a short postmortem note when the bug points to a repeated blind spot in tests, docs, or skill guidance.
 
 ## Reference Routing
 
@@ -48,9 +51,11 @@ The goal is evidence, not activity.
 ## Failure Modes
 
 - Staring at code or proposing fixes before a reproducible feedback loop exists
+- Treating a smoke command that never goes red as proof of this bug
 - Proposing fixes before identifying the failing boundary
 - Ignoring recent change history when the breakage may be a regression
 - Bundling several speculative changes into one test
+- Leaving tagged debug probes or measurement scripts behind
 - Treating repeated bad hypotheses as proof of an architectural flaw
 - Turning mitigation work into a rewrite without evidence
 - Leaving debug instrumentation or throwaway harnesses behind after verification

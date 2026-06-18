@@ -41,8 +41,6 @@ Current top-level routers:
   - final evidence gate before claiming success
 - `grill-me`
   - standalone router for stress-testing a plan or design before execution
-- `designing-with-patterns`
-  - pattern-vs-no-pattern architecture decisions
 - `improve-codebase-architecture`
   - critical repo or subsystem review for simpler structure, clearer seams, and a phased agent-friendly improvement plan
 - `improve-test-suite`
@@ -91,7 +89,6 @@ For larger features:
 
 ### Architecture and systems
 
-- `designing-with-patterns`
 - `improve-codebase-architecture`
 - `improve-test-suite`
 - `designing-data-intensive-systems`
