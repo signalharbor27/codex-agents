@@ -1,6 +1,6 @@
 ---
 name: testing-software
-description: Choose the cheapest trustworthy test strategy for the risk in front of you. Use when deciding what to test, what to keep real versus fake, or why a suite is flaky, slow, or low-signal. Not for root-cause debugging before the failure mode is understood.
+description: Choose the cheapest trustworthy proof for software behavior. Use when deciding unit/integration/e2e coverage, TDD/red-green-refactor slices, mocks vs fakes, acceptance assertions, or why tests are flaky/slow/low-signal. Not for root-cause debugging.
 ---
 
 # Testing Software

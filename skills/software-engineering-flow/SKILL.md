@@ -1,6 +1,6 @@
 ---
 name: software-engineering-flow
-description: "Use when starting software-engineering work: coding, debugging, reviews, refactors, architecture, tests, CI, or branches. Routes to the right narrower engineering skill before planning or edits. Not for marketing, docs-only prose, finance, or simple shell lookups."
+description: "Use when starting any software-engineering task before planning, edits, or verification: coding, debugging, reviews, refactors, architecture, tests, CI, branches, or merge conflicts. Routes to narrower skills; not for marketing/docs-only/finance."
 ---
 
 # Software Engineering Flow

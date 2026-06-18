@@ -1,6 +1,6 @@
 ---
 name: writing-software
-description: Shape software changes with minimal scope, clear module boundaries, and explicit tradeoffs. Use when implementing or refactoring code where change shape, interfaces, naming, or complexity are the main decisions. Not for test-strategy, Rust-specific, or storage-architecture questions.
+description: Shape implementation/refactor work with minimal scope and clear module boundaries. Use when building a feature, changing an interface, planning a prototype or decision map, or reducing complexity. Not for test strategy, debugging, Rust, or storage architecture.
 ---
 
 # Writing Software

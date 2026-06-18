@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Find the root cause of bugs, test failures, and unexpected behavior before changing code. Use when the failure mode is not yet understood or guess-and-check has started to creep in. Not for deciding long-term test strategy.
+description: Find root cause before changing code. Use when the user says debug/diagnose, reports broken, throwing, failing, flaky, slow, or unexpected behavior, or when guess-and-check has started. Not for long-term test strategy.
 ---
 
 # Systematic Debugging

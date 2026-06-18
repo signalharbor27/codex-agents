@@ -1,6 +1,6 @@
 ---
 name: review-and-simplify-changes
-description: "Use when reviewing or simplifying committed, PR, branch, or WIP changes: run eight fresh read-only tracks by default; honor explicit user-scoped single-track findings-only reviews."
+description: Review and simplify committed, PR, branch, or WIP diffs. Use when asked to review since X, clean up changes, compare Standards vs Intent, or run broad read-only tracks; honor explicit single-track findings-only scope.
 ---
 
 # Review and Simplify Changes

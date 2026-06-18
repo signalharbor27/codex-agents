@@ -1,6 +1,6 @@
 ---
 name: improve-test-suite
-description: Critically review a repo or subsystem test suite, remove bad or redundant coverage, and produce a phased improvement plan. Use when you want to simplify testing, strengthen boundary-focused proof, and align tests with behavior-first TDD principles.
+description: Audit a repo or subsystem test suite for brittle, over-mocked, flaky, redundant, slow, or low-signal tests. Use when you want a phased plan to remove bad coverage and add stronger behavior-focused seam tests.
 ---
 
 # Improve Test Suite

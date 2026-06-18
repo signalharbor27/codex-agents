@@ -1,6 +1,6 @@
 ---
 name: writing-skills
-description: Create or revise skills with clear routing, small entrypoints, and progressive disclosure. Use when building or editing Codex skills, references, and bundled guidance. Not for ordinary software implementation tasks.
+description: Create or revise skills for clearer routing and predictable behavior. Use when writing SKILL.md files, editing descriptions, splitting references, pruning context load, or adding routing/eval cases. Not for ordinary software implementation.
 ---
 
 # Writing Skills

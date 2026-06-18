@@ -1,6 +1,6 @@
 ---
 name: designing-data-intensive-systems
-description: Choose storage and distributed-system shapes from workload, consistency, and failure pressures. Use when data volume, retention, partitioning, replication, streaming, or recovery tradeoffs drive the design. Not for ordinary module-level implementation questions.
+description: Choose data/storage architecture from workload and failure pressure. Use when time-series data, retention, partitioning, replication, streaming/queues/CDC, consistency, recovery, or Postgres/Timescale tradeoffs drive the design.
 ---
 
 # Designing Data-Intensive Systems

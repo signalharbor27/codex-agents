@@ -1,6 +1,6 @@
 ---
 name: improve-codebase-architecture
-description: Critically review a codebase for architecture drag, agent-hostile shape, and weak tests, then produce a phased improvement plan. Use when you want a repo or subsystem audit to simplify structure, strengthen seams, and align implementation with the active skills.
+description: Audit codebase or subsystem architecture for shallow modules, weak seams, agent navigability, domain drift, and test-shape pain. Use when you want a phased plan to deepen interfaces, simplify structure, and improve verification.
 ---
 
 # Improve Codebase Architecture

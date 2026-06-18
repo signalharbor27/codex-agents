@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: Stress-test a plan or design through focused questioning until the key branch decisions are stable. Use when the user wants to grill a plan, pressure-test a design, or explicitly says "grill me".
+description: Stress-test a plan or design one question at a time. Use when the user says grill me, asks to pressure-test a plan, or branch decisions, assumptions, dependencies, scope, or verification are still unstable.
 ---
 
 # Grill Me
