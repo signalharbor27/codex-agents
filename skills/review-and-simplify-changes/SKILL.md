@@ -59,10 +59,10 @@ When the requested scope is a branch, PR, or findings-only review, make the read
 Launch all eight fresh parallel track agents for every broad review. Tell them they are not alone in the codebase, must stay read-only, must not revert others' work, and should inspect the diff plus relevant callers, tests, Standards, and Intent context. A track may report "no finding".
 
 1. **DRY/deduplication**: consolidate duplication only when it reduces complexity; reject shallow abstractions.
-2. **Shared types/contracts**: find duplicate or drifting type definitions; consolidate only where ownership is genuinely shared.
+2. **Shared types/contracts**: find duplicate or drifting type definitions; consolidate only where ownership is genuinely shared. When runtime gates separate raw or external payload variants from domain objects, verify exported/static contracts preserve that split instead of advertising guarded variants as happy-path domain types.
 3. **Unused code**: use existing tools such as `knip`, compiler/linter output, exports, imports, and repo search; remove only when references are disproven.
 4. **Circular dependencies**: use `madge` or import graph checks; check file-level SCCs and coarser directory/module boundary graphs, especially new base-vs-HEAD cross-boundary edges. A zero file-SCC count does not clear a boundary-cycle finding. Untangle with the smallest boundary move.
-5. **Weak types**: replace `any`, `unknown`, casts, and language equivalents only after researching real payloads, callers, and package types.
+5. **Weak types**: replace `any`, `unknown`, casts, and language equivalents only after researching real payloads, callers, and package types. For raw or external payloads, `unknown` or an untrusted boundary type may be correct until guards or schema parsing narrow it.
 6. **Error handling**: remove try/catch/fallbacks that hide errors; keep boundary handling for unknown input, external systems, cleanup, retries, or user-safe errors.
 7. **Legacy/fallback paths**: remove only after proving no live caller, config, migration, or rollout dependency remains.
 8. **AI slop/comments/stubs**: remove stubs, stale migration notes, and filler comments; keep concise intent comments.
