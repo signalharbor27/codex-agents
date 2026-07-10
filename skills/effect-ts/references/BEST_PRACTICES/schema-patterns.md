@@ -2,12 +2,12 @@
 
 ## Branded Types for IDs
 
-**Always brand entity IDs** to prevent accidentally passing the wrong ID type:
+Follow the repo's existing ID representation. Brand IDs when multiple same-shape identifiers cross module or service boundaries and accidental mixing is plausible. Plain validated strings are appropriate for local IDs, single-domain code, or public contracts where brands add friction without meaningful protection.
 
 ```typescript
 import { Schema } from "effect"
 
-// Entity IDs - always branded with namespace
+// Cross-boundary entity IDs branded with a namespace
 export const UserId = Schema.UUID.pipe(Schema.brand("@App/UserId"))
 export type UserId = Schema.Schema.Type<typeof UserId>
 
@@ -23,7 +23,7 @@ export type ProductId = Schema.Schema.Type<typeof ProductId>
 
 ### Branding Convention
 
-Use `@Namespace/EntityName` format:
+When introducing brands, follow the repo's current naming convention. If none exists, `@Namespace/EntityName` is a clear default:
 - `@App/UserId` - Main application entities
 - `@Billing/InvoiceId` - Billing domain entities
 - `@External/StripeCustomerId` - External system IDs

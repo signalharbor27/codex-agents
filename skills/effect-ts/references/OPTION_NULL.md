@@ -1,5 +1,3 @@
-NOTE: Verify examples against current Effect docs via Context7; patterns may drift.
-
 # Option vs Null Patterns
 
 ## The Rule

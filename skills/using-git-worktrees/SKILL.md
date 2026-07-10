@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Create an isolated git worktree when the work is large enough or risky enough to justify a separate workspace. Use when branch isolation matters. Not for every small edit or as an automatic first step.
+description: "Create an isolated git worktree. Use when the user requests branch/workspace isolation or current-workspace interference makes it necessary. Not merely because implementation has parallel subagents."
 ---
 
 # Using Git Worktrees
@@ -20,6 +20,7 @@ This is optional setup, not a universal prerequisite.
 
 - Tiny edits or single-file changes that do not benefit from isolation
 - Repositories where the current workspace is already the correct branch and state
+- Parallelizable work whose write scopes can remain isolated without changing branch state
 
 ## Minimal Workflow
 

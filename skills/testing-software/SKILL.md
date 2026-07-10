@@ -1,6 +1,6 @@
 ---
 name: testing-software
-description: Choose the cheapest trustworthy proof for software behavior. Use when deciding unit/integration/e2e coverage, TDD/red-green-refactor slices, mocks vs fakes, acceptance assertions, or why tests are flaky/slow/low-signal. Not for root-cause debugging.
+description: "Choose the cheapest trustworthy proof for software behavior. Use when the user explicitly requests TDD, an understood bug has a cheap failing test, or coverage, mocks/fakes, or assertions need selection. Not when root cause is unknown."
 ---
 
 # Testing Software
@@ -16,15 +16,17 @@ Producer standard: tests shaped by this skill should not create new `improve-tes
 - Choosing unit, integration, end-to-end, or exploratory coverage
 - Deciding what must stay real, what can be faked, and what should be mocked
 - Writing acceptance criteria or concrete assertions
-- Evaluating whether a suite is over-mocked, brittle, or too expensive
+- Evaluating a bounded test slice for brittleness, cost, or weak signal
 - Using TDD deliberately for a slice of behavior
+- Fixing an understood regression when a cheap trustworthy failing test already exists
 - Designing characterization, contract, property, state-machine, or golden tests for risky behavior
 
 ## When Not to Use
 
 - Use `systematic-debugging` first when you do not understand the failure
 - Use `writing-software` when the main question is change shape, not test shape
-- Do not default to TDD when the task is configuration churn, mechanical migration, or pure wiring with better proof available
+- Use `improve-test-suite` for repo-wide or subsystem-wide suite audits
+- Prefer non-TDD proof for configuration churn, mechanical migrations, or pure wiring when it is cheaper and equally trustworthy
 
 ## Minimal Workflow
 
@@ -45,6 +47,7 @@ Producer standard: tests shaped by this skill should not create new `improve-tes
 11. For UI changes, screenshots are evidence only when paired with an assertion, comparison, or explicit visual QA observation; a screenshot command alone is not a pass/fail test.
 12. Keep E2E tests few and critical. Use stable selectors, avoid broad multi-purpose flows, and push logic coverage down to cheaper seam tests.
 13. Name the gaps that the chosen test will not prove.
+14. Finish when the observable behavior, proof layer, real/fake/mock boundary, required failure cases, verification command, and known proof gaps are explicit.
 
 ## Reference Routing
 

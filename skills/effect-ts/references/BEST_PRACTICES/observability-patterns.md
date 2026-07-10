@@ -2,7 +2,7 @@
 
 ## Structured Logging with Effect.log
 
-**Always use Effect.log** instead of console.log. Effect.log provides:
+Within Effect-native code, prefer the repo's logging abstraction. Use `Effect.log` when the Effect runtime owns log levels, telemetry, or test capture. `console.log` remains reasonable for short-lived local scripts, temporary debugging, or code outside the Effect runtime; remove temporary debug output before completion. `Effect.log` provides:
 - Structured data
 - Log levels
 - Integration with telemetry systems
@@ -53,7 +53,7 @@ const processOrder = Effect.fn("OrderService.processOrder")(function* (input: Or
 
 ## Effect.fn for Automatic Tracing
 
-**Always use Effect.fn** for service methods. This automatically creates spans with proper names:
+Use `Effect.fn` for service methods that should create named spans under the repo's observability policy. Plain functions are appropriate when tracing is disabled, a higher boundary already owns the span, or the helper is too small to justify another span. `Effect.fn` creates spans with proper names:
 
 ```typescript
 // Creates span: "UserService.findById"
@@ -185,7 +185,7 @@ const timedEffect = effect.pipe(
 
 ## Configuration with Config
 
-**Always use Config** instead of process.env:
+Prefer the repo's configuration boundary. Use Effect `Config` when values need typed decoding, validation, redaction, or layer composition. Direct `process.env` access can be appropriate at a small process/bootstrap boundary or behind an established framework config layer; normalize it once and pass typed values inward.
 
 ### Basic Config
 

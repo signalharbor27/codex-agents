@@ -2,7 +2,7 @@
 
 ## Effect.Service Over Context.Tag
 
-**Always prefer `Effect.Service`** for defining business logic services. This is the modern, recommended approach that provides:
+Follow the service abstraction already established by the repo. For a new business-service boundary, prefer `Effect.Service` when its generated layer, accessors, and dependency declaration reduce wiring. Keep `Context.Tag` or another established pattern for low-level capabilities, compatibility with existing composition, or cases where generated accessors are intentionally unwanted. `Effect.Service` provides:
 
 1. **Built-in `Default` layer** - No manual layer creation needed
 2. **Automatic accessors** - Direct method calls via `ServiceName.method()`
@@ -36,7 +36,7 @@ export class UserService extends Effect.Service<UserService>()("UserService", {
 
 ### Service with Dependencies
 
-**Critical:** Always declare dependencies using the `dependencies` array. This ensures:
+When an `Effect.Service` owns stable dependencies, declare them in the `dependencies` array so its `Default` layer is self-contained. Provide dependencies at a higher composition boundary instead when implementations vary by request, environment, or test, or when the repo intentionally keeps construction external. Declaring owned dependencies here provides:
 - Dependencies are automatically provided when using `ServiceName.Default`
 - Type errors if dependencies are missing
 - No manual `Layer.provide` at usage sites
@@ -78,10 +78,10 @@ export class OrderService extends Effect.Service<OrderService>()("OrderService",
 }) {}
 ```
 
-### Wrong: Leaking Dependencies
+### Risk: Undeclared Stable Dependencies
 
 ```typescript
-// WRONG - Dependencies not declared, must be provided manually
+// Stable dependency omitted; callers must now provide it manually
 export class OrderService extends Effect.Service<OrderService>()("OrderService", {
     accessors: true,
     effect: Effect.gen(function* () {
@@ -90,15 +90,15 @@ export class OrderService extends Effect.Service<OrderService>()("OrderService",
     }),
 }) {}
 
-// Now every usage site must do this:
+// Without composition elsewhere, each usage site must provide it:
 const program = OrderService.create(input).pipe(
-    Effect.provide(UserService.Default),  // Annoying and error-prone
+    Effect.provide(UserService.Default),  // Repeated wiring can drift
 )
 ```
 
 ## Effect.fn for Tracing
 
-**Always wrap service methods with `Effect.fn`**. This provides automatic tracing with meaningful span names.
+Use `Effect.fn` for service methods when the repo relies on Effect tracing or consistent span names. Plain effect-valued functions remain appropriate for small private helpers, established uninstrumented code, or boundaries instrumented elsewhere. `Effect.fn` provides automatic tracing with meaningful span names.
 
 ### Naming Convention
 
@@ -220,17 +220,17 @@ export class AppService extends Effect.Service<AppService>()("AppService", {
 
 ### Return Types
 
-Services should return `Effect` types, never `Promise`:
+Inside an Effect-native service interface, prefer `Effect` return types so typed errors and requirements remain composable. Promise-returning APIs remain valid at interoperability boundaries or when an established public contract is Promise-based; adapt them once at the boundary.
 
 ```typescript
-// CORRECT
+// Effect-native service
 const findById = Effect.fn("UserService.findById")(
     function* (id: UserId): Effect.Effect<User, UserNotFoundError> {
         // ...
     }
 )
 
-// WRONG - Promise in service interface
+// Promise boundary; adapt before exposing it through an Effect-native service
 const findById = async (id: UserId): Promise<User> => {
     // ...
 }

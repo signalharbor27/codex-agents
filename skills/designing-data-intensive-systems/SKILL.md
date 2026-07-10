@@ -1,6 +1,6 @@
 ---
 name: designing-data-intensive-systems
-description: Choose data/storage architecture from workload and failure pressure. Use when time-series data, retention, partitioning, replication, streaming/queues/CDC, consistency, recovery, or Postgres/Timescale tradeoffs drive the design.
+description: "Choose data/storage architecture from workload and failure pressure. Use when time-series data, retention, partitioning, replication, streaming/queues/CDC, consistency, recovery, or Postgres/Timescale tradeoffs drive the design."
 ---
 
 # Designing Data-Intensive Systems

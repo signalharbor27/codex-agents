@@ -1,5 +1,3 @@
-NOTE: Verify examples against current Effect docs via Context7; patterns may drift.
-
 # Effect + Next.js Integration
 
 `@prb/effect-next` provides typed helpers for integrating Effect with Next.js 15+ App Router—route handlers, server

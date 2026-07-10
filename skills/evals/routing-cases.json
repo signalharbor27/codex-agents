@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "engineering_skills": [
     "describe-pr",
     "designing-data-intensive-systems",
@@ -23,166 +23,422 @@
     {
       "id": "grill-a-plan",
       "prompt": "Grill me on this implementation plan until the risky branch decisions and verification gaps are fully resolved.",
-      "expected_skill": "grill-me",
-      "forbidden_initial_skills": ["writing-software", "verification-before-completion"]
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "grill-me",
+      "allowed_secondary_skills": ["verification-before-completion", "writing-software"],
+      "expected_sequence": ["software-engineering-flow", "grill-me"],
+      "required_actions": ["ask-exactly-one-question"],
+      "expectations": {
+        "first_action": "map-decisions",
+        "mutation": "none",
+        "question": "one-at-a-time",
+        "stop": "wait-for-answer"
+      }
     },
     {
-      "id": "simple-bugfix-shape",
+      "id": "simple-refactor",
       "prompt": "Refactor this handler to remove duplication and make the error semantics clearer.",
-      "expected_skill": "writing-software",
-      "forbidden_initial_skills": ["testing-software", "systematic-debugging"]
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-software",
+      "allowed_secondary_skills": ["testing-software", "verification-before-completion"],
+      "expected_sequence": ["software-engineering-flow", "writing-software", "verification-before-completion"],
+      "required_actions": ["inspect-before-editing", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
     },
     {
       "id": "explicit-tdd-request",
       "prompt": "I want to fix this checkout bug with TDD. Start with the most important behavior slice.",
-      "expected_skill": "testing-software",
-      "forbidden_initial_skills": ["writing-software", "systematic-debugging"]
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "testing-software",
+      "allowed_secondary_skills": ["writing-software", "verification-before-completion"],
+      "expected_sequence": ["software-engineering-flow", "testing-software"],
+      "required_actions": ["build-red-capable-loop", "verify-before-completion"],
+      "expectations": {
+        "first_action": "build-failing-loop",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
     },
     {
       "id": "cheap-bugfix-tdd-default",
-      "prompt": "This regression changes the API response body. The endpoint is covered by a fast integration test, and I want the safest fix.",
-      "expected_skill": "testing-software",
-      "forbidden_initial_skills": ["systematic-debugging"]
+      "prompt": "This understood regression changes the API response body. The endpoint has a fast integration test; make the safest fix.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "testing-software",
+      "allowed_secondary_skills": ["writing-software", "verification-before-completion"],
+      "expected_sequence": ["software-engineering-flow", "testing-software", "verification-before-completion"],
+      "required_actions": ["build-red-capable-loop", "verify-before-completion"],
+      "expectations": {
+        "first_action": ["build-failing-loop", "inspect-current-state"],
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
     },
     {
       "id": "unknown-flaky-failure",
-      "prompt": "This test fails only in CI and I do not understand why yet.",
-      "expected_skill": "systematic-debugging",
-      "forbidden_initial_skills": ["testing-software", "writing-software"]
+      "prompt": "Diagnose why this test fails only in CI; I do not understand the cause yet.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "systematic-debugging",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "systematic-debugging"],
+      "required_actions": ["find-root-cause-before-fix"],
+      "expectations": {
+        "first_action": ["build-failing-loop", "inspect-current-state"],
+        "mutation": ["diagnostic-only", "none"],
+        "question": "only-if-blocked",
+        "stop": "after-root-cause"
+      }
     },
     {
       "id": "pattern-debate",
-      "prompt": "Should this plugin system stay simple, or should we introduce a strategy pattern?",
-      "expected_skill": "writing-software",
-      "forbidden_initial_skills": ["testing-software"]
+      "prompt": "Should this plugin system stay simple, or should we introduce a strategy pattern? Inspect the current design and recommend one direction.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-software",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "writing-software"],
+      "required_actions": ["inspect-before-recommending", "compare-simpler-option"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "recommendation"
+      }
     },
     {
-      "id": "repo_architecture_review",
+      "id": "repo-architecture-review",
       "prompt": "Critically review this codebase and create a phased plan to simplify the architecture, make it more agent friendly, and improve testing at the right seams.",
-      "expected_skill": "improve-codebase-architecture",
-      "forbidden_initial_skills": ["writing-software", "testing-software"]
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "improve-codebase-architecture",
+      "allowed_secondary_skills": ["improve-test-suite", "verification-before-completion"],
+      "expected_sequence": ["software-engineering-flow", "improve-codebase-architecture"],
+      "required_actions": ["inspect-before-recommending", "separate-findings-from-plan"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "plan"
+      }
     },
     {
-      "id": "test_suite_review",
-      "prompt": "Critically review this repo's tests, remove bad or redundant coverage, suggest better seam-level tests, and create a phased plan aligned with behavior-first TDD.",
-      "expected_skill": "improve-test-suite",
-      "forbidden_initial_skills": ["testing-software", "systematic-debugging", "writing-software"]
+      "id": "test-suite-review",
+      "prompt": "Critically review this repo's tests and create a phased plan to remove bad or redundant coverage and add stronger seam-level tests.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "improve-test-suite",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "improve-test-suite"],
+      "required_actions": ["inspect-before-recommending", "separate-findings-from-plan"],
+      "expectations": {
+        "first_action": ["inspect-current-state", "pin-review-scope"],
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "plan"
+      }
     },
     {
-      "id": "repo_cleanup_quality",
-      "prompt": "Clean up this codebase: deduplicate code, remove unused code, fix weak types, untangle cycles, remove legacy fallbacks and AI slop, then implement high-confidence recommendations.",
-      "expected_skill": "review-and-simplify-changes",
-      "forbidden_initial_skills": ["improve-codebase-architecture"]
+      "id": "wip-cleanup-quality",
+      "prompt": "Review and clean up the current WIP diff: deduplicate code, remove proven-unused code, fix weak types, untangle new cycles, and remove legacy fallbacks or AI slop only when evidence supports it.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "review-and-simplify-changes",
+      "allowed_secondary_skills": ["effect-ts", "testing-software", "verification-before-completion", "writing-rust", "writing-software"],
+      "expected_sequence": ["software-engineering-flow", "review-and-simplify-changes", "verification-before-completion"],
+      "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "verify-before-completion"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
     },
     {
-      "id": "review_standards_intent",
+      "id": "review-standards-intent",
       "prompt": "Review these WIP changes against the repo standards and what this diff was trying to accomplish, then simplify only high-confidence issues.",
-      "expected_skill": "review-and-simplify-changes",
-      "forbidden_initial_skills": ["improve-codebase-architecture", "testing-software"]
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "review-and-simplify-changes",
+      "allowed_secondary_skills": ["effect-ts", "testing-software", "verification-before-completion", "writing-rust", "writing-software"],
+      "expected_sequence": ["software-engineering-flow", "review-and-simplify-changes"],
+      "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "keep-standards-and-intent-separate", "verify-before-completion"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "broad-read-only-review",
+      "prompt": "Run a broad findings-only review of the current WIP diff across all eight review tracks. Do not change files.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "review-and-simplify-changes",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "review-and-simplify-changes"],
+      "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
+      "id": "single-track-read-only-review",
+      "prompt": "Review only weak typing in the current WIP diff. Findings only; keep this a single read-only track.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "review-and-simplify-changes",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "review-and-simplify-changes"],
+      "required_actions": ["pin-review-scope", "honor-single-track-scope", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
     },
     {
       "id": "data-workload",
       "prompt": "We ingest append-only events and query them by time range; should we keep plain Postgres or move toward Timescale?",
-      "expected_skill": "designing-data-intensive-systems",
-      "forbidden_initial_skills": ["writing-software"],
-      "secondary_skills_allowed": ["writing-software", "testing-software", "verification-before-completion"]
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "designing-data-intensive-systems",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "designing-data-intensive-systems"],
+      "required_actions": ["state-workload-and-correctness-pressure", "compare-simpler-option"],
+      "expectations": {
+        "first_action": "map-workload",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "recommendation"
+      }
     },
     {
       "id": "effect-wrapper",
-      "prompt": "Wrap this third-party billing SDK in Effect without leaking the raw client everywhere.",
-      "expected_skill": "effect-ts",
-      "forbidden_initial_skills": ["writing-software", "testing-software"],
-      "secondary_skills_allowed": ["writing-software", "testing-software", "verification-before-completion"]
+      "prompt": "Wrap this third-party billing SDK in Effect without leaking the raw client everywhere, then verify the implementation.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "effect-ts",
+      "allowed_secondary_skills": ["testing-software", "verification-before-completion", "writing-software"],
+      "expected_sequence": ["software-engineering-flow", "effect-ts", "verification-before-completion"],
+      "required_actions": ["inspect-before-editing", "preserve-effect-boundary", "verify-before-completion"],
+      "expectations": {
+        "first_action": ["inspect-current-state", "map-workload"],
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
     },
     {
       "id": "rust-api",
-      "prompt": "This Rust API keeps borrowing data too long. I need a cleaner ownership boundary.",
-      "expected_skill": "writing-rust",
-      "forbidden_initial_skills": ["writing-software"],
-      "secondary_skills_allowed": ["writing-software", "testing-software", "verification-before-completion"]
+      "prompt": "Refactor this Rust API so it stops borrowing data longer than necessary, with a cleaner ownership boundary and fresh verification.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-rust",
+      "allowed_secondary_skills": ["testing-software", "verification-before-completion", "writing-software"],
+      "expected_sequence": ["software-engineering-flow", "writing-rust", "verification-before-completion"],
+      "required_actions": ["inspect-before-editing", "state-rust-specific-pressure", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
     },
     {
       "id": "describe-pr",
-      "prompt": "Write a clear PR description that explains the problem, the user-facing changes, the implementation, and how to verify it.",
-      "expected_skill": "describe-pr",
-      "forbidden_initial_skills": ["writing-software"],
-      "secondary_skills_allowed": ["verification-before-completion"]
+      "prompt": "Write a clear PR description that explains the problem, user-facing changes, implementation, and verified evidence.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "describe-pr",
+      "allowed_secondary_skills": ["verification-before-completion"],
+      "expected_sequence": ["software-engineering-flow", "describe-pr"],
+      "required_actions": ["read-final-diff", "do-not-invent-verification"],
+      "expectations": {
+        "first_action": ["inspect-current-state", "pin-review-scope", "read-final-diff", "verify-branch-state"],
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "after-artifact"
+      }
     },
     {
       "id": "review-feedback",
-      "prompt": "I got code review feedback and I am not sure whether it is technically correct for this codebase.",
-      "expected_skill": "receiving-code-review",
-      "forbidden_initial_skills": ["writing-software", "verification-before-completion"]
+      "prompt": "I got code review feedback and I am not sure whether it is technically correct for this codebase. Evaluate it; do not implement changes yet.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "receiving-code-review",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "receiving-code-review"],
+      "required_actions": ["verify-feedback-against-code", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "evaluate-feedback",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
     },
     {
       "id": "verify-completion",
-      "prompt": "Before I say this fix is done, what do I need to run to prove it?",
-      "expected_skill": "verification-before-completion",
-      "forbidden_initial_skills": ["testing-software", "writing-software"]
+      "prompt": "Before I say this fix is done, tell me what evidence would prove it. Do not run or change anything.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "verification-before-completion",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "verification-before-completion"],
+      "required_actions": ["identify-claim-matched-proof", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "identify-proof",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "plan"
+      }
     },
     {
       "id": "worktree-isolation",
-      "prompt": "This refactor is risky and I want a separate branch workspace before touching the current tree.",
-      "expected_skill": "using-git-worktrees",
-      "forbidden_initial_skills": ["writing-software"]
+      "prompt": "This refactor is risky and I want a separate branch workspace before touching the current tree. Create the worktree using repo conventions.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "using-git-worktrees",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "using-git-worktrees"],
+      "required_actions": ["inspect-worktree-conventions", "report-worktree-location"],
+      "expectations": {
+        "first_action": "verify-branch-state",
+        "mutation": "requested-worktree",
+        "question": "only-if-blocked",
+        "stop": "after-worktree-ready"
+      }
     },
     {
-      "id": "non_trivial_feature_plan",
-      "prompt": "Add a new admin export workflow across the API, queue worker, and dashboard UI. Start by inspecting the repo and give me a short plan before editing.",
-      "expected_skill": "writing-software",
-      "forbidden_initial_skills": ["testing-software"],
-      "secondary_skills_allowed": ["testing-software", "verification-before-completion"]
+      "id": "non-trivial-feature",
+      "prompt": "Add a new admin export workflow across the API, queue worker, and dashboard UI. Inspect the repo, give a short plan, implement it, and verify it.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-software",
+      "allowed_secondary_skills": ["testing-software", "verification-before-completion"],
+      "expected_sequence": ["software-engineering-flow", "writing-software", "testing-software", "verification-before-completion"],
+      "required_actions": ["inspect-before-editing", "plan-before-editing", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": ["only-if-blocked", "required-before-unapproved-action"],
+        "stop": "after-verification"
+      }
     },
     {
-      "id": "parallel_tracks_feature",
-      "prompt": "Implement a larger feature with one backend slice, one docs slice, and one test-fixture slice; preserve context and split independent work where it makes sense.",
-      "expected_skill": "writing-software",
-      "forbidden_initial_skills": ["using-git-worktrees"]
+      "id": "parallel-tracks-feature",
+      "prompt": "Implement a larger feature with one backend slice, one docs slice, and one test-fixture slice; preserve context and split independent work where it makes sense. Infer routine choices from repo conventions; ask only if blocked or a consequential choice emerges.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-software",
+      "allowed_secondary_skills": ["testing-software", "verification-before-completion"],
+      "expected_sequence": ["software-engineering-flow", "writing-software", "verification-before-completion"],
+      "required_actions": ["delegate-independent-tracks", "verify-before-completion"],
+      "expectations": {
+        "first_action": ["inspect-current-state", "map-decisions", "map-workload"],
+        "mutation": "requested-repo-writes",
+        "question": ["only-if-blocked", "required-before-unapproved-action"],
+        "stop": "after-verification"
+      }
     },
     {
-      "id": "greenfield_prototype_path",
-      "prompt": "This is a new internal workflow tool with unclear UX and integration shape. Inspect constraints, then prototype the thinnest useful path before locking the implementation plan.",
-      "expected_skill": "writing-software",
-      "forbidden_initial_skills": ["testing-software"],
-      "secondary_skills_allowed": ["testing-software", "verification-before-completion"]
+      "id": "greenfield-prototype-path",
+      "prompt": "Build a new internal workflow tool with unclear UX and integration shape. Inspect constraints, prototype the thinnest useful path, then verify what works before locking architecture.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-software",
+      "allowed_secondary_skills": ["testing-software", "verification-before-completion"],
+      "expected_sequence": ["software-engineering-flow", "writing-software", "verification-before-completion"],
+      "required_actions": ["inspect-before-editing", "build-thin-prototype", "verify-before-completion"],
+      "expectations": {
+        "first_action": ["inspect-current-state", "map-decisions"],
+        "mutation": "requested-repo-writes",
+        "question": "required-before-unapproved-action",
+        "stop": "after-verification"
+      }
     },
     {
-      "id": "foggy_decision_map",
-      "prompt": "This idea is too unclear for an implementation plan. Map the open decisions, research/prototype/discuss tracks, and the next uncertainty to resolve without creating issues or a PRD.",
-      "expected_skill": "writing-software",
-      "forbidden_initial_skills": ["testing-software", "review-and-simplify-changes"]
+      "id": "foggy-decision-map",
+      "prompt": "This idea is too unclear for an implementation plan. Map the open decisions, research/prototype/discuss tracks, and next uncertainty without creating issues, a PRD, or code.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-software",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "writing-software"],
+      "required_actions": ["separate-facts-decisions-and-open-questions"],
+      "expectations": {
+        "first_action": "map-decisions",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "plan"
+      }
     },
     {
-      "id": "merge_conflict_safe_resolution",
-      "prompt": "There is an in-progress rebase conflict. Resolve it by preserving both intents where possible, but do not stage, commit, continue, or abort without asking me.",
-      "expected_skill": "software-engineering-flow",
-      "forbidden_initial_skills": ["finishing-a-development-branch", "verification-before-completion"]
+      "id": "merge-conflict-safe-resolution",
+      "prompt": "There is an in-progress rebase conflict. Resolve conflicting files by preserving both intents where possible, but do not stage, commit, continue, or abort without asking me.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "software-engineering-flow",
+      "allowed_secondary_skills": ["verification-before-completion"],
+      "expected_sequence": ["software-engineering-flow"],
+      "required_actions": ["inspect-both-intents", "do-not-change-branch-state"],
+      "expectations": {
+        "first_action": "verify-branch-state",
+        "mutation": "requested-repo-writes",
+        "question": "required-before-unapproved-action",
+        "stop": "after-requested-scope"
+      }
     },
     {
-      "id": "file_backed_exec_plan",
-      "prompt": "This will take multiple sessions and several agents. Inspect first, then create a durable exec plan in the repo before implementing.",
-      "expected_skill": "writing-software",
-      "forbidden_initial_skills": ["testing-software"],
-      "secondary_skills_allowed": ["testing-software", "verification-before-completion"]
+      "id": "file-backed-exec-plan",
+      "prompt": "This implementation will take multiple sessions and several agents. Inspect first, then create a durable exec plan in the repo; stop before implementation.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-software",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "writing-software"],
+      "required_actions": ["inspect-before-editing", "create-requested-plan-file", "stop-before-implementation"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-plan-file",
+        "question": "only-if-blocked",
+        "stop": "after-artifact"
+      }
     },
     {
       "id": "finish-branch",
-      "prompt": "The branch is done and I need to decide whether to merge it, open a PR, or keep it around.",
-      "expected_skill": "finishing-a-development-branch",
-      "forbidden_initial_skills": ["using-git-worktrees"],
-      "secondary_skills_allowed": ["verification-before-completion", "describe-pr"]
+      "prompt": "The branch is done and I need to decide whether to merge it, open a PR, or keep it around. Verify state and present the choices; do not choose for me.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "finishing-a-development-branch",
+      "allowed_secondary_skills": ["describe-pr", "verification-before-completion"],
+      "expected_sequence": ["software-engineering-flow", "finishing-a-development-branch"],
+      "required_actions": ["verify-branch-state", "require-explicit-branch-integration-choice"],
+      "expectations": {
+        "first_action": "verify-branch-state",
+        "mutation": "after-user-choice",
+        "question": "required-before-unapproved-action",
+        "stop": "present-options"
+      }
     },
     {
-      "id": "e2e_review_feedback_to_finish",
-      "prompt": "Address this review feedback, implement the valid changes, prove the branch is ready, describe the PR, and finish the branch workflow.",
-      "expected_sequence": ["receiving-code-review", "writing-software", "verification-before-completion", "describe-pr", "finishing-a-development-branch"],
-      "forbidden_initial_skills": ["describe-pr", "finishing-a-development-branch"]
+      "id": "e2e-review-feedback-to-finish",
+      "prompt": "Address this review feedback, implement valid changes, prove the branch is ready, describe the PR, and finish the branch workflow without choosing an integration action for me.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "receiving-code-review",
+      "allowed_secondary_skills": ["describe-pr", "finishing-a-development-branch", "testing-software", "verification-before-completion", "writing-software"],
+      "expected_sequence": ["software-engineering-flow", "receiving-code-review", "writing-software", "verification-before-completion", "describe-pr", "finishing-a-development-branch"],
+      "required_actions": ["verify-feedback-against-code", "verify-before-completion", "require-explicit-branch-integration-choice"],
+      "expectations": {
+        "first_action": ["evaluate-feedback", "pin-review-scope"],
+        "mutation": ["after-user-choice", "requested-repo-writes"],
+        "question": "required-before-unapproved-action",
+        "stop": "present-options"
+      }
     },
     {
       "id": "skill-authoring",
-      "prompt": "Create a new skill and keep the entrypoint small while moving heavy material into references.",
-      "expected_skill": "writing-skills",
-      "forbidden_initial_skills": ["writing-software"]
+      "prompt": "Create a new skill, keep the entrypoint small, move heavy material into references, and run the skill-surface checks.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-skills",
+      "allowed_secondary_skills": ["verification-before-completion"],
+      "expected_sequence": ["software-engineering-flow", "writing-skills", "verification-before-completion"],
+      "required_actions": ["inspect-before-editing", "validate-skill-surface", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
     }
   ]
 }

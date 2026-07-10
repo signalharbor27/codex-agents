@@ -1,5 +1,3 @@
-NOTE: Verify examples against current Effect docs via Context7; patterns may drift.
-
 # Critical Rules for Effect-TS
 
 These rules address common mistakes when working with Effect. Understanding why they matter helps write idiomatic Effect

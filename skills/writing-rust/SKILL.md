@@ -1,6 +1,6 @@
 ---
 name: writing-rust
-description: Shape Rust code with sound ownership, clear APIs, and explicit tradeoffs. Use when borrowing, traits, error surfaces, async, or unsafe boundaries materially affect the design. Not for generic code-structure or test-strategy questions.
+description: "Shape Rust code with sound ownership, clear APIs, and explicit tradeoffs. Use when borrowing, traits, error surfaces, async, or unsafe boundaries materially affect the design. Not for generic code-structure or test-strategy questions."
 ---
 
 # Writing Rust
@@ -28,14 +28,15 @@ Keep the entrypoint focused on pressure and route idioms to references.
 2. State the Rust-specific pressure.
 3. Prefer the simplest safe shape that keeps invariants obvious.
 4. Name the soundness, ergonomics, and API-stability tradeoffs.
-5. For implementation, hand back to `writing-software` when generic change shape matters, `testing-software` for proof choice, and `verification-before-completion` before claiming done.
+5. For guidance or review, finish with the recommended API or ownership shape, material tradeoffs, and verification needed.
+6. For implementation, hand back to `writing-software` when generic change shape matters, `testing-software` for proof choice, and `verification-before-completion` before claiming done.
 
 ## Reference Routing
 
 - Read [STYLE.md](STYLE.md) for naming, visibility, and docs.
 - Read [PATTERNS.md](PATTERNS.md) for traits, builders, typestate, and wrapper patterns.
 - Read [DOCS.md](DOCS.md) for docs and doctests.
-- Read [SSR.md](SSR.md) when SSR or frontend integration matters.
+- Read [SSR.md](SSR.md) when a Rust refactor spans many sites and rust-analyzer structural search and replace is safer than manual edits.
 
 ## Failure Modes
 

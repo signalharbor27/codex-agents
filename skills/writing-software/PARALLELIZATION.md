@@ -2,6 +2,8 @@ Read this when the work is large enough that bounded subagents can preserve cont
 
 Use subagents for isolation and parallelism when available, not for ceremony. If subagents are unavailable, parallelize independent reads/checks with local tools where possible and keep synthesis on the main thread.
 
+When a narrower workflow mandates a fixed number of distinct subagents, preserve that count and role separation. Use capacity-aware waves rather than merging or dropping required tracks; broad reviews follow `review-and-simplify-changes`'s Eight-Agent Invariant.
+
 Good fits:
 - context-heavy research that can run while the main thread plans
 - independent tracks such as docs, tests, fixtures, or UI polish

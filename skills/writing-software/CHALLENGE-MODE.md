@@ -1,4 +1,4 @@
-Read this after drafting any real plan.
+Read this only when the user requests an interactive plan grill or one unresolved consequential choice requires their decision. For ordinary plans, challenge assumptions internally without entering this turn-by-turn flow.
 
 Challenge mode means:
 - walk the decision tree branch by branch

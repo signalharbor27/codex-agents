@@ -9,21 +9,24 @@ It is designed around a small global harness in [AGENTS.md](AGENTS.md), a small 
 - keep the top-level skill surface small
 - route software work through `software-engineering-flow` first, then into the narrowest producer or reviewer skill
 - use narrower skills only when the problem is really about tests, debugging, Rust, data systems, or other specialized engineering domains
-- keep prompts compact and explicit
+- keep prompts small, explicit, and backed by behavioral evals
 - require fresh verification before completion claims
 - avoid stale Claude/Anthropic/runtime-specific assumptions
 
-This repo is intentionally aligned with current OpenAI prompt-guidance themes:
-- keep instructions specific and compact
-- prefer outcome-first prompts over process-heavy scaffolding
-- separate complex work into clear stages only when it improves reliability
-- prefer small reusable prompt components over one giant always-on prompt
-- make success and verification criteria explicit where they matter
-- scale verification to risk and blast radius
+This repo targets GPT-5.6; OpenAI's `gpt-5.6` alias currently routes to `gpt-5.6-sol`. Model upgrades are tuning passes: validate the deployed model and reasoning settings on representative work rather than treating a slug change as sufficient.
 
-Reference:
-- OpenAI prompt guidance: https://developers.openai.com/api/docs/guides/prompt-guidance/
-- Amp GPT-5.5 findings: https://ampcode.com/models/gpt-5.5
+Prompt and skill guidance:
+- start with the smallest prompt and tool set that reliably completes the task; add instructions only for observed gaps
+- state outcomes, success evidence, important constraints, and approval boundaries; let the model infer routine steps
+- use one compact authorization policy instead of repeating permission warnings throughout the prompt
+- prioritize required evidence, decisions, caveats, and next actions instead of imposing generic brevity or global response templates
+- use lightweight task-specific structure; disclose branch-specific detail behind precise reference pointers
+- give ordered steps checkable completion criteria, co-locate related rules and caveats, and prune duplication and sentence-level no-ops
+- benchmark task success, final-answer completeness, evidence, tokens, latency, and cost on representative prompts
+
+References:
+- OpenAI GPT-5.6 model guidance: https://developers.openai.com/api/docs/guides/latest-model
+- Matt Pocock's writing-great-skills reference: https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-great-skills
 
 ## Top-Level Skills
 
@@ -75,7 +78,7 @@ For larger features:
 - let `writing-software` branch into greenfield or brownfield mode based on whether the main uncertainty is new shape or existing invariants
 - use narrower routers only when they clearly dominate
 - pull in references only when the problem actually needs them
-- use a file-backed exec plan in the target repo, typically under `docs/exec-plans/active/`, when the work is large, multi-session, or multi-agent
+- when Q has requested or authorized a durable plan, keep it in the target repo, typically under `docs/exec-plans/active/`
 
 ## Skill Families
 
@@ -108,14 +111,22 @@ For larger features:
 
 ## Evals
 
-The lightweight eval suite lives in [skills/evals](skills/evals).
+The executable eval suite lives in [skills/evals](skills/evals).
 
 It currently covers:
-- skill count and expected top-level routers
-- required `When to Use` / `When Not to Use` sections
-- description shape
-- banned legacy terms
-- routing cases for representative prompts
+- exact skill inventory, quoted frontmatter, required sections, local links, and stale bindings
+- 28 representative routing cases with mandatory router, primary/secondary sequence, first action, mutation authority, question policy, stop condition, and required actions
+- dry-run previews that make no external calls
+- optional guarded GPT-5.6-sol classification through `codex exec`
+
+Run local structural and fixture validation:
+
+```bash
+bash skills/evals/check-skill-surface.sh
+bun skills/evals/run-routing-evals.ts dry-run
+```
+
+Live evaluation requires an explicit case or `--all` plus `--allow-live`; see [skills/evals/README.md](skills/evals/README.md).
 
 ## Exec Plans
 
@@ -125,15 +136,7 @@ Suggested target-repo path:
 - `docs/exec-plans/active/`: current plans
 - `docs/exec-plans/completed/`: archived finished plans
 
-Use them for large, multi-session, or multi-agent work. Keep them local by default; commit only when the plan has durable team value.
-
-Run:
-
-```bash
-bash skills/evals/check-skill-surface.sh
-```
-
-`routing-cases.json` is the seed set for manual or agent-driven behavioral checks after major edits.
+Use them for large, multi-session, or multi-agent work only when the user requests or authorizes the durable artifact. Keep them local by default; commit only when the plan has durable team value and committing it is in scope.
 
 ## What Is Not In Scope
 

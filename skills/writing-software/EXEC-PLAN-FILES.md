@@ -1,6 +1,6 @@
-Read this when the work is large enough that chat alone is not a reliable source of truth.
+Read this only after the user requests or authorizes a durable exec-plan file.
 
-Use a local exec-plan file for:
+Once authorized, a local exec-plan file fits:
 - multi-session work
 - multi-agent work
 - repo-wide review or migration work

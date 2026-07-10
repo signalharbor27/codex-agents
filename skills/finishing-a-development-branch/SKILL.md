@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Close out completed branch work with an explicit integration choice and verified state. Use when implementation is done and you need to merge, open a PR, keep the branch, or discard it. Not for mid-task execution.
+description: "Close out completed branch work with an explicit integration choice and verified state. Use when the current task asks to merge, open a PR, keep, discard, or clean up after implementation only; not as an automatic implementation tail."
 ---
 
 # Finishing a Development Branch

@@ -16,28 +16,6 @@ Treat the friction you hit while trying to understand the codebase as evidence, 
 - operability: timeouts, retries, idempotency, backpressure, observability, and recovery are explicit where failure matters
 - workflow fit: whether the repo supports research, planning, delegation, and verification cleanly
 
-## What Good Output Looks Like
-
-Keep it short and critical.
-
-1. Current-state findings
-2. Highest-cost problems
-3. Preserved constraints and invariants
-4. Target architecture shape
-5. Phased plan
-6. Verification approach
-
-Be opinionated: recommend a strongest target shape, not just a menu of options.
-If the target shape is genuinely unclear, compare 2-3 realistic shapes first, then recommend the strongest one.
-
-For each phase, include:
-
-- goal
-- scope
-- dependencies
-- verification
-- expected payoff
-
 ## Good Review Questions
 
 - Which modules are shallow wrappers instead of deep boundaries?

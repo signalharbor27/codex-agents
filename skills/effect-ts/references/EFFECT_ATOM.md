@@ -1,5 +1,3 @@
-NOTE: Verify examples against current Effect docs via Context7; patterns may drift.
-
 # Effect-Atom Reference
 
 Reactive state management library for Effect. Provides atoms (reactive state containers) that integrate with Effect's

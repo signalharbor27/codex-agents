@@ -1,6 +1,6 @@
 ---
 name: describe-pr
-description: Write reviewer-oriented pull request summaries with clear problem framing, user-visible impact, implementation notes, and verification steps. Use when drafting or updating a PR description after the code is already in place.
+description: "Write reviewer-oriented pull request summaries after implementation. Use when creating or updating a PR body from the final diff and verification state; not while code still needs design or implementation."
 ---
 
 # Describe PR
@@ -9,6 +9,7 @@ description: Write reviewer-oriented pull request summaries with clear problem f
 
 Use this skill when the work exists and the main task is explaining it clearly to reviewers.
 Focus on what changed, why it changed, what users will notice, and how someone can verify it quickly.
+The first task action is reading the final diff; do not draft from a plan or file list alone.
 
 ## When to Use
 
