@@ -1,11 +1,10 @@
-# Anti-Patterns (Forbidden)
+# Effect Boundary Review Guide
 
-These patterns are **never acceptable** in Effect-TS code. Each is listed with rationale and the correct alternative.
+These are strong defaults for Effect-native application code, not universal bans. Follow current official Effect documentation and established repo conventions. Apply each warning at the boundary named by its heading; interoperability, bootstrap, test, and intentionally unrecoverable paths may justify exceptions.
 
-## FORBIDDEN: Effect.runSync/runPromise Inside Services
+## Avoid Running Effects Inside Effect-Native Services
 
 ```typescript
-// FORBIDDEN
 export class UserService extends Effect.Service<UserService>()("UserService", {
     effect: Effect.gen(function* () {
         const findById = (id: UserId) => {
@@ -27,10 +26,9 @@ const findById = Effect.fn("UserService.findById")(function* (id: UserId) {
 })
 ```
 
-## FORBIDDEN: throw Inside Effect.gen
+## Prefer Typed Failures Inside Effect.gen
 
 ```typescript
-// FORBIDDEN
 yield* Effect.gen(function* () {
     const user = yield* repo.findById(id)
     if (!user) {
@@ -53,10 +51,9 @@ yield* Effect.gen(function* () {
 })
 ```
 
-## FORBIDDEN: catchAll Losing Type Information
+## Preserve Error Information in Broad Handling
 
 ```typescript
-// FORBIDDEN
 yield* someEffect.pipe(
     Effect.catchAll((err) =>
         Effect.fail(new GenericError({ message: "Something failed" }))
@@ -76,10 +73,9 @@ yield* someEffect.pipe(
 )
 ```
 
-## FORBIDDEN: any/unknown Casts
+## Decode Untrusted Data Instead of Casting
 
 ```typescript
-// FORBIDDEN
 const data = someValue as any
 const result = (await fetch(url)) as unknown as MyType
 ```
@@ -97,10 +93,9 @@ if (isMyType(someValue)) {
 }
 ```
 
-## FORBIDDEN: Promise in Service Signatures
+## Keep Effect-Native Service Signatures Composable
 
 ```typescript
-// FORBIDDEN
 export class UserService extends Effect.Service<UserService>()("UserService", {
     effect: Effect.gen(function* () {
         return {
@@ -123,10 +118,9 @@ const findById = Effect.fn("UserService.findById")(
 )
 ```
 
-## FORBIDDEN: console.log
+## Use the Repo Logging Boundary
 
 ```typescript
-// FORBIDDEN
 console.log("Processing order:", orderId)
 console.error("Error:", error)
 ```
@@ -139,10 +133,9 @@ yield* Effect.log("Processing order", { orderId })
 yield* Effect.logError("Operation failed", { error: String(error) })
 ```
 
-## FORBIDDEN: process.env Directly
+## Normalize Environment Configuration at the Boundary
 
 ```typescript
-// FORBIDDEN
 const apiKey = process.env.API_KEY
 const port = parseInt(process.env.PORT || "3000")
 ```
@@ -157,10 +150,9 @@ const config = yield* Config.all({
 })
 ```
 
-## FORBIDDEN: Config.secret (Deprecated)
+## Replace Deprecated Config.secret
 
 ```typescript
-// FORBIDDEN (deprecated)
 const secretConfig = Config.all({
     apiKey: Config.secret("API_KEY"),
     dbPassword: Config.secret("DB_PASSWORD"),
@@ -189,10 +181,9 @@ const secretNumber = Config.redacted(Config.integer("SECRET_PORT"))
 //    ^? Redacted<number>
 ```
 
-## FORBIDDEN: null/undefined in Domain Types
+## Model Domain Absence Deliberately
 
 ```typescript
-// FORBIDDEN
 type User = {
     name: string
     bio: string | null
@@ -211,10 +202,9 @@ const User = Schema.Struct({
 })
 ```
 
-## FORBIDDEN: Option.getOrThrow
+## Handle Option Absence Explicitly
 
 ```typescript
-// FORBIDDEN
 const user = Option.getOrThrow(maybeUser)
 const name = pipe(maybeName, Option.getOrThrow)
 ```
@@ -236,10 +226,9 @@ const name = Option.getOrElse(maybeName, () => "Anonymous")
 const upperName = Option.map(maybeName, (n) => n.toUpperCase())
 ```
 
-## FORBIDDEN: Context.Tag for Business Services
+## Choose the Service Abstraction by Repo Convention
 
 ```typescript
-// FORBIDDEN
 export class UserService extends Context.Tag("UserService")<
     UserService,
     { findById: (id: UserId) => Effect.Effect<User, UserNotFoundError> }
@@ -259,10 +248,9 @@ export class UserService extends Effect.Service<UserService>()("UserService", {
 }) {}
 ```
 
-## FORBIDDEN: Ignoring Errors with orDie
+## Reserve orDie for Defects
 
 ```typescript
-// FORBIDDEN (in most cases)
 yield* someEffect.pipe(Effect.orDie)
 ```
 
@@ -283,10 +271,9 @@ yield* someEffect.pipe(
 )
 ```
 
-## FORBIDDEN: mapError Instead of catchTag
+## Preserve Error Discrimination
 
 ```typescript
-// FORBIDDEN
 yield* effect.pipe(
     Effect.mapError((err) => new GenericError({ message: String(err) }))
 )
@@ -303,10 +290,9 @@ yield* effect.pipe(
 )
 ```
 
-## FORBIDDEN: Mixing Effect and Promise Chains
+## Keep Composition in One Effect Program
 
 ```typescript
-// FORBIDDEN
 const result = await someEffect.pipe(
     Effect.runPromise,
 ).then(data => {
@@ -327,10 +313,9 @@ const program = Effect.gen(function* () {
 const result = await Effect.runPromise(program)
 ```
 
-## FORBIDDEN: Mutable State Without Ref
+## Use Managed State for Shared Mutation
 
 ```typescript
-// FORBIDDEN
 let counter = 0
 const increment = Effect.sync(() => { counter++ })
 ```
@@ -346,10 +331,9 @@ const program = Effect.gen(function* () {
 })
 ```
 
-## FORBIDDEN: Using Date.now() or new Date() Directly
+## Inject Time When Determinism Matters
 
 ```typescript
-// FORBIDDEN
 const now = new Date()
 const timestamp = Date.now()
 ```

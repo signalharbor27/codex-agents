@@ -1,6 +1,6 @@
 ---
 name: improve-codebase-architecture
-description: Audit codebase or subsystem architecture for shallow modules, weak seams, agent navigability, domain drift, and test-shape pain. Use when you want a phased plan to deepen interfaces, simplify structure, and improve verification.
+description: "Audit codebase or subsystem architecture for shallow modules, weak seams, agent navigability, domain drift, and test-shape pain. Use when you want a phased plan to deepen interfaces, simplify structure, and improve verification."
 ---
 
 # Improve Codebase Architecture
@@ -37,16 +37,23 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 7. Check agent-friendliness directly: entrypoints, local reasoning, verification commands, implicit side effects, and navigability.
 8. Classify findings as pre-existing debt, regression from the current change, preventable by `software-engineering-flow`, preventable by `writing-software`, preventable by `testing-software`, or repo-doc/memory candidate.
 9. For large repos or monorepos, split evidence gathering by subsystem and use subagents for bounded independent review tracks such as frontend, backend, shared packages, or build and CI.
-10. For repo-wide, monorepo, or multi-session reviews, write the phased plan to a local file in the target repo, typically under `docs/exec-plans/active/`, instead of leaving it only in chat.
-11. Produce a phased plan with scope, expected payoff, dependencies, and verification for each phase.
+10. Produce a phased plan with scope, expected payoff, dependencies, and verification for each phase.
+11. Keep the review and plan in chat by default. Create or update a target-repo plan file only when the user explicitly requests or has already authorized a durable artifact.
 12. Offer to record durable terms in `CONTEXT.md` or durable tradeoffs in ADRs only when the decision will guide future work.
-13. Grill the phased plan before finalizing it: walk the design tree, resolve dependencies, challenge assumptions, and tighten verification.
+13. Pressure-test the draft internally before finalizing it. Use interactive `grill-me` only when the user requests that flow or a consequential unresolved choice requires approval.
 14. Call out what should not change, what should be deferred, and at least one rejected alternative when the tradeoff is non-trivial.
+
+## Output Contract
+
+- Prioritized findings with file or subsystem evidence, impact, and confidence
+- A phased plan whose phases each state scope, payoff, dependencies, and verification
+- Explicit preserved behavior, deferred work, rejected alternatives, and open decisions
+- Done when every recommendation traces to evidence and the plan has no hidden consequential choice
 
 ## Reference Routing
 
-- Read [AGENT_FRIENDLY_REVIEW.md](AGENT_FRIENDLY_REVIEW.md) for the review rubric, output shape, and planning heuristics.
-- Read [../writing-software/EXEC-PLAN-FILES.md](../writing-software/EXEC-PLAN-FILES.md) when the review needs a durable plan file.
+- Read [AGENT_FRIENDLY_REVIEW.md](AGENT_FRIENDLY_REVIEW.md) for the review rubric and planning heuristics.
+- Read [../writing-software/EXEC-PLAN-FILES.md](../writing-software/EXEC-PLAN-FILES.md) only after a durable target-repo plan file is explicitly authorized.
 
 ## Failure Modes
 

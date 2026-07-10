@@ -1,6 +1,6 @@
 ---
 name: software-engineering-flow
-description: "Use when starting any software-engineering task before planning, edits, or verification: coding, debugging, reviews, refactors, architecture, tests, CI, branches, or merge conflicts. Routes to narrower skills; not for marketing/docs-only/finance."
+description: "Use when starting software engineering. Routes understood regressions with cheap failing tests to testing-software; operational-risk implementation to writing-software plus testing-software; directly owns in-progress merge/rebase conflicts."
 ---
 
 # Software Engineering Flow
@@ -8,8 +8,8 @@ description: "Use when starting any software-engineering task before planning, e
 ## Overview
 
 Use this as the first engineering router. Keep it short: pick the right narrower skill, then execute.
-For GPT-5.5, keep prompts outcome-first: name the goal, success evidence, constraints, and stop condition, then let the narrower skill choose the efficient path.
-Favor explicit, scoped instructions over broad "be thorough" prompts: gather enough context to act safely, make the risk boundary concrete, and keep status/final text compact while keeping code and plans readable.
+For GPT-5.6, keep prompts outcome-first: name the goal, success evidence, important constraints or approval boundaries, and stop condition; let the narrower skill choose routine steps.
+Preserve required evidence and artifacts. Prefer a small task-specific structure over generic brevity rules or an always-on response template.
 
 ## When to Use
 
@@ -26,18 +26,17 @@ Favor explicit, scoped instructions over broad "be thorough" prompts: gather eno
 
 1. Load this skill before inspecting, planning, editing, or verifying.
 2. Choose and load any narrower skill whose trigger fits.
-3. If no narrower skill fits, use `writing-software` as the default.
-4. First line: chosen skill names and task mode. For non-trivial work, add one compact outcome frame: goal, success evidence, constraints/side effects, and output shape.
-5. For implementation or refactor work, classify risk before editing. High risk includes money/credits, auth/security/privacy, external services, live side effects, database schema or migrations, webhooks/events/queues/workers/schedulers, concurrency/idempotency, generated public contracts, or changes spanning 3+ modules/slices.
-6. For high-risk work, the producer preflight is blocking, not advisory:
+3. If no narrower skill fits, use `writing-software` as the default. Exception: this skill directly owns in-progress merge or rebase conflict resolution; do not add a generic narrower skill.
+4. State the chosen skills and task mode. For non-trivial work, add one compact outcome frame: goal, success evidence, constraints/side effects, and output shape.
+5. Before implementation or refactoring, classify risk. Operational risk includes money/credits, auth/security/privacy, external or live side effects, database schema or migrations, webhooks/events/queues/workers/schedulers, concurrency/idempotency, or generated public contracts. Module count changes planning depth, not risk by itself.
+6. Operational-risk producer preflight is blocking:
    - load `writing-software` and `testing-software`
    - load relevant references for the risk, especially `INTERFACE-DESIGN.md`, `COMPLEXITY.md`, `API-COMPATIBILITY.md`, `PRODUCTION-READINESS.md`, `SECURITY-DESIGN.md`, and `DELIVERY.md`
    - state the intended deep module or application boundary, what callers should not know, durable state and side-effect sequence, idempotency/recovery shape, compatibility risk, and test matrix
    - do not edit until likely architecture/test-suite review findings are either resolved in the plan or explicitly accepted as debt
-7. For lower-risk work, still cover the producer gates lightly: `writing-software` for architecture/change shape and `testing-software` for proof shape when behavior risk exists.
-8. Keep the task mode explicit: new change, new codebase, existing complex codebase, bug, review, or verification.
-9. Before handoff, know the exact verification command or observation and the stop condition.
-10. Before any intended commit, run `review-and-simplify-changes`, fix high-confidence findings, then rerun the relevant verification.
+7. For lower-risk work, load `writing-software` when change shape is non-trivial and `testing-software` when behavior needs proof.
+8. Before an implementation handoff, load `verification-before-completion` and run the exact command or observation required by the stop condition.
+9. Before an intended commit, inspect the final diff and rerun relevant verification. Use `review-and-simplify-changes` when Q requests broad review or the agreed scope includes it; preserve that skill's Eight-Agent Invariant.
 
 ## Reference Routing
 

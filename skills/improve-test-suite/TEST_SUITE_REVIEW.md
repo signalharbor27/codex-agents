@@ -29,26 +29,6 @@ Use this when the task is to review a test suite and produce a practical cleanup
 - are so slow or flaky that teams stop trusting them
 - break on harmless refactors even when behavior is unchanged
 
-## What Good Output Looks Like
-
-Keep it short and critical.
-
-1. Current-state findings
-2. Highest-cost test problems
-3. Tests and suites to preserve
-4. Tests to remove or demote
-5. New tests worth adding
-6. Phased plan
-7. Verification approach
-
-For each phase, include:
-
-- goal
-- scope
-- dependencies
-- verification
-- expected payoff
-
 ## Good Review Questions
 
 - Which tests would fail on a harmless internal refactor

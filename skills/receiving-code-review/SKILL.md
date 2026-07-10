@@ -1,6 +1,6 @@
 ---
 name: receiving-code-review
-description: Evaluate review feedback technically before acting on it. Use when handling review comments, especially when scope, correctness, or context is unclear. Not for requesting a review or for blind feedback application.
+description: "Evaluate review feedback technically before acting on it. Use when handling review comments, especially when scope, correctness, or context is unclear. Not for requesting a review or for blind feedback application."
 ---
 
 # Receiving Code Review
@@ -26,7 +26,8 @@ The goal is technical correctness for this codebase.
 1. Infer routine intent from the review comment; ask only for missing acceptance criteria, destructive/live/shared-state, or scope changes.
 2. Verify it against the actual codebase.
 3. Apply, reject, or escalate with technical reasoning.
-4. Test changes before closing the loop.
+4. When valid feedback requires implementation, load `writing-software` before editing.
+5. Test changes and load `verification-before-completion` before closing the loop.
 
 ## Reference Routing
 

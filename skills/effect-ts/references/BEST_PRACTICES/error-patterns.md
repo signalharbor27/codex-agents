@@ -121,9 +121,9 @@ export class SessionExpiredError extends Schema.TaggedError<SessionExpiredError>
 ) {}
 ```
 
-## Schema.TaggedError for All Errors
+## Schema.TaggedError for Schema-Driven Errors
 
-**Always use `Schema.TaggedError`** for defining errors. This provides:
+Follow the error representation already established by the repo. Prefer `Schema.TaggedError` when an error crosses RPC, HTTP, persistence, or another schema-driven boundary and needs serialization or annotations. For local-only failures, `Data.TaggedError`, a tagged value, or the repo's existing error type may be simpler. `Schema.TaggedError` provides:
 
 1. **Serialization** - Errors can be sent over RPC/network
 2. **Type safety** - `_tag` discriminator enables `catchTag`
@@ -174,14 +174,16 @@ export class ForbiddenError extends Schema.TaggedError<ForbiddenError>()(
 
 ### Required Fields
 
-Every error should have:
+Errors that cross a human-readable or network boundary should usually have:
 - `message: Schema.String` - Human-readable description
-- Relevant context fields (IDs, etc.)
+- Relevant context fields that are safe for that boundary (IDs, etc.)
 - Optional `cause: Schema.optional(Schema.String)` for error chains
+
+Internal sentinel errors may omit a message when the tag and typed context fully describe the failure.
 
 ## Error Handling with catchTag/catchTags
 
-**Never use `catchAll` or `mapError`** when you can use `catchTag`/`catchTags`. These preserve type information and enable precise error handling.
+Prefer `catchTag` or `catchTags` when handling known tagged subsets; they preserve type information and make recovery precise. Use `catchAll` when a boundary intentionally handles the entire error channel, and use `mapError` when translating that whole channel into another contract. Preserve useful cause and context during broad handling.
 
 ### catchTag for Single Error Types
 

@@ -1,5 +1,3 @@
-NOTE: Verify examples against current Effect docs via Context7; patterns may drift.
-
 # Testing Effect-TS (Vitest) — Reference
 
 This is a pragmatic guide for writing _deterministic_ tests in Effect-TS codebases, especially when using `@effect/vitest`.

@@ -204,9 +204,9 @@ fn traverse(dir: Direction) { }
 fn traverse(forward: bool) { }
 ```
 
-## Pattern Matching: Never Use Wildcards
+## Pattern Matching: Prefer Exhaustive Matches for Closed Enums
 
-Always match all variants explicitly to get compiler errors when variants are added.
+Prefer naming every variant when the enum is closed and each variant has distinct behavior. This preserves compiler feedback when variants are added.
 
 ```rust
 // DO
@@ -223,7 +223,7 @@ match status {
 }
 ```
 
-If a wildcard seems necessary, **ask the user before using it**.
+Use a wildcard when the remaining variants intentionally share behavior, an external enum is non-exhaustive, or the ignored remainder is immaterial at this boundary. Keep the arm narrow and make the intent clear when it is not obvious; follow existing repo conventions rather than escalating a routine implementation choice.
 
 ## Pattern Matching: Avoid `matches!` Macro
 

@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Find root cause before changing code. Use when the user says debug/diagnose, reports broken, throwing, failing, flaky, slow, or unexpected behavior, or when guess-and-check has started. Not for long-term test strategy.
+description: "Find root cause before changing code. Use when a failure is unexplained, flaky, intermittent, environment-sensitive, or still being guessed at. Not when the user explicitly requests TDD or states the regression is understood."
 ---
 
 # Systematic Debugging
@@ -12,7 +12,7 @@ The goal is evidence, not activity.
 
 ## When to Use
 
-- Bug reports, test failures, and unexpected behavior
+- Bug reports, test failures, and unexpected behavior whose cause is not understood
 - Flaky, intermittent, or environment-sensitive failures
 - Multi-component issues where the failing boundary is unclear
 - Situations where several speculative fixes have already been tried
@@ -21,6 +21,7 @@ The goal is evidence, not activity.
 ## When Not to Use
 
 - Use `testing-software` when the failure is understood and the question is test shape
+- Use `testing-software` first for an understood regression with an explicit or cheap trustworthy failing test
 - Use `writing-software` when the issue is design/refactor pressure rather than a live failure
 - Do not turn ordinary debugging into an architecture review unless evidence actually points there
 

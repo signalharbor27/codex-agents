@@ -1,5 +1,3 @@
-NOTE: Verify examples against current Effect docs via Context7; patterns may drift.
-
 # Stream Patterns
 
 Streams are lazy, pull-based sequences of values that can be infinite. Handle with care.

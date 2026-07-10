@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Codex engineering skill routing result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mandatory_router",
+    "primary_skill",
+    "secondary_skills",
+    "sequence",
+    "actions",
+    "first_action",
+    "mutation",
+    "question",
+    "stop"
+  ],
+  "properties": {
+    "mandatory_router": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "primary_skill": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "secondary_skills": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      }
+    },
+    "sequence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "ask-exactly-one-question",
+          "build-red-capable-loop",
+          "build-thin-prototype",
+          "compare-simpler-option",
+          "create-requested-plan-file",
+          "delegate-independent-tracks",
+          "do-not-change-branch-state",
+          "do-not-invent-verification",
+          "find-root-cause-before-fix",
+          "honor-single-track-scope",
+          "identify-claim-matched-proof",
+          "inspect-before-editing",
+          "inspect-before-recommending",
+          "inspect-both-intents",
+          "inspect-worktree-conventions",
+          "keep-task-read-only",
+          "keep-standards-and-intent-separate",
+          "launch-exactly-eight-distinct-read-only-subagents",
+          "pin-review-scope",
+          "plan-before-editing",
+          "preserve-effect-boundary",
+          "read-final-diff",
+          "report-worktree-location",
+          "require-explicit-branch-integration-choice",
+          "separate-facts-decisions-and-open-questions",
+          "separate-findings-from-plan",
+          "state-rust-specific-pressure",
+          "state-workload-and-correctness-pressure",
+          "stop-before-implementation",
+          "validate-skill-surface",
+          "verify-before-completion",
+          "verify-branch-state",
+          "verify-feedback-against-code"
+        ]
+      }
+    },
+    "first_action": {
+      "enum": [
+        "build-failing-loop",
+        "evaluate-feedback",
+        "identify-proof",
+        "inspect-current-state",
+        "map-decisions",
+        "map-workload",
+        "pin-review-scope",
+        "read-final-diff",
+        "verify-branch-state"
+      ]
+    },
+    "mutation": {
+      "enum": [
+        "after-user-choice",
+        "diagnostic-only",
+        "none",
+        "requested-plan-file",
+        "requested-repo-writes",
+        "requested-worktree"
+      ]
+    },
+    "question": {
+      "enum": [
+        "one-at-a-time",
+        "only-if-blocked",
+        "required-before-unapproved-action"
+      ]
+    },
+    "stop": {
+      "enum": [
+        "after-artifact",
+        "after-requested-scope",
+        "after-root-cause",
+        "after-verification",
+        "after-worktree-ready",
+        "findings",
+        "plan",
+        "present-options",
+        "recommendation",
+        "wait-for-answer"
+      ]
+    }
+  }
+}
