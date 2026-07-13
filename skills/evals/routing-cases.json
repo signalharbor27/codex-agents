@@ -27,7 +27,7 @@
       "primary_skill": "grill-me",
       "allowed_secondary_skills": ["verification-before-completion", "writing-software"],
       "expected_sequence": ["software-engineering-flow", "grill-me"],
-      "required_actions": ["ask-exactly-one-question"],
+      "required_actions": ["ask-exactly-one-question", "resolve-facts-before-asking", "leave-consequential-decisions-to-user", "require-implementation-authorization-after-grill", "stop-before-implementation"],
       "expectations": {
         "first_action": "map-decisions",
         "mutation": "none",
@@ -57,7 +57,7 @@
       "primary_skill": "testing-software",
       "allowed_secondary_skills": ["writing-software", "verification-before-completion"],
       "expected_sequence": ["software-engineering-flow", "testing-software"],
-      "required_actions": ["build-red-capable-loop", "verify-before-completion"],
+      "required_actions": ["build-red-capable-loop", "use-independent-test-oracle", "verify-before-completion"],
       "expectations": {
         "first_action": "build-failing-loop",
         "mutation": "requested-repo-writes",
@@ -162,7 +162,7 @@
       "primary_skill": "review-and-simplify-changes",
       "allowed_secondary_skills": ["effect-ts", "testing-software", "verification-before-completion", "writing-rust", "writing-software"],
       "expected_sequence": ["software-engineering-flow", "review-and-simplify-changes"],
-      "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "keep-standards-and-intent-separate", "verify-before-completion"],
+      "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "keep-standards-and-intent-separate", "trace-each-material-intent-requirement", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "requested-repo-writes",
@@ -312,7 +312,7 @@
       "primary_skill": "writing-software",
       "allowed_secondary_skills": ["testing-software", "verification-before-completion"],
       "expected_sequence": ["software-engineering-flow", "writing-software", "testing-software", "verification-before-completion"],
-      "required_actions": ["inspect-before-editing", "plan-before-editing", "verify-before-completion"],
+      "required_actions": ["inspect-before-editing", "plan-before-editing", "avoid-expand-contract-without-wide-migration", "verify-before-completion"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "requested-repo-writes",
@@ -357,12 +357,57 @@
       "primary_skill": "writing-software",
       "allowed_secondary_skills": [],
       "expected_sequence": ["software-engineering-flow", "writing-software"],
-      "required_actions": ["separate-facts-decisions-and-open-questions"],
+      "required_actions": ["separate-facts-decisions-and-open-questions", "map-precise-blocked-questions", "defer-imprecise-uncertainty"],
       "expectations": {
         "first_action": "map-decisions",
         "mutation": "none",
         "question": "only-if-blocked",
         "stop": "plan"
+      }
+    },
+    {
+      "id": "wide-contract-migration",
+      "prompt": "Plan a repository-wide API rename where callers cannot all move in one vertical slice. Keep each checkpoint green and stop at the plan.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-software",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "writing-software"],
+      "required_actions": ["inspect-before-recommending", "use-expand-contract-for-wide-migration"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "plan"
+      }
+    },
+    {
+      "id": "source-grounded-research",
+      "prompt": "Research how the current code and the installed dependency version handle retries. Cite authoritative sources, separate verified facts from inference, and do not edit files.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-software",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "writing-software"],
+      "required_actions": ["inspect-before-recommending", "cite-authoritative-sources", "use-version-matched-authoritative-sources", "separate-facts-inference-and-recommendations", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
+      "id": "read-only-domain-modeling",
+      "prompt": "Review the domain terminology and propose glossary or ADR changes, but do not write CONTEXT.md or any other file.",
+      "mandatory_router": "software-engineering-flow",
+      "primary_skill": "writing-software",
+      "allowed_secondary_skills": [],
+      "expected_sequence": ["software-engineering-flow", "writing-software"],
+      "required_actions": ["inspect-before-recommending", "keep-domain-artifacts-proposed", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "recommendation"
       }
     },
     {
@@ -387,7 +432,7 @@
       "primary_skill": "writing-software",
       "allowed_secondary_skills": [],
       "expected_sequence": ["software-engineering-flow", "writing-software"],
-      "required_actions": ["inspect-before-editing", "create-requested-plan-file", "stop-before-implementation"],
+      "required_actions": ["inspect-before-editing", "create-requested-plan-file", "single-source-durable-map", "stop-before-implementation"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "requested-plan-file",

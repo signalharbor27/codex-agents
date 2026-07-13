@@ -29,6 +29,7 @@ Source family: Eric Evans and Vaughn Vernon on domain-driven design.
 
 - Read existing `CONTEXT.md`, `CONTEXT-MAP.md`, `docs/adr/`, or equivalent repo docs before inventing terms.
 - If `CONTEXT-MAP.md` exists, use it to find the owning context. If multiple contexts fit and ownership matters, ask.
+- In read-only planning, review, or research, challenge the model and propose glossary, context-map, or ADR changes in chat; write artifacts only when the user requested them or they are already part of the authorized deliverable.
 - Create or update `CONTEXT.md` lazily only when a term, relationship, alias, or ambiguity will guide future changes.
 - Keep definitions one sentence. Define what the term is, not implementation details.
 - Record aliases to avoid when competing names caused confusion.
