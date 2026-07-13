@@ -19,10 +19,12 @@ Rules:
   - refactor request: verify the pain in code, define in/out scope, then plan tiny behavior-preserving commits
 - if design choices are genuinely unclear, resolve them before writing implementation steps
 - when the work is too foggy for a plan, make a lightweight decision map first: open questions, research/prototype/discuss tracks, dependencies between decisions, and the next decision that would unlock the most uncertainty
+- put a question on the decision map once it can be stated precisely, even when blocked; leave uncertainty that cannot yet be phrased precisely unsliced until earlier decisions clarify it
 - keep the decision map local to chat or the exec plan unless the user asks for tracker issues; do not convert it into PRDs or tickets by default
+- for an authorized durable map, keep each detailed decision in one authoritative location and use the overview as a concise index and resume surface rather than duplicating detail
 - keep research objective; do not mix "how it works" with "what we should build"
 - do not finalize the tactical plan with unresolved branch decisions or open questions
-- plan in vertical slices, not layer-by-layer batches
+- prefer vertical slices over layer-by-layer batches; when one mechanical contract migration cannot stay green as independent vertical slices, use expand/contract: add the new form alongside the old, migrate callers in dependency order, then remove the old form after all migration batches pass
 - make each slice useful and verifiable through behavior, not just a file-edit batch
 - review the design discussion and structure outline deeply; spot-check the tactical plan and save deep review for the code
 - use inline plans by default; use a file-backed exec plan only after the user requests or authorizes the durable artifact

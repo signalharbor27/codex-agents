@@ -26,13 +26,13 @@ The goal is shared understanding, not implementation.
 ## Minimal Workflow
 
 1. Read the plan, design, or directly mentioned files fully before questioning it.
-2. If the codebase can answer a question, inspect the code before asking the user.
+2. Resolve facts from code or other authoritative evidence instead of asking the user. Put consequential product, scope, architecture, and behavior decisions to the user; keep routine implementation choices agent-owned when repo conventions make them clear.
 3. Pick the single highest-leverage unresolved branch decision.
 4. Ask exactly one question per turn. Do not batch multiple branches, preview the rest of the questionnaire, or dump a full report.
 5. For that one question, include a recommended answer, the key tradeoff, and what changes if the answer goes the other way.
 6. Stop and wait for the user's answer. On the next turn, briefly mark the prior branch as resolved, then move to the next single highest-leverage question.
 7. Tighten dependencies, rejected alternatives, scope edges, and verification until the plan is stable.
-8. Stop when the major branch decisions are resolved or the user wants to return to planning.
+8. Leave the grill when the major branch decisions are resolved and the user confirms the plan is ready. Begin implementation only when the original task already authorized it or the user explicitly requests implementation.
 
 ## Reference Routing
 
@@ -45,5 +45,7 @@ The goal is shared understanding, not implementation.
 - Asking multiple questions in one turn or presenting the whole design tree at once
 - Turning the grill into a report, memo, or questionnaire instead of an interactive state machine
 - Using user questions as a substitute for code inspection
+- Treating routine implementation details as user-owned decisions
+- Treating plan readiness as implementation authority
 - Grilling forever without converging on stable decisions
 - Stress-testing tiny low-risk work that does not need a standalone grill

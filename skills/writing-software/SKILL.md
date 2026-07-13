@@ -58,7 +58,7 @@ Keep changes small and reversible. Scale planning and proof to actual behavior a
 - Read [PRODUCTION-READINESS.md](PRODUCTION-READINESS.md) when timeouts, retries, backpressure, health checks, or observability matter.
 - Read [SECURITY-DESIGN.md](SECURITY-DESIGN.md) when trust boundaries, auth, secrets, or attacker paths matter.
 - Read [DELIVERY.md](DELIVERY.md) for deploy gates, rollback, migrations, and small-batch delivery.
-- Read [PLANNING-ARTIFACTS.md](PLANNING-ARTIFACTS.md) when user-approved work needs staged research/design/outline/plan artifacts instead of one short inline plan.
+- Read [PLANNING-ARTIFACTS.md](PLANNING-ARTIFACTS.md) for source-grounded factual research or when work needs staged research/design/outline/plan artifacts instead of one short inline plan.
 - Read [EXEC-PLAN-FILES.md](EXEC-PLAN-FILES.md) when the user requested or approved a durable in-repo plan across sessions or agents.
 - Read [PARALLELIZATION.md](PARALLELIZATION.md) when a plan may benefit from subagents or split execution.
 - Read [TRACER-BULLETS.md](TRACER-BULLETS.md) for greenfield or large-feature first slices.

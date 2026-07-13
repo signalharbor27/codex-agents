@@ -29,7 +29,7 @@ Use this after a commit, PR, branch, or WIP diff to improve code quality without
    - If a fixed-point diff is empty but unstaged changes exist, report the mismatch and include the unstaged diff only when user intent clearly points at WIP; otherwise ask one narrow scope question.
 3. Read repo-local `AGENTS.md`, docs, package scripts, conventions, and change Intent sources: prompt, explicit spec, plan, task notes, issue, or commit message. Use the diff as evidence of touched behavior, not as proof of intent.
 4. State scope, allowed side effects, validation target, and that the Eight-Agent Invariant applies unless the user explicitly requested one track.
-5. Before cleanup tracks, judge two axes separately: **Standards** (repo rules, skill guidance, local conventions) and **Intent** (what the change was trying to accomplish). Keep those findings separate from cleanup taste.
+5. Before cleanup tracks, judge two axes separately: **Standards** (repo rules, skill guidance, local conventions) and **Intent** (what the change was trying to accomplish). Account for each material Intent requirement as implemented, partial, missing, contradicted, incorrect, or unrequested scope; give tracks a concise digest or source pointers rather than making each rediscover a large spec. Keep those findings separate from cleanup taste.
 6. Apply the Eight-Agent Invariant for every non-single-track review. For the explicit single-track exception, dispatch only that track.
 7. Implement only findings with clear evidence and low behavior risk when the user asked for fixes. Do not stage, commit, push, or add new dependencies unless explicitly asked.
 8. Finish when every required track is accounted for, findings are deduplicated and judged against Standards and Intent, requested fixes are validated, and skipped validation or residual risk is explicit.
@@ -109,4 +109,4 @@ If validation is too broad, unavailable, or skipped by instruction, say exactly 
 
 ## Failure Modes
 
-- Rewrite-by-cleanup; deleting dynamic use after one search; merging different domain types; removing boundary defense; fake precise types; overlapping edits; recs without safe fixes.
+- Rewrite-by-cleanup; diff impressions mistaken for requirement traceability; deleting dynamic use after one search; merging different domain types; removing boundary defense; fake precise types; overlapping edits; recs without safe fixes.

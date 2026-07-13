@@ -1,4 +1,4 @@
-Read this when a change is large or ambiguous enough to need staged planning artifacts instead of one short inline plan.
+Read this for source-grounded factual research, or when a change needs staged planning artifacts instead of one short inline plan.
 
 Keep each artifact small and purpose-specific.
 
@@ -29,11 +29,14 @@ Include:
 - relevant patterns and conventions
 - constraints and invariants already present
 - current testing shape
-- concrete code references when useful
+- material local claims cited to current code, tests, configuration, or authoritative repo docs
+- dependency and API claims sourced from version-matched source, official docs, specifications, or first-party APIs
+- verified facts separated visibly from inference and recommendations, with enough attribution to check consequential conclusions
 
 Avoid:
 - recommendations unless the task explicitly asks for them
 - mixing diagnosis with design choice
+- relying on secondary summaries when an accessible authoritative source owns the fact
 
 ## 3. Design Discussion
 
