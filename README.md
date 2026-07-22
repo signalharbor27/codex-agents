@@ -28,6 +28,63 @@ References:
 - OpenAI GPT-5.6 model guidance: https://developers.openai.com/api/docs/guides/latest-model
 - Matt Pocock's writing-great-skills reference: https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-great-skills
 
+## Codex Custom Agents (v2 Setup)
+
+The global Codex configuration uses named custom agents as task-specific lanes. The main agent remains the orchestrator: it owns scope, user communication, write coordination, synthesis, and the final completion claim. Subagents receive bounded fresh briefs and return evidence, not authority.
+
+The current `~/.codex/config.toml` registration shape is below; the human-facing role descriptions are summarized under role selection.
+
+```toml
+[agents]
+max_depth = 2
+
+[agents.reviewer]
+config_file = "./agents/reviewer.toml"
+nickname_candidates = ["Atlas", "Delta", "Echo", "Kite", "Nova", "Orion", "Pixel", "Sage"]
+
+[agents.fast_reviewer]
+config_file = "./agents/fast_reviewer.toml"
+nickname_candidates = ["Dash", "Flux", "Jet", "Swift"]
+
+[agents.oracle_reviewer]
+config_file = "./agents/oracle_reviewer.toml"
+nickname_candidates = ["Athena", "Helix", "Kepler", "Vega"]
+
+[agents.librarian]
+config_file = "./agents/librarian.toml"
+nickname_candidates = ["Archive", "Index", "Quill", "Scout"]
+
+[agents.verifier]
+config_file = "./agents/verifier.toml"
+nickname_candidates = ["Gauge", "Proof", "Relay", "Trace"]
+```
+
+Paths in `config_file` are relative to the configuration file that registers the role, so these resolve to `~/.codex/agents/*.toml`. The role file's `name` is the agent identity; the nickname is presentation-only. With `max_depth = 2`, the root thread at depth 0 can create children and a permitted child can create one more level. The current custom profiles themselves forbid spawning more agents, keeping normal work to one controlled fan-out layer.
+
+### Role selection
+
+- `fast_reviewer`: `gpt-5.6-terra`, low reasoning, read-only. Use for fast, narrow, mechanically checkable tracks such as unused code, dependency edges, or comments and stubs.
+- `reviewer`: `gpt-5.6-sol`, medium reasoning, read-only. Use for normal correctness, contract, regression, and maintainability review with a pinned scope.
+- `oracle_reviewer`: `gpt-5.6-sol`, high reasoning, read-only. Use for the hardest judgment-heavy review, subtle behavior tracing, architectural tradeoffs, or a consequential second opinion.
+- `librarian`: `gpt-5.6-terra`, low reasoning, read-only. Use for version-aware library docs, public implementation research, and current external facts; it should synthesize primary evidence rather than review local code by default.
+- `verifier`: `gpt-5.6-terra`, medium reasoning, workspace-write sandbox. Use after implementation to run the exact local checks, capture commands and exit status, and report pass, fail, or blocked. It may create ordinary tool artifacts but must not edit source, update dependencies, or mutate external systems.
+
+Research-capable profiles route version-specific library questions to the documentation MCP, public implementation and usage searches to grep.app, and broader current web or release research to Exa. They use the narrowest source first and keep repository contracts authoritative.
+
+Codex's built-in `default`, `worker`, and `explorer` roles remain available. The custom roster is deliberately strongest on research, review, and proof, where clean independent context and role-specific tools provide the most leverage.
+
+### Delegation policy
+
+- Stay on the main thread for small or tightly sequential work. Spawn the minimum number of agents that gives each independent question a clear owner.
+- Prefer parallel read-heavy tracks. Parallel writes are safe only with disjoint file ownership and no shared contract; otherwise serialize them.
+- Give every subagent a self-contained brief: goal, exact scope, relevant files or symbols, constraints and mutation authority, required evidence, acceptance criteria, and output shape.
+- Match capability to difficulty: use the fast role for clear mechanical work, the standard role by default, and the oracle only when deeper judgment is worth the latency and cost.
+- Keep the main thread focused on requirements and decisions while children absorb noisy searches, logs, test output, and independent review.
+- Treat every child result as untrusted evidence. The parent must inspect material claims, reconcile disagreements, review any diff, and run or delegate fresh final verification.
+- Never delegate a decision that requires user approval, a write to shared or live state, or the final decision that the task is complete.
+
+This design is inspired by Amp's capability dial and its specialized [subagents](https://ampcode.com/manual/subagents), [Oracle](https://ampcode.com/manual/oracle), and [Librarian](https://ampcode.com/manual/librarian): choose the least expensive capable lane, reserve deeper reasoning for hard judgment, and isolate retrieval or noisy work from the main context. Codex's implementation details follow the current [Subagents documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents) and [configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference).
+
 ## Top-Level Skills
 
 Current top-level routers:
