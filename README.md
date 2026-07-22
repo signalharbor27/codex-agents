@@ -32,7 +32,40 @@ References:
 
 The global Codex configuration uses named custom agents as task-specific lanes. The main agent remains the orchestrator: it owns scope, user communication, write coordination, synthesis, and the final completion claim. Subagents receive bounded fresh briefs and return evidence, not authority.
 
-The current `~/.codex/config.toml` registration shape is below; the human-facing role descriptions are summarized under role selection.
+The installable source lives in [agents](agents): five complete profile files plus [registry.toml](agents/registry.toml), which contains the global registration tables.
+
+### Install globally
+
+Copy the profiles into Codex home:
+
+```bash
+CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+install -d "$CODEX_HOME/agents"
+install -m 0644 \
+  agents/fast_reviewer.toml \
+  agents/librarian.toml \
+  agents/oracle_reviewer.toml \
+  agents/reviewer.toml \
+  agents/verifier.toml \
+  "$CODEX_HOME/agents/"
+```
+
+Then merge [agents/registry.toml](agents/registry.toml) into `$CODEX_HOME/config.toml`. Do not replace the existing config, and do not append a second `[agents]` table if one already exists; merge `max_depth` and the five `[agents.<name>]` tables into the existing structure. Start a new Codex session after changing the configuration.
+
+The installed layout should be:
+
+```text
+$CODEX_HOME/
+├── config.toml
+└── agents/
+    ├── fast_reviewer.toml
+    ├── librarian.toml
+    ├── oracle_reviewer.toml
+    ├── reviewer.toml
+    └── verifier.toml
+```
+
+The current registration shape is:
 
 ```toml
 [agents]
