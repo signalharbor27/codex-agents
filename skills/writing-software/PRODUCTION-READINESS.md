@@ -24,6 +24,9 @@ Source family: Michael Nygard, *Release It!*, plus SRE practices.
 - Is retry safe and bounded?
 - What durable intent exists before an external side effect starts?
 - What idempotency key or natural key prevents duplicate work?
+- Does an acknowledgement mean accepted for processing or durably complete? What observable postcondition defines completion?
+- On an idempotency or natural-key conflict, is the existing state semantically equivalent across every field that matters, or must the operation fail closed?
+- After retries or asynchronous processing, how is the final postcondition verified or reconciled instead of inferred from an acknowledgement?
 - What happens if the external side effect succeeds but local commit/logging/provisioning fails?
 - What happens if local state advances but the external side effect fails or times out?
 - Can two workers, webhooks, schedulers, or users process the same item at once? If yes, what claim, lease, lock, or compare-and-swap prevents damage?
