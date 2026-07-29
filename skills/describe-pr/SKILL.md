@@ -20,8 +20,8 @@ The first task action is reading the final diff; do not draft from a plan or fil
 
 ## When Not to Use
 
-- Use `writing-software` when the code itself still needs to be designed or implemented
-- Use `verification-before-completion` to prove the work, not to write the summary
+- Use `engineering` when the code itself still needs to be designed or implemented
+- Run claim-matched proof before this skill; do not use the PR summary as verification
 - Do not use this skill before you understand the final diff and verification state
 
 ## Minimal Workflow
@@ -36,7 +36,7 @@ The first task action is reading the final diff; do not draft from a plan or fil
 ## Reference Routing
 
 - Use the repo PR template when one exists.
-- Use `verification-before-completion` first if the verification state is still unclear.
+- Return to the relevant producer and run fresh claim-matched proof if verification state is unclear.
 
 ## Failure Modes
 

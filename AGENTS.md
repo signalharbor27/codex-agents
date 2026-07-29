@@ -14,13 +14,14 @@ These are mandatory. Violation = failure.
 - For large independent work, use parallel subagents when available; otherwise parallelize independent reads/checks and keep synthesis local unless a loaded skill requires subagents.
 - For implementation/fix requests, continue through code changes and verification unless Q asks for research/plan only.
 - If Q says continue until done, keep going until complete, blocked, or verification fails.
-- For software-engineering work, load `software-engineering-flow` first; do not inspect, plan, edit, or verify before it.
+- For software-engineering work, choose the one primary skill that owns the current job before inspecting, planning, editing, or verifying.
 - Follow user instruction first, then repo-local `AGENTS.md`.
 - Skills guide workflow, not safety, honesty, or direct instructions.
 - On instruction conflict, call it out and take the safest valid path.
 
 # Workflow
 - Non-trivial work: state a compact outcome frame (goal, success evidence, allowed side effects, output shape), then inspect current reality -> plan enough to act safely -> implement -> verify.
+- When prior-session context could materially improve the task and optional memory tooling is unavailable, search `/home/dev/.codex/memories/MEMORY.md`, read at most one or two directly referenced rollout summaries, then stop.
 - Prefer decision rules over scripted steps. Use strict absolutes only for safety, honesty, permissions, verification, and explicit user rules.
 - Research/plan-only tasks stop at findings or plan; implementation tasks stop only after verification or blocker.
 - Before tool batches: one compact line with goal, expected output, and context.
@@ -29,6 +30,14 @@ These are mandatory. Violation = failure.
 - Do not silently retry repeated failures. Read the error, state the changed theory, then try a different focused approach.
 - If context feels degraded, say so, restate the goal/current state, then continue or ask one narrow question.
 - Stop only when complete, blocked, approval is required, or no safe path exists.
+
+# Skills
+
+- Use `engineering` for understood implementation, refactoring, planning, or research; `debugging` for unknown-cause failures; and `test-design` only when tests or proof design are the primary task. Each owns its complete loop through fresh evidence.
+- For review, audit, branch, handoff, or skill-authoring work, use that narrower skill as primary instead of adding a generic producer.
+- Add domain modifiers such as `writing-rust`, `effect-ts`, or `designing-data-intensive-systems` only when their pressure is present.
+- Load only references explicitly routed by the primary skill and required by the task's present pressure. Routine changes should not load architecture, security, delivery, or test-design material by default.
+- Do not stack planning, implementation, testing, and final-verification skills. Transition primary skills only when the task genuinely moves to a different job.
 
 # Subagents
 - Use subagents when work has independent tracks, a specialist materially improves the result, or noisy exploration, research, logs, or verification would pollute the main context. Keep small or tightly sequential work on the main thread.

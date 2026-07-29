@@ -34,7 +34,7 @@ This is optional setup, not a universal prerequisite.
 
 ## Reference Routing
 
-- Use `writing-software` once the isolated workspace is ready and the real task becomes implementation.
+- Use `engineering` as the next primary skill once the isolated workspace is ready and the real task becomes implementation.
 - Use `finishing-a-development-branch` when the isolated branch is complete and needs an integration decision.
 
 ## Failure Modes

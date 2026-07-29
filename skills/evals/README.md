@@ -1,78 +1,61 @@
 # Skill Evals
 
-Executable checks for the active Codex engineering skill surface.
+Executable checks for the active engineering skill surface.
 
-The suite covers:
+The suite verifies:
 
-- structural skill checks: expected routers, required sections, description shape, and stale terms
-- routing fixture validation: exact skill inventory, mandatory router, primary and allowed secondary skills, ordered sequences, and behavior contracts
-- behavioral expectations: first action, mutation authority, question boundary, stop condition, and required workflow actions
-- optional live routing evaluation through `codex exec` with GPT-5.6-sol
+- exact top-level skill inventory
+- quoted, trigger-focused descriptions with the configured length budget
+- required entrypoint sections, line limits, and valid local links
+- one-level progressive references with no reference-to-reference chains
+- one primary skill plus exact modifiers and pressure references
+- first action, mutation authority, question boundary, stop condition, and required actions
+- the broad-review exact-eight-agent invariant
 
-## Static validation
-
-Run the complete local check:
-
-```bash
-./skills/evals/check-skill-surface.sh
-```
-
-Run only routing fixture and result-vocabulary validation:
+## Local Validation
 
 ```bash
-bun skills/evals/run-routing-evals.ts validate
-```
-
-Run focused runner boundary tests:
-
-```bash
+bash skills/evals/check-skill-surface.sh
 bun test skills/evals/run-routing-evals.test.ts
-```
-
-The Bun validator is dependency-free. Its manual fixture validator is authoritative: it rejects unknown or malformed fields, compares `engineering_skills` with actual `SKILL.md` directories, validates local Markdown links, and checks cross-field routing invariants.
-
-## Dry run
-
-Preview every live invocation contract without calling a model:
-
-```bash
+bun skills/evals/run-routing-evals.ts validate
 bun skills/evals/run-routing-evals.ts dry-run
 ```
+
+The Bun validator is dependency-free and authoritative for fixture, inventory, frontmatter, link, progressive-disclosure, and cross-field rules.
+
+Dry-run emits one JSON line per case with `external_call: false` and the expected contract:
+
+- `primary_skill`
+- `modifier_skills`
+- `references`
+- `actions`
+- `first_action`
+- `mutation`
+- `question`
+- `stop`
 
 Preview one case:
 
 ```bash
-bun skills/evals/run-routing-evals.ts dry-run --case wip-cleanup-quality
+bun skills/evals/run-routing-evals.ts dry-run --case routine-refactor
 ```
 
-Each JSON line reports `external_call: false`, the fixed model and sandbox arguments, and the expected routing/behavior contract.
+## Optional Live Evaluation
 
-## Optional live run
+Live mode classifies the task; it does not execute it. It explicitly uses GPT-5.6 SOL at `xhigh`, an ephemeral session, a read-only sandbox, and [routing-result.schema.json](routing-result.schema.json).
 
-Live mode invokes the installed `codex exec` CLI with:
-
-- model `gpt-5.6-sol`
-- ephemeral sessions
-- read-only sandbox
-- `routing-result.schema.json` as the output contract
-
-It requires explicit external-call consent and an explicit case scope:
+External-call consent and explicit scope are mandatory:
 
 ```bash
 bun skills/evals/run-routing-evals.ts live --case unknown-flaky-failure --allow-live
-```
-
-Run all cases only when model cost and latency are intentional:
-
-```bash
 bun skills/evals/run-routing-evals.ts live --all --allow-live
 ```
 
-Live evaluation classifies the intended workflow; it does not execute the task embedded in a case. The runner compares mandatory/primary routing, allowed secondaries, ordered required sequence, required actions, and behavioral expectations. A non-matching case exits nonzero.
+The runner compares the exact primary skill, modifiers, disclosed references, required actions, and behavior contract. A mismatch exits nonzero.
 
 ## Files
 
-- `routing-cases.json`: versioned cases and expected behavior
-- `routing-result.schema.json`: structured live-model output schema
-- `run-routing-evals.ts`: static, dry-run, and live runner
-- `check-skill-surface.sh`: complete structural and routing validation entrypoint
+- [routing-cases.json](routing-cases.json): representative routes and expected behavior
+- [routing-result.schema.json](routing-result.schema.json): structured live output
+- [run-routing-evals.ts](run-routing-evals.ts): validation, dry-run, and guarded live runner
+- [check-skill-surface.sh](check-skill-surface.sh): complete local entrypoint

@@ -1,48 +1,60 @@
 {
-  "version": 2,
+  "version": 3,
   "engineering_skills": [
+    "debugging",
     "describe-pr",
     "designing-data-intensive-systems",
     "effect-ts",
+    "engineering",
     "finishing-a-development-branch",
     "grill-me",
     "improve-codebase-architecture",
     "improve-test-suite",
     "receiving-code-review",
     "review-and-simplify-changes",
-    "software-engineering-flow",
-    "systematic-debugging",
-    "testing-software",
+    "test-design",
     "using-git-worktrees",
-    "verification-before-completion",
     "writing-rust",
-    "writing-skills",
-    "writing-software"
+    "writing-skills"
+  ],
+  "skill_references": [
+    "debugging/references/async-and-flakes.md",
+    "debugging/references/root-cause-tracing.md",
+    "engineering/references/boundary-design.md",
+    "engineering/references/compatibility-and-delivery.md",
+    "engineering/references/durable-plan.md",
+    "engineering/references/feature-shape.md",
+    "engineering/references/legacy-change.md",
+    "engineering/references/performance-and-capacity.md",
+    "engineering/references/proof.md",
+    "engineering/references/security.md",
+    "engineering/references/state-and-effects.md",
+    "test-design/references/browser-e2e.md",
+    "test-design/references/tdd.md",
+    "test-design/references/test-selection.md"
   ],
   "cases": [
     {
       "id": "grill-a-plan",
-      "prompt": "Grill me on this implementation plan until the risky branch decisions and verification gaps are fully resolved.",
-      "mandatory_router": "software-engineering-flow",
+      "prompt": "Grill this implementation plan one question at a time. Resolve repository facts yourself, recommend an answer with each question, and do not implement anything.",
       "primary_skill": "grill-me",
-      "allowed_secondary_skills": ["verification-before-completion", "writing-software"],
-      "expected_sequence": ["software-engineering-flow", "grill-me"],
-      "required_actions": ["ask-exactly-one-question", "resolve-facts-before-asking", "leave-consequential-decisions-to-user", "require-implementation-authorization-after-grill", "stop-before-implementation"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["resolve-facts-before-asking", "ask-exactly-one-question", "keep-task-read-only"],
       "expectations": {
-        "first_action": "map-decisions",
+        "first_action": "inspect-current-state",
         "mutation": "none",
         "question": "one-at-a-time",
         "stop": "wait-for-answer"
       }
     },
     {
-      "id": "simple-refactor",
-      "prompt": "Refactor this handler to remove duplication and make the error semantics clearer.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "writing-software",
-      "allowed_secondary_skills": ["testing-software", "verification-before-completion"],
-      "expected_sequence": ["software-engineering-flow", "writing-software", "verification-before-completion"],
-      "required_actions": ["inspect-before-editing", "verify-before-completion"],
+      "id": "routine-refactor",
+      "prompt": "Refactor this local parser helper to remove duplication without changing behavior. Keep the diff small and verify the existing focused tests.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["inspect-before-editing", "stay-within-change-budget", "verify-before-completion"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "requested-repo-writes",
@@ -51,12 +63,123 @@
       }
     },
     {
-      "id": "explicit-tdd-request",
-      "prompt": "I want to fix this checkout bug with TDD. Start with the most important behavior slice.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "testing-software",
-      "allowed_secondary_skills": ["writing-software", "verification-before-completion"],
-      "expected_sequence": ["software-engineering-flow", "testing-software"],
+      "id": "greenfield-integration",
+      "prompt": "Build the first usable path for a new internal integration. Use the real entrypoint and provider boundary, keep it thin, and prove one end-to-end behavior before adding options.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/feature-shape.md"],
+      "required_actions": ["inspect-before-editing", "build-production-complete-slice", "load-only-present-pressure-references", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "boundary-change",
+      "prompt": "Design and implement a small application boundary that hides provider quirks from three current callers. Compare it with keeping the code direct and avoid pass-through wrappers.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/boundary-design.md"],
+      "required_actions": ["inspect-before-editing", "load-only-present-pressure-references", "stay-within-change-budget", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "legacy-behavior-change",
+      "prompt": "Change this under-tested legacy import path without breaking its odd existing consumers. Characterize the behavior first and avoid a rewrite.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/legacy-change.md"],
+      "required_actions": ["inspect-before-editing", "load-only-present-pressure-references", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "payment-webhook",
+      "prompt": "Implement payment webhook processing so duplicate delivery, retries, partial failure, and reconciliation cannot double-credit an account.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/state-and-effects.md"],
+      "required_actions": ["inspect-before-editing", "load-only-present-pressure-references", "build-production-complete-slice", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "required-before-unapproved-action",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "sdk-schema-migration",
+      "prompt": "Plan a schema and generated SDK rename where consumers deploy independently. Keep mixed versions working and stop at the plan.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/compatibility-and-delivery.md"],
+      "required_actions": ["inspect-before-recommending", "load-only-present-pressure-references"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "plan"
+      }
+    },
+    {
+      "id": "auth-replay",
+      "prompt": "Implement a one-time privileged action. Bind it to the authenticated account and resource, reject replay, and fail closed.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/security.md"],
+      "required_actions": ["inspect-before-editing", "load-only-present-pressure-references", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "hot-path-query",
+      "prompt": "Reduce latency on this hot database query. Establish a representative baseline, find the bottleneck, make one measured change, and verify correctness.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/performance-and-capacity.md"],
+      "required_actions": ["inspect-before-editing", "load-only-present-pressure-references", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "understood-bug-fix",
+      "prompt": "The bug is understood: empty normalized IDs bypass this validation. Add the smallest regression proof and fix, then run the relevant checks.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/proof.md"],
+      "required_actions": ["inspect-before-editing", "identify-claim-matched-proof", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "explicit-tdd",
+      "prompt": "Use TDD to add this validation behavior one vertical slice at a time. Show the focused test failing for the right reason before changing production code.",
+      "primary_skill": "test-design",
+      "expected_modifier_skills": [],
+      "expected_references": ["test-design/references/tdd.md"],
       "required_actions": ["build-red-capable-loop", "use-independent-test-oracle", "verify-before-completion"],
       "expectations": {
         "first_action": "build-failing-loop",
@@ -66,15 +189,28 @@
       }
     },
     {
-      "id": "cheap-bugfix-tdd-default",
-      "prompt": "This understood regression changes the API response body. The endpoint has a fast integration test; make the safest fix.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "testing-software",
-      "allowed_secondary_skills": ["writing-software", "verification-before-completion"],
-      "expected_sequence": ["software-engineering-flow", "testing-software", "verification-before-completion"],
-      "required_actions": ["build-red-capable-loop", "verify-before-completion"],
+      "id": "test-strategy",
+      "prompt": "Choose the smallest trustworthy tests for this stateful provider boundary, including what stays real, what can be faked, and the important failure cases. Do not edit files.",
+      "primary_skill": "test-design",
+      "expected_modifier_skills": [],
+      "expected_references": ["test-design/references/test-selection.md"],
+      "required_actions": ["use-independent-test-oracle", "keep-task-read-only"],
       "expectations": {
-        "first_action": ["build-failing-loop", "inspect-current-state"],
+        "first_action": "identify-proof",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "plan"
+      }
+    },
+    {
+      "id": "browser-e2e",
+      "prompt": "Add one stable Playwright browser test for this critical checkout flow, including meaningful assertions and failure evidence without arbitrary sleeps.",
+      "primary_skill": "test-design",
+      "expected_modifier_skills": [],
+      "expected_references": ["test-design/references/browser-e2e.md"],
+      "required_actions": ["inspect-before-editing", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
         "mutation": "requested-repo-writes",
         "question": "only-if-blocked",
         "stop": "after-verification"
@@ -82,41 +218,38 @@
     },
     {
       "id": "unknown-flaky-failure",
-      "prompt": "Diagnose why this test fails only in CI; I do not understand the cause yet.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "systematic-debugging",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "systematic-debugging"],
-      "required_actions": ["find-root-cause-before-fix"],
+      "prompt": "This test fails intermittently in CI and the cause is unknown. Diagnose and fix it, proving the actual interleaving or awaited condition rather than increasing sleeps.",
+      "primary_skill": "debugging",
+      "expected_modifier_skills": [],
+      "expected_references": ["debugging/references/async-and-flakes.md"],
+      "required_actions": ["build-red-capable-loop", "find-root-cause-before-fix", "verify-before-completion"],
       "expectations": {
-        "first_action": ["build-failing-loop", "inspect-current-state"],
-        "mutation": ["diagnostic-only", "none"],
+        "first_action": "build-failing-loop",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "trace-bad-state",
+      "prompt": "A malformed value reaches a crash several calls after it is created. Diagnose only: trace it back to the first invalid transition and do not edit production code.",
+      "primary_skill": "debugging",
+      "expected_modifier_skills": [],
+      "expected_references": ["debugging/references/root-cause-tracing.md"],
+      "required_actions": ["build-red-capable-loop", "find-root-cause-before-fix"],
+      "expectations": {
+        "first_action": "build-failing-loop",
+        "mutation": "diagnostic-only",
         "question": "only-if-blocked",
         "stop": "after-root-cause"
       }
     },
     {
-      "id": "pattern-debate",
-      "prompt": "Should this plugin system stay simple, or should we introduce a strategy pattern? Inspect the current design and recommend one direction.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "writing-software",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "writing-software"],
-      "required_actions": ["inspect-before-recommending", "compare-simpler-option"],
-      "expectations": {
-        "first_action": "inspect-current-state",
-        "mutation": "none",
-        "question": "only-if-blocked",
-        "stop": "recommendation"
-      }
-    },
-    {
       "id": "repo-architecture-review",
       "prompt": "Critically review this codebase and create a phased plan to simplify the architecture, make it more agent friendly, and improve testing at the right seams.",
-      "mandatory_router": "software-engineering-flow",
       "primary_skill": "improve-codebase-architecture",
-      "allowed_secondary_skills": ["improve-test-suite", "verification-before-completion"],
-      "expected_sequence": ["software-engineering-flow", "improve-codebase-architecture"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
       "required_actions": ["inspect-before-recommending", "separate-findings-from-plan"],
       "expectations": {
         "first_action": "inspect-current-state",
@@ -128,13 +261,12 @@
     {
       "id": "test-suite-review",
       "prompt": "Critically review this repo's tests and create a phased plan to remove bad or redundant coverage and add stronger seam-level tests.",
-      "mandatory_router": "software-engineering-flow",
       "primary_skill": "improve-test-suite",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "improve-test-suite"],
-      "required_actions": ["inspect-before-recommending", "separate-findings-from-plan"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["pin-review-scope", "inspect-before-recommending", "separate-findings-from-plan"],
       "expectations": {
-        "first_action": ["inspect-current-state", "pin-review-scope"],
+        "first_action": "pin-review-scope",
         "mutation": "none",
         "question": "only-if-blocked",
         "stop": "plan"
@@ -143,10 +275,9 @@
     {
       "id": "wip-cleanup-quality",
       "prompt": "Review and clean up the current WIP diff: deduplicate code, remove proven-unused code, fix weak types, untangle new cycles, and remove legacy fallbacks or AI slop only when evidence supports it.",
-      "mandatory_router": "software-engineering-flow",
       "primary_skill": "review-and-simplify-changes",
-      "allowed_secondary_skills": ["effect-ts", "testing-software", "verification-before-completion", "writing-rust", "writing-software"],
-      "expected_sequence": ["software-engineering-flow", "review-and-simplify-changes", "verification-before-completion"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
       "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -158,10 +289,9 @@
     {
       "id": "review-standards-intent",
       "prompt": "Review these WIP changes against the repo standards and what this diff was trying to accomplish, then simplify only high-confidence issues.",
-      "mandatory_router": "software-engineering-flow",
       "primary_skill": "review-and-simplify-changes",
-      "allowed_secondary_skills": ["effect-ts", "testing-software", "verification-before-completion", "writing-rust", "writing-software"],
-      "expected_sequence": ["software-engineering-flow", "review-and-simplify-changes"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
       "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "keep-standards-and-intent-separate", "trace-each-material-intent-requirement", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -173,10 +303,9 @@
     {
       "id": "broad-read-only-review",
       "prompt": "Run a broad findings-only review of the current WIP diff across all eight review tracks. Do not change files.",
-      "mandatory_router": "software-engineering-flow",
       "primary_skill": "review-and-simplify-changes",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "review-and-simplify-changes"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
       "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "keep-task-read-only"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -188,10 +317,9 @@
     {
       "id": "single-track-read-only-review",
       "prompt": "Review only weak typing in the current WIP diff. Findings only; keep this a single read-only track.",
-      "mandatory_router": "software-engineering-flow",
       "primary_skill": "review-and-simplify-changes",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "review-and-simplify-changes"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
       "required_actions": ["pin-review-scope", "honor-single-track-scope", "keep-task-read-only"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -202,12 +330,11 @@
     },
     {
       "id": "data-workload",
-      "prompt": "We ingest append-only events and query them by time range; should we keep plain Postgres or move toward Timescale?",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "designing-data-intensive-systems",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "designing-data-intensive-systems"],
-      "required_actions": ["state-workload-and-correctness-pressure", "compare-simpler-option"],
+      "prompt": "We ingest append-only events and query them by time range; compare plain Postgres with Timescale from the real workload and capacity needs. Do not edit files.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": ["designing-data-intensive-systems"],
+      "expected_references": ["engineering/references/performance-and-capacity.md"],
+      "required_actions": ["state-workload-and-correctness-pressure", "load-only-present-pressure-references", "keep-task-read-only"],
       "expectations": {
         "first_action": "map-workload",
         "mutation": "none",
@@ -218,13 +345,12 @@
     {
       "id": "effect-wrapper",
       "prompt": "Wrap this third-party billing SDK in Effect without leaking the raw client everywhere, then verify the implementation.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "effect-ts",
-      "allowed_secondary_skills": ["testing-software", "verification-before-completion", "writing-software"],
-      "expected_sequence": ["software-engineering-flow", "effect-ts", "verification-before-completion"],
+      "primary_skill": "engineering",
+      "expected_modifier_skills": ["effect-ts"],
+      "expected_references": ["engineering/references/boundary-design.md"],
       "required_actions": ["inspect-before-editing", "preserve-effect-boundary", "verify-before-completion"],
       "expectations": {
-        "first_action": ["inspect-current-state", "map-workload"],
+        "first_action": "inspect-current-state",
         "mutation": "requested-repo-writes",
         "question": "only-if-blocked",
         "stop": "after-verification"
@@ -233,10 +359,9 @@
     {
       "id": "rust-api",
       "prompt": "Refactor this Rust API so it stops borrowing data longer than necessary, with a cleaner ownership boundary and fresh verification.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "writing-rust",
-      "allowed_secondary_skills": ["testing-software", "verification-before-completion", "writing-software"],
-      "expected_sequence": ["software-engineering-flow", "writing-rust", "verification-before-completion"],
+      "primary_skill": "engineering",
+      "expected_modifier_skills": ["writing-rust"],
+      "expected_references": ["engineering/references/boundary-design.md"],
       "required_actions": ["inspect-before-editing", "state-rust-specific-pressure", "verify-before-completion"],
       "expectations": {
         "first_action": "inspect-current-state",
@@ -248,13 +373,12 @@
     {
       "id": "describe-pr",
       "prompt": "Write a clear PR description that explains the problem, user-facing changes, implementation, and verified evidence.",
-      "mandatory_router": "software-engineering-flow",
       "primary_skill": "describe-pr",
-      "allowed_secondary_skills": ["verification-before-completion"],
-      "expected_sequence": ["software-engineering-flow", "describe-pr"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
       "required_actions": ["read-final-diff", "do-not-invent-verification"],
       "expectations": {
-        "first_action": ["inspect-current-state", "pin-review-scope", "read-final-diff", "verify-branch-state"],
+        "first_action": "read-final-diff",
         "mutation": "none",
         "question": "only-if-blocked",
         "stop": "after-artifact"
@@ -263,10 +387,9 @@
     {
       "id": "review-feedback",
       "prompt": "I got code review feedback and I am not sure whether it is technically correct for this codebase. Evaluate it; do not implement changes yet.",
-      "mandatory_router": "software-engineering-flow",
       "primary_skill": "receiving-code-review",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "receiving-code-review"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
       "required_actions": ["verify-feedback-against-code", "keep-task-read-only"],
       "expectations": {
         "first_action": "evaluate-feedback",
@@ -276,27 +399,11 @@
       }
     },
     {
-      "id": "verify-completion",
-      "prompt": "Before I say this fix is done, tell me what evidence would prove it. Do not run or change anything.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "verification-before-completion",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "verification-before-completion"],
-      "required_actions": ["identify-claim-matched-proof", "keep-task-read-only"],
-      "expectations": {
-        "first_action": "identify-proof",
-        "mutation": "none",
-        "question": "only-if-blocked",
-        "stop": "plan"
-      }
-    },
-    {
       "id": "worktree-isolation",
       "prompt": "This refactor is risky and I want a separate branch workspace before touching the current tree. Create the worktree using repo conventions.",
-      "mandatory_router": "software-engineering-flow",
       "primary_skill": "using-git-worktrees",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "using-git-worktrees"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
       "required_actions": ["inspect-worktree-conventions", "report-worktree-location"],
       "expectations": {
         "first_action": "verify-branch-state",
@@ -306,58 +413,26 @@
       }
     },
     {
-      "id": "non-trivial-feature",
-      "prompt": "Add a new admin export workflow across the API, queue worker, and dashboard UI. Inspect the repo, give a short plan, implement it, and verify it.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "writing-software",
-      "allowed_secondary_skills": ["testing-software", "verification-before-completion"],
-      "expected_sequence": ["software-engineering-flow", "writing-software", "testing-software", "verification-before-completion"],
-      "required_actions": ["inspect-before-editing", "plan-before-editing", "avoid-expand-contract-without-wide-migration", "verify-before-completion"],
+      "id": "parallel-tracks-feature",
+      "prompt": "Implement a larger feature with independent backend, docs, and fixture tracks. Build one production-complete slice, delegate only independent work, and verify it.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/feature-shape.md"],
+      "required_actions": ["build-production-complete-slice", "delegate-independent-tracks", "verify-before-completion"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "requested-repo-writes",
-        "question": ["only-if-blocked", "required-before-unapproved-action"],
-        "stop": "after-verification"
-      }
-    },
-    {
-      "id": "parallel-tracks-feature",
-      "prompt": "Implement a larger feature with one backend slice, one docs slice, and one test-fixture slice; preserve context and split independent work where it makes sense. Infer routine choices from repo conventions; ask only if blocked or a consequential choice emerges.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "writing-software",
-      "allowed_secondary_skills": ["testing-software", "verification-before-completion"],
-      "expected_sequence": ["software-engineering-flow", "writing-software", "verification-before-completion"],
-      "required_actions": ["delegate-independent-tracks", "verify-before-completion"],
-      "expectations": {
-        "first_action": ["inspect-current-state", "map-decisions", "map-workload"],
-        "mutation": "requested-repo-writes",
-        "question": ["only-if-blocked", "required-before-unapproved-action"],
-        "stop": "after-verification"
-      }
-    },
-    {
-      "id": "greenfield-prototype-path",
-      "prompt": "Build a new internal workflow tool with unclear UX and integration shape. Inspect constraints, prototype the thinnest useful path, then verify what works before locking architecture.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "writing-software",
-      "allowed_secondary_skills": ["testing-software", "verification-before-completion"],
-      "expected_sequence": ["software-engineering-flow", "writing-software", "verification-before-completion"],
-      "required_actions": ["inspect-before-editing", "build-thin-prototype", "verify-before-completion"],
-      "expectations": {
-        "first_action": ["inspect-current-state", "map-decisions"],
-        "mutation": "requested-repo-writes",
-        "question": "required-before-unapproved-action",
+        "question": "only-if-blocked",
         "stop": "after-verification"
       }
     },
     {
       "id": "foggy-decision-map",
-      "prompt": "This idea is too unclear for an implementation plan. Map the open decisions, research/prototype/discuss tracks, and next uncertainty without creating issues, a PRD, or code.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "writing-software",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "writing-software"],
-      "required_actions": ["separate-facts-decisions-and-open-questions", "map-precise-blocked-questions", "defer-imprecise-uncertainty"],
+      "prompt": "This idea is too unclear for an implementation plan. Map verified facts, open decisions, and the next uncertainty without creating issues, a PRD, or code.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["separate-facts-decisions-and-open-questions", "keep-task-read-only"],
       "expectations": {
         "first_action": "map-decisions",
         "mutation": "none",
@@ -366,28 +441,12 @@
       }
     },
     {
-      "id": "wide-contract-migration",
-      "prompt": "Plan a repository-wide API rename where callers cannot all move in one vertical slice. Keep each checkpoint green and stop at the plan.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "writing-software",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "writing-software"],
-      "required_actions": ["inspect-before-recommending", "use-expand-contract-for-wide-migration"],
-      "expectations": {
-        "first_action": "inspect-current-state",
-        "mutation": "none",
-        "question": "only-if-blocked",
-        "stop": "plan"
-      }
-    },
-    {
       "id": "source-grounded-research",
-      "prompt": "Research how the current code and the installed dependency version handle retries. Cite authoritative sources, separate verified facts from inference, and do not edit files.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "writing-software",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "writing-software"],
-      "required_actions": ["inspect-before-recommending", "cite-authoritative-sources", "use-version-matched-authoritative-sources", "separate-facts-inference-and-recommendations", "keep-task-read-only"],
+      "prompt": "Research how the current code and installed dependency version handle retries. Cite authoritative sources, separate facts from inference, and do not edit files.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["inspect-before-recommending", "cite-authoritative-sources", "separate-facts-inference-and-recommendations", "keep-task-read-only"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "none",
@@ -396,27 +455,11 @@
       }
     },
     {
-      "id": "read-only-domain-modeling",
-      "prompt": "Review the domain terminology and propose glossary or ADR changes, but do not write CONTEXT.md or any other file.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "writing-software",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "writing-software"],
-      "required_actions": ["inspect-before-recommending", "keep-domain-artifacts-proposed", "keep-task-read-only"],
-      "expectations": {
-        "first_action": "inspect-current-state",
-        "mutation": "none",
-        "question": "only-if-blocked",
-        "stop": "recommendation"
-      }
-    },
-    {
       "id": "merge-conflict-safe-resolution",
       "prompt": "There is an in-progress rebase conflict. Resolve conflicting files by preserving both intents where possible, but do not stage, commit, continue, or abort without asking me.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "software-engineering-flow",
-      "allowed_secondary_skills": ["verification-before-completion"],
-      "expected_sequence": ["software-engineering-flow"],
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": [],
       "required_actions": ["inspect-both-intents", "do-not-change-branch-state"],
       "expectations": {
         "first_action": "verify-branch-state",
@@ -428,10 +471,9 @@
     {
       "id": "file-backed-exec-plan",
       "prompt": "This implementation will take multiple sessions and several agents. Inspect first, then create a durable exec plan in the repo; stop before implementation.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "writing-software",
-      "allowed_secondary_skills": [],
-      "expected_sequence": ["software-engineering-flow", "writing-software"],
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/durable-plan.md"],
       "required_actions": ["inspect-before-editing", "create-requested-plan-file", "single-source-durable-map", "stop-before-implementation"],
       "expectations": {
         "first_action": "inspect-current-state",
@@ -443,10 +485,9 @@
     {
       "id": "finish-branch",
       "prompt": "The branch is done and I need to decide whether to merge it, open a PR, or keep it around. Verify state and present the choices; do not choose for me.",
-      "mandatory_router": "software-engineering-flow",
       "primary_skill": "finishing-a-development-branch",
-      "allowed_secondary_skills": ["describe-pr", "verification-before-completion"],
-      "expected_sequence": ["software-engineering-flow", "finishing-a-development-branch"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
       "required_actions": ["verify-branch-state", "require-explicit-branch-integration-choice"],
       "expectations": {
         "first_action": "verify-branch-state",
@@ -456,27 +497,11 @@
       }
     },
     {
-      "id": "e2e-review-feedback-to-finish",
-      "prompt": "Address this review feedback, implement valid changes, prove the branch is ready, describe the PR, and finish the branch workflow without choosing an integration action for me.",
-      "mandatory_router": "software-engineering-flow",
-      "primary_skill": "receiving-code-review",
-      "allowed_secondary_skills": ["describe-pr", "finishing-a-development-branch", "testing-software", "verification-before-completion", "writing-software"],
-      "expected_sequence": ["software-engineering-flow", "receiving-code-review", "writing-software", "verification-before-completion", "describe-pr", "finishing-a-development-branch"],
-      "required_actions": ["verify-feedback-against-code", "verify-before-completion", "require-explicit-branch-integration-choice"],
-      "expectations": {
-        "first_action": ["evaluate-feedback", "pin-review-scope"],
-        "mutation": ["after-user-choice", "requested-repo-writes"],
-        "question": "required-before-unapproved-action",
-        "stop": "present-options"
-      }
-    },
-    {
       "id": "skill-authoring",
-      "prompt": "Create a new skill, keep the entrypoint small, move heavy material into references, and run the skill-surface checks.",
-      "mandatory_router": "software-engineering-flow",
+      "prompt": "Create a new skill, keep the entrypoint small, move branch-specific material into one-level references, and run the skill-surface checks.",
       "primary_skill": "writing-skills",
-      "allowed_secondary_skills": ["verification-before-completion"],
-      "expected_sequence": ["software-engineering-flow", "writing-skills", "verification-before-completion"],
+      "expected_modifier_skills": [],
+      "expected_references": [],
       "required_actions": ["inspect-before-editing", "validate-skill-surface", "verify-before-completion"],
       "expectations": {
         "first_action": "inspect-current-state",

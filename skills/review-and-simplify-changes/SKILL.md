@@ -18,13 +18,13 @@ Use this after a commit, PR, branch, or WIP diff to improve code quality without
 
 ## When Not to Use
 
-- Use `systematic-debugging` first when behavior is broken and cause is unknown
+- Use `debugging` first when behavior is broken and cause is unknown
 - Use `improve-codebase-architecture` for architecture plans without implementation
-- Use `testing-software` when the main question is test strategy
+- Use `test-design` when the main question is test strategy
 
 ## Minimal Workflow
 
-1. Load `software-engineering-flow`, then this skill. Load narrower skills as needed: `writing-software`, `testing-software`, `effect-ts`, `writing-rust`, and `verification-before-completion`.
+1. Use this as the primary skill. Load `effect-ts` or `writing-rust` only when that domain is present, and load the pressure references below only when the diff supplies evidence for them.
 2. Pin the review scope: commit, PR, branch, fixed point, or WIP diff. If the user says WIP, always inspect `git status --short` before choosing the diff. Prefer `git diff <fixed-point>...HEAD` and `git log <fixed-point>..HEAD --oneline` when a fixed point is provided; if an explicitly requested diff cannot be produced locally and no exact remote base/head is provided for the same comparison, stop blocked/no-review instead of inferring scope from unrelated remote branches, PRs, or GitHub comparisons. Otherwise choose the safest obvious comparison or ask only when it materially changes the review.
    - If a fixed-point diff is empty but unstaged changes exist, report the mismatch and include the unstaged diff only when user intent clearly points at WIP; otherwise ask one narrow scope question.
 3. Read repo-local `AGENTS.md`, docs, package scripts, conventions, and change Intent sources: prompt, explicit spec, plan, task notes, issue, or commit message. Use the diff as evidence of touched behavior, not as proof of intent.
@@ -72,13 +72,12 @@ Keep Standards and Intent findings on separate axes in synthesis. If Intent is u
 
 During aggregation, check whether the right skills were used:
 
-- `writing-software/COMPLEXITY.md` for deep modules, change amplification, cognitive load, and information hiding
-- `writing-software/INTERFACE-DESIGN.md` for caller-first interfaces, misuse risk, and deletion-test pressure
-- `writing-software/WORKFLOW-MODES.md` for new change vs new codebase vs complex existing codebase
-- `writing-software/LEGACY-CODE.md` for characterization seams and dependency-breaking
+- `engineering/references/boundary-design.md` for deep modules, change amplification, information hiding, caller-first interfaces, misuse risk, and deletion-test pressure
+- `engineering/references/feature-shape.md` for tracer bullets and production-complete vertical slices
+- `engineering/references/legacy-change.md` for characterization seams and dependency-breaking
 - `improve-codebase-architecture/AGENT_FRIENDLY_REVIEW.md` for seam quality, agent navigability, domain fit, and verification pain
-- `writing-software/API-COMPATIBILITY.md`, `SECURITY-DESIGN.md`, `PRODUCTION-READINESS.md`, or `DELIVERY.md` when those risks appear
-- `testing-software` for proof shape, especially behavior-preserving refactors
+- `engineering/references/compatibility-and-delivery.md`, `security.md`, or `state-and-effects.md` when those risks appear
+- `engineering/references/proof.md` for proof shape, especially behavior-preserving refactors
 - [URL-ATTRIBUTION-REVIEW.md](URL-ATTRIBUTION-REVIEW.md) only for URL, link, campaign attribution, analytics, or CTA-helper changes
 
 If a needed skill was missing, call that out in the final summary. If the skill guidance itself caused misrouting, ambiguity, or unsafe behavior, propose the smallest update to that skill.
@@ -87,17 +86,17 @@ If a needed skill was missing, call that out in the final summary. If the skill 
 
 Each review must judge changes against the active SWE principles, not generic cleanup taste:
 
-- Deep modules / information hiding: `writing-software/COMPLEXITY.md`
-- Caller-first interfaces / deletion test / module-interface-depth-seam-adapter vocabulary: `writing-software/INTERFACE-DESIGN.md`
-- Safe brownfield seams: `writing-software/LEGACY-CODE.md` and `WORKFLOW-MODES.md`
+- Deep modules / information hiding: `engineering/references/boundary-design.md`
+- Caller-first interfaces / deletion test / module-interface-depth-seam-adapter vocabulary: `engineering/references/boundary-design.md`
+- Safe brownfield seams: `engineering/references/legacy-change.md`
 - Navigability, domain language, seam quality, verification pain: `improve-codebase-architecture`
-- Behavior-focused public-interface tests: `testing-software`
+- Behavior-focused public-interface tests: `test-design`
 
 Flag a finding only when it improves one of those principles with evidence. Do not recommend DRY, type consolidation, patterns, or cleanup unless the linked skill would support the move.
 
 ## Upstream Prevention
 
-Before finalizing, classify important findings as pre-existing debt, regression from current changes, preventable by `software-engineering-flow`, preventable by `writing-software`, preventable by `testing-software`, repo-doc candidate, or memory candidate.
+Before finalizing, classify important findings as pre-existing debt, regression from current changes, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, repo-doc candidate, or memory candidate.
 If a producer skill should have prevented a repeated or high-cost issue, propose the smallest skill/reference update instead of expanding this review skill.
 Do not auto-edit memory, repo docs, or skills unless the user asked for that mutation.
 

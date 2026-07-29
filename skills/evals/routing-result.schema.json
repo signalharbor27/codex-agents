@@ -1,13 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Codex engineering skill routing result",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "mandatory_router",
     "primary_skill",
-    "secondary_skills",
-    "sequence",
+    "modifier_skills",
+    "references",
     "actions",
     "first_action",
     "mutation",
@@ -15,41 +13,34 @@
     "stop"
   ],
   "properties": {
-    "mandatory_router": {
-      "type": "string",
-      "pattern": "^[a-z][a-z0-9-]*$"
-    },
     "primary_skill": {
       "type": "string",
-      "pattern": "^[a-z][a-z0-9-]*$"
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
-    "secondary_skills": {
+    "modifier_skills": {
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^[a-z][a-z0-9-]*$"
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
       }
     },
-    "sequence": {
+    "references": {
       "type": "array",
-      "minItems": 1,
       "items": {
         "type": "string",
-        "pattern": "^[a-z][a-z0-9-]*$"
+        "pattern": "^[a-z0-9-]+/references/[a-z0-9-]+\\.md$"
       }
     },
     "actions": {
       "type": "array",
       "items": {
+        "type": "string",
         "enum": [
           "ask-exactly-one-question",
-          "avoid-expand-contract-without-wide-migration",
+          "build-production-complete-slice",
           "build-red-capable-loop",
-          "build-thin-prototype",
           "cite-authoritative-sources",
-          "compare-simpler-option",
           "create-requested-plan-file",
-          "defer-imprecise-uncertainty",
           "delegate-independent-tracks",
           "do-not-change-branch-state",
           "do-not-invent-verification",
@@ -64,14 +55,11 @@
           "keep-standards-and-intent-separate",
           "keep-task-read-only",
           "launch-exactly-eight-distinct-read-only-subagents",
-          "leave-consequential-decisions-to-user",
-          "map-precise-blocked-questions",
+          "load-only-present-pressure-references",
           "pin-review-scope",
-          "plan-before-editing",
           "preserve-effect-boundary",
           "read-final-diff",
           "report-worktree-location",
-          "require-implementation-authorization-after-grill",
           "require-explicit-branch-integration-choice",
           "resolve-facts-before-asking",
           "separate-facts-decisions-and-open-questions",
@@ -80,11 +68,10 @@
           "single-source-durable-map",
           "state-rust-specific-pressure",
           "state-workload-and-correctness-pressure",
+          "stay-within-change-budget",
           "stop-before-implementation",
           "trace-each-material-intent-requirement",
-          "use-expand-contract-for-wide-migration",
           "use-independent-test-oracle",
-          "use-version-matched-authoritative-sources",
           "validate-skill-surface",
           "verify-before-completion",
           "verify-branch-state",
@@ -93,6 +80,7 @@
       }
     },
     "first_action": {
+      "type": "string",
       "enum": [
         "build-failing-loop",
         "evaluate-feedback",
@@ -106,6 +94,7 @@
       ]
     },
     "mutation": {
+      "type": "string",
       "enum": [
         "after-user-choice",
         "diagnostic-only",
@@ -116,6 +105,7 @@
       ]
     },
     "question": {
+      "type": "string",
       "enum": [
         "one-at-a-time",
         "only-if-blocked",
@@ -123,6 +113,7 @@
       ]
     },
     "stop": {
+      "type": "string",
       "enum": [
         "after-artifact",
         "after-requested-scope",

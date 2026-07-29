@@ -19,8 +19,8 @@ The goal is shared understanding, not implementation.
 
 ## When Not to Use
 
-- Use `writing-software` when the task is still shaping or implementing the change
-- Use `systematic-debugging` when the failure mode is not yet understood
+- Use `engineering` when the task is shaping or implementing the change
+- Use `debugging` when the failure mode is not yet understood
 - Do not use this for tiny tasks where a light internal plan check is enough
 
 ## Minimal Workflow
@@ -36,8 +36,7 @@ The goal is shared understanding, not implementation.
 
 ## Reference Routing
 
-- Use [../writing-software/CHALLENGE-MODE.md](../writing-software/CHALLENGE-MODE.md) for the detailed grill rubric.
-- Use `writing-software` if the discussion needs to turn back into staged planning or implementation.
+- Use `engineering` as the next primary skill if the discussion turns into planning or implementation.
 
 ## Failure Modes
 

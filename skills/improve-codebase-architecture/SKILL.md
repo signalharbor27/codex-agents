@@ -23,7 +23,7 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 
 - Ordinary feature implementation or local refactors
 - Root-cause debugging of one failure path
-- Narrow pattern debates better handled by `writing-software/INTERFACE-DESIGN.md`
+- Narrow pattern debates better handled by `engineering/references/boundary-design.md`
 - Storage or distributed-systems reviews driven mainly by workload shape
 
 ## Minimal Workflow
@@ -35,7 +35,7 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 5. Compare the current shape against simpler, deeper modules with clearer interfaces; use module/interface/seam/depth/leverage/locality vocabulary and the deletion test.
 6. Treat a one-adapter seam as hypothetical unless it hides real external complexity, policy variation, or a second adapter such as tests.
 7. Check agent-friendliness directly: entrypoints, local reasoning, verification commands, implicit side effects, and navigability.
-8. Classify findings as pre-existing debt, regression from the current change, preventable by `software-engineering-flow`, preventable by `writing-software`, preventable by `testing-software`, or repo-doc/memory candidate.
+8. Classify findings as pre-existing debt, regression from the current change, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, or repo-doc/memory candidate.
 9. For large repos or monorepos, split evidence gathering by subsystem and use subagents for bounded independent review tracks such as frontend, backend, shared packages, or build and CI.
 10. Produce a phased plan with scope, expected payoff, dependencies, and verification for each phase.
 11. Keep the review and plan in chat by default. Create or update a target-repo plan file only when the user explicitly requests or has already authorized a durable artifact.
@@ -53,7 +53,7 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 ## Reference Routing
 
 - Read [AGENT_FRIENDLY_REVIEW.md](AGENT_FRIENDLY_REVIEW.md) for the review rubric and planning heuristics.
-- Read [../writing-software/EXEC-PLAN-FILES.md](../writing-software/EXEC-PLAN-FILES.md) only after a durable target-repo plan file is explicitly authorized.
+- Read [../engineering/references/durable-plan.md](../engineering/references/durable-plan.md) only after a durable target-repo plan file is explicitly authorized.
 
 ## Failure Modes
 

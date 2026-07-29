@@ -29,7 +29,7 @@ Verify the current state, present clear options, and do not delete work by accid
 
 ## Reference Routing
 
-- Use `verification-before-completion` if completion claims still need fresh proof.
+- Run the repository's claim-matched proof fresh before presenting completion choices.
 - Use `describe-pr` when the next step is writing or updating the PR summary.
 
 ## Failure Modes
