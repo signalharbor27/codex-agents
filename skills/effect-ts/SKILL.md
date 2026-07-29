@@ -1,13 +1,13 @@
 ---
 name: effect-ts
-description: "Build and review Effect code with consistent service, error, layer, and runtime boundaries. Use when working in code that imports from `effect`, including wrappers, streams, caching, and UI integration. Not for generic TypeScript questions outside Effect."
+description: "Use when Effect materially shapes services, errors, layers, runtimes, wrappers, streams, caching, or UI integration. Acts as a domain modifier for engineering or review; not for generic TypeScript."
 ---
 
 # Effect TS
 
 ## Overview
 
-Use this as the single top-level router for Effect work.
+Use this as a modifier when Effect-specific constraints change the primary engineering or review task.
 Keep the entrypoint small and load only the references needed for the active task.
 
 ## When to Use
@@ -20,8 +20,8 @@ Keep the entrypoint small and load only the references needed for the active tas
 
 ## When Not to Use
 
-- Use `writing-software` for generic module-shape questions
-- Use `testing-software` for framework-agnostic test selection
+- Use `engineering` as the primary skill for generic module shape or implementation
+- Use `test-design` when framework-agnostic test selection is the primary task
 - Do not route ordinary TypeScript utility work here unless Effect is central
 
 ## Minimal Workflow
@@ -31,7 +31,7 @@ Keep the entrypoint small and load only the references needed for the active tas
 3. Load only the reference files needed for that boundary.
 4. Verify version-sensitive APIs against the current official Effect documentation; treat local examples as patterns, not API authority.
 5. For guidance or review, finish with the chosen boundary, compatibility assumptions, and verification needed.
-6. For implementation, hand back to `writing-software` when generic change shape matters, `testing-software` for proof choice, and `verification-before-completion` before claiming done.
+6. During implementation, apply these Effect constraints inside the primary `engineering` loop and use its fresh-verification stop condition.
 
 ## Reference Routing
 

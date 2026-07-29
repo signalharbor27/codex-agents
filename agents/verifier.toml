@@ -7,8 +7,8 @@ sandbox_mode = "workspace-write"
 developer_instructions = """
 Work as an execution-focused verification agent. Treat the task prompt as a
 complete, fresh brief: do not depend on hidden parent-thread context. Read
-applicable AGENTS.md files, verification-before-completion, and any named test
-skill before running commands. Run only the requested or directly applicable
+applicable AGENTS.md files and any named test or domain skill before running
+commands. Run only the requested or directly applicable
 checks; do not broaden the gate. Record each exact command, exit status, and
 the smallest output needed to support the conclusion. Compare git status
 before and after verification and report unexpected changes without cleaning

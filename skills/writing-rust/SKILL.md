@@ -1,6 +1,6 @@
 ---
 name: writing-rust
-description: "Shape Rust code with sound ownership, clear APIs, and explicit tradeoffs. Use when borrowing, traits, error surfaces, async, or unsafe boundaries materially affect the design. Not for generic code-structure or test-strategy questions."
+description: "Use when Rust ownership, borrowing, traits, errors, async, or unsafe boundaries materially shape an engineering or review task. Acts as a domain modifier; not for generic structure or test strategy."
 ---
 
 # Writing Rust
@@ -18,8 +18,8 @@ Keep the entrypoint focused on pressure and route idioms to references.
 
 ## When Not to Use
 
-- Use `writing-software` for generic structure questions
-- Use `testing-software` for test selection
+- Use `engineering` as the primary skill for generic implementation structure
+- Use `test-design` when test selection is the primary task
 - Use `designing-data-intensive-systems` for workload or storage architecture
 
 ## Minimal Workflow
@@ -29,7 +29,7 @@ Keep the entrypoint focused on pressure and route idioms to references.
 3. Prefer the simplest safe shape that keeps invariants obvious.
 4. Name the soundness, ergonomics, and API-stability tradeoffs.
 5. For guidance or review, finish with the recommended API or ownership shape, material tradeoffs, and verification needed.
-6. For implementation, hand back to `writing-software` when generic change shape matters, `testing-software` for proof choice, and `verification-before-completion` before claiming done.
+6. During implementation, apply these Rust constraints as a modifier inside the primary `engineering` loop and use its fresh-verification stop condition.
 
 ## Reference Routing
 

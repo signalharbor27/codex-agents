@@ -4,10 +4,10 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 
 import {
-  compareResult,
   collectSubprocess,
-  parseSkillFrontmatter,
+  compareResult,
   parseLiveResult,
+  parseSkillFrontmatter,
   readJson,
   validateFixtureTopLevel,
   validateResultSchema,
@@ -20,10 +20,9 @@ const fixture = (await Bun.file(`${import.meta.dir}/routing-cases.json`).json())
 const resultSchema: unknown = await Bun.file(`${import.meta.dir}/routing-result.schema.json`).json()
 
 const validResult: RoutingResult = {
-  mandatory_router: "software-engineering-flow",
-  primary_skill: "writing-software",
-  secondary_skills: ["verification-before-completion"],
-  sequence: ["software-engineering-flow", "writing-software", "verification-before-completion"],
+  primary_skill: "engineering",
+  modifier_skills: [],
+  references: [],
   actions: ["inspect-before-editing", "verify-before-completion"],
   first_action: "inspect-current-state",
   mutation: "requested-repo-writes",
@@ -32,7 +31,7 @@ const validResult: RoutingResult = {
 }
 
 describe("live result boundary", () => {
-  test("uses only structured-output-compatible array constraints", () => {
+  test("uses structured-output-compatible constraints", () => {
     expect(JSON.stringify(resultSchema)).not.toContain('"uniqueItems"')
   })
 
@@ -40,7 +39,7 @@ describe("live result boundary", () => {
     expect(parseLiveResult(JSON.stringify(validResult), fixture, resultSchema)).toEqual(validResult)
   })
 
-  test("rejects prefixed output instead of extracting braces", () => {
+  test("rejects prefixed output", () => {
     expect(() => parseLiveResult(`progress\n${JSON.stringify(validResult)}`, fixture, resultSchema)).toThrow(
       "did not return JSON",
     )
@@ -53,25 +52,34 @@ describe("live result boundary", () => {
     )
   })
 
-  test("rejects duplicate sequence entries", () => {
+  test("rejects duplicate references", () => {
     const duplicate = {
       ...validResult,
-      sequence: [...validResult.sequence, "verification-before-completion"],
+      references: [
+        "engineering/references/feature-shape.md",
+        "engineering/references/feature-shape.md",
+      ],
     }
     expect(() => parseLiveResult(JSON.stringify(duplicate), fixture, resultSchema)).toThrow(
-      "sequence must not contain duplicates",
+      "references must not contain duplicates",
+    )
+  })
+
+  test("rejects a primary skill repeated as a modifier", () => {
+    const duplicate = { ...validResult, modifier_skills: ["engineering"] }
+    expect(() => parseLiveResult(JSON.stringify(duplicate), fixture, resultSchema)).toThrow(
+      "repeats primary skill as modifier",
     )
   })
 })
 
-test("secondary skill order must match sequence order", () => {
+test("comparison rejects unnecessary modifiers and references", () => {
   const routingCase: RoutingCase = {
-    id: "ordered-secondary-test",
-    prompt: "Synthetic ordering case for the routing evaluator.",
-    mandatory_router: "software-engineering-flow",
-    primary_skill: "writing-software",
-    allowed_secondary_skills: ["testing-software", "verification-before-completion"],
-    expected_sequence: ["software-engineering-flow", "writing-software"],
+    id: "routine-test",
+    prompt: "Synthetic routine engineering request.",
+    primary_skill: "engineering",
+    expected_modifier_skills: [],
+    expected_references: [],
     required_actions: ["inspect-before-editing"],
     expectations: {
       first_action: "inspect-current-state",
@@ -80,30 +88,24 @@ test("secondary skill order must match sequence order", () => {
       stop: "after-verification",
     },
   }
-  const reversed: RoutingResult = {
+  const overloaded: RoutingResult = {
     ...validResult,
-    secondary_skills: ["testing-software", "verification-before-completion"],
-    sequence: [
-      "software-engineering-flow",
-      "writing-software",
-      "verification-before-completion",
-      "testing-software",
-    ],
-    actions: ["inspect-before-editing"],
+    modifier_skills: ["test-design"],
+    references: ["engineering/references/proof.md"],
   }
-  expect(compareResult(routingCase, reversed)).toContain(
-    "secondary_skills must match the ordered secondary entries in sequence",
-  )
+  expect(compareResult(routingCase, overloaded)).toEqual([
+    "modifier_skills: expected , got test-design",
+    "references: expected , got engineering/references/proof.md",
+  ])
 })
 
-test("accepts explicit alternatives for every expectation field", () => {
+test("accepts explicit alternatives for expectation fields", () => {
   const routingCase: RoutingCase = {
-    id: "first-action-alternative-test",
-    prompt: "Synthetic first-action alternative case for the routing evaluator.",
-    mandatory_router: "software-engineering-flow",
-    primary_skill: "writing-software",
-    allowed_secondary_skills: ["verification-before-completion"],
-    expected_sequence: ["software-engineering-flow", "writing-software"],
+    id: "alternative-test",
+    prompt: "Synthetic expectation alternative.",
+    primary_skill: "engineering",
+    expected_modifier_skills: [],
+    expected_references: [],
     required_actions: ["inspect-before-editing"],
     expectations: {
       first_action: ["inspect-current-state", "verify-branch-state"],
@@ -115,7 +117,7 @@ test("accepts explicit alternatives for every expectation field", () => {
   expect(compareResult(routingCase, validResult)).toEqual([])
 })
 
-test("decodes quoted frontmatter descriptions for the live catalog", () => {
+test("decodes quoted frontmatter descriptions", () => {
   const frontmatter = parseSkillFrontmatter(`---
 name: synthetic
 description: "Use when a \\"quoted\\" trigger applies."
@@ -129,18 +131,11 @@ description: "Use when a \\"quoted\\" trigger applies."
   })
 })
 
-test("result schema validation rejects property-shape drift", () => {
-  const invalid = structuredClone(resultSchema)
-  if (typeof invalid !== "object" || invalid === null || Array.isArray(invalid)) throw new Error("bad fixture")
-  const properties = (invalid as Record<string, unknown>).properties
-  if (typeof properties !== "object" || properties === null || Array.isArray(properties)) {
-    throw new Error("bad fixture properties")
-  }
-  const primarySkill = (properties as Record<string, unknown>).primary_skill
-  if (typeof primarySkill !== "object" || primarySkill === null || Array.isArray(primarySkill)) {
-    throw new Error("bad primary_skill fixture")
-  }
-  Reflect.set(primarySkill, "type", "number")
+test("result schema validation rejects property drift", () => {
+  const invalid = structuredClone(resultSchema) as Record<string, unknown>
+  const properties = invalid.properties as Record<string, unknown>
+  const primary = properties.primary_skill as Record<string, unknown>
+  primary.type = "number"
   expect(validateResultSchema(invalid)).toContain(
     "result schema primary_skill must be a patterned string",
   )
@@ -160,21 +155,14 @@ test("JSON loading distinguishes missing files from malformed content", async ()
 
 test("fixture contract rejects unknown top-level fields", () => {
   expect(validateFixtureTopLevel({ ...fixture, unexpected: true })).toEqual([
-    "routing fixture must contain exactly version, engineering_skills, and cases",
+    "routing fixture must contain exactly version, engineering_skills, skill_references, cases",
   ])
 })
 
 test("subprocess timeout kills a TERM-resistant process group", async () => {
   const setsid = Bun.which("setsid")
-  const cmd = setsid
-    ? [setsid, "sh", "-c", "trap '' TERM; sleep 5"]
-    : ["sleep", "5"]
-  const child = Bun.spawn({
-    cmd,
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "pipe",
-  })
+  const cmd = setsid ? [setsid, "sh", "-c", "trap '' TERM; sleep 5"] : ["sleep", "5"]
+  const child = Bun.spawn({ cmd, stdin: "ignore", stdout: "pipe", stderr: "pipe" })
   const startedAt = performance.now()
   await expect(collectSubprocess(child, "synthetic child", 10, Boolean(setsid), 20)).rejects.toThrow(
     "synthetic child timed out after 10ms",

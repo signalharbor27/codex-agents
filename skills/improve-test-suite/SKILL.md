@@ -21,7 +21,7 @@ Hard preservation rule: keep tests that protect real incidents or contracts unle
 ## When Not to Use
 
 - Root-cause debugging when the failure mode is not yet understood
-- Ordinary feature implementation with a local test choice question better handled by `testing-software`
+- Ordinary feature implementation with a local test choice question better handled by `engineering`
 - Pure code-architecture review where testing is secondary
 - One-off flaky test investigation that does not need suite-level review
 
@@ -31,7 +31,7 @@ Hard preservation rule: keep tests that protect real incidents or contracts unle
 2. Before recommending any removal, inventory incident and contract provenance.
 3. Identify the highest-cost test problems: brittle internals, duplicate coverage, mock theater, slow low-signal flows, and missing seam-level proof.
 4. Compare the current suite against a simpler shape: boundary-focused tests, public interfaces, and cheap trustworthy signals.
-5. Classify findings as pre-existing test debt, regression from the current change, preventable by `software-engineering-flow`, preventable by `writing-software`, preventable by `testing-software`, or repo-doc/memory candidate.
+5. Classify findings as pre-existing test debt, regression from the current change, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, or repo-doc/memory candidate.
 6. For large repos, split evidence gathering by subsystem or test layer and use subagents for bounded independent review tracks.
 7. Produce a phased plan covering what to remove, what to keep, what to rewrite, and what new tests would materially increase trust.
 8. Keep the review and plan in chat by default. Create or update a target-repo plan file only when the user explicitly requests or has already authorized a durable artifact.
@@ -48,7 +48,7 @@ Hard preservation rule: keep tests that protect real incidents or contracts unle
 ## Reference Routing
 
 - Read [TEST_SUITE_REVIEW.md](TEST_SUITE_REVIEW.md) for the review rubric and bad-vs-good test patterns.
-- Read [../writing-software/EXEC-PLAN-FILES.md](../writing-software/EXEC-PLAN-FILES.md) only after a durable target-repo plan file is explicitly authorized.
+- Read [../engineering/references/durable-plan.md](../engineering/references/durable-plan.md) only after a durable target-repo plan file is explicitly authorized.
 
 ## Failure Modes
 

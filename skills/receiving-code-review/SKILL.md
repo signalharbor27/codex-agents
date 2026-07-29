@@ -18,21 +18,19 @@ The goal is technical correctness for this codebase.
 
 ## When Not to Use
 
-- Use `verification-before-completion` for final proof of a claim
-- Use `writing-software` when the question is pure design, not review response
+- Use `engineering` when the question is pure design or implementation, not review response
 
 ## Minimal Workflow
 
 1. Infer routine intent from the review comment; ask only for missing acceptance criteria, destructive/live/shared-state, or scope changes.
 2. Verify it against the actual codebase.
 3. Apply, reject, or escalate with technical reasoning.
-4. When valid feedback requires implementation, load `writing-software` before editing.
-5. Test changes and load `verification-before-completion` before closing the loop.
+4. When valid feedback requires implementation, transition to `engineering` as the primary skill before editing.
+5. Run fresh claim-matched proof before closing the loop.
 
 ## Reference Routing
 
-- Use `writing-software` after the review feedback has been validated and the main task becomes implementation.
-- Use `verification-before-completion` before claiming the review-driven changes are done.
+- Use `engineering` after feedback is validated and the main task becomes implementation.
 
 ## Failure Modes
 

@@ -34,7 +34,7 @@ Treat the `description` as the routing signal available before the skill loads: 
 7. For GPT-5.6, start with the smallest prompt that passes representative evals. State outcomes, evidence, important constraints or permissions, and required output; add process only when order is necessary or an eval exposes a gap.
 8. Keep each meaning in one authoritative place. Apply the sentence-level no-op test and delete instructions that do not change routing, execution, or completion behavior.
 9. Test routing, execution, completion, and output shape with representative prompts against the deployed model and configuration.
-10. Before claiming a skill change complete, load `verification-before-completion`; run the skill-surface check plus the selected behavioral evals.
+10. Before claiming a skill change complete, run the skill-surface check plus the selected behavioral evals fresh and read their actual output.
 11. Merge or delete overlapping skills instead of preserving every niche router.
 
 ## Reference Routing

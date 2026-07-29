@@ -1,6 +1,6 @@
 ---
 name: designing-data-intensive-systems
-description: "Choose data/storage architecture from workload and failure pressure. Use when time-series data, retention, partitioning, replication, streaming/queues/CDC, consistency, recovery, or Postgres/Timescale tradeoffs drive the design."
+description: "Use when workload and failure pressure make data/storage architecture central: time series, retention, partitioning, replication, streams, consistency, recovery, or Postgres/Timescale. Acts as an engineering or review modifier."
 ---
 
 # Designing Data-Intensive Systems
@@ -19,8 +19,8 @@ Keep the entrypoint focused on pressure; push detailed tactics into references.
 
 ## When Not to Use
 
-- Use `writing-software` for ordinary implementation and refactoring questions
-- Use `writing-software/INTERFACE-DESIGN.md` for module-local architecture debates
+- Use `engineering` as the primary skill for ordinary implementation and refactoring
+- Use `engineering/references/boundary-design.md` for module-local architecture debates
 - Do not jump to Postgres or Timescale specifics before workload shape is clear
 
 ## Minimal Workflow
@@ -29,7 +29,7 @@ Keep the entrypoint focused on pressure; push detailed tactics into references.
 2. Name the system roles involved.
 3. Compare 2-3 viable shapes, including a simpler option.
 4. State what should be benchmarked or tested next.
-5. For implementation, hand back to `writing-software` when generic change shape matters, `testing-software` for proof choice, and `verification-before-completion` before claiming done.
+5. During implementation, apply these workload constraints inside the primary `engineering` loop and use its fresh-verification stop condition.
 
 ## Reference Routing
 
