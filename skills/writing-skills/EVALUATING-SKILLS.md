@@ -11,8 +11,11 @@ Evaluate with representative prompts:
 - completion criterion: can the agent tell when each required unit of work is done, or can it stop early without noticing?
 - branch disclosure: does each run load shared instructions plus only the branch-specific references it needs?
 - final completeness: are every required artifact, decision, evidence item, caveat, and next action present?
+- implementation economy: once behavior and proof pass, is every changed file or boundary necessary?
 
 Compare meaningful prompt changes with the previous version or a no-skill baseline on the same cases. Track task success and required evidence first; then final completeness, tokens, latency, and cost. Fewer calls or shorter answers count as improvements only when the required quality bar still passes.
+
+For implementation-producing skills, pair ready-to-code prompts: one bounded case that should stay with the existing owner, and one variant where correctness requires another boundary or artifact. Judge behavior and evidence before economy. Reject an otherwise passing result when it adds unexplained files or boundaries, speculative hooks, redundant proof, or unrelated cleanup. Treat changed-line and file counts as scope-growth signals to investigate, not hard caps; stop when the requested outcome passes and every changed boundary is justified.
 
 Apply a sentence-level no-op test: remove or vary one instruction, rerun representative cases, and keep it only when it changes routing, execution, completion, or an explicit invariant. Treat leading words and invocation phrasing as hypotheses to test, not portable guarantees.
 
