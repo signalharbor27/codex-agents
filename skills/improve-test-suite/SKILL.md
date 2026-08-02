@@ -27,7 +27,7 @@ Hard preservation rule: keep tests that protect real incidents or contracts unle
 
 ## Minimal Workflow
 
-1. Pin the repo or subsystem review scope, then inspect suite shape, layers, speed, mocks, and directly mentioned pain points.
+1. Pin the repo or subsystem review scope, then inspect suite shape, layers, speed, mocks, and directly mentioned pain points. When invoked as a post-code gate, limit the review to the original task diff and its direct effects; report broader or pre-existing findings as separate follow-up candidates without expanding current work.
 2. Before recommending any removal, inventory incident and contract provenance.
 3. Identify the highest-cost test problems: brittle internals, duplicate coverage, mock theater, slow low-signal flows, and missing seam-level proof.
 4. Compare the current suite against a simpler shape: boundary-focused tests, public interfaces, and cheap trustworthy signals.
