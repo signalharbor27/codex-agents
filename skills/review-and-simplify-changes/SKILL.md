@@ -25,13 +25,13 @@ Use this after a commit, PR, branch, or WIP diff to improve code quality without
 ## Minimal Workflow
 
 1. Use this as the primary skill. Load `effect-ts` or `writing-rust` only when that domain is present, and load the pressure references below only when the diff supplies evidence for them.
-2. Pin the review scope: commit, PR, branch, fixed point, or WIP diff. If the user says WIP, always inspect `git status --short` before choosing the diff. Prefer `git diff <fixed-point>...HEAD` and `git log <fixed-point>..HEAD --oneline` when a fixed point is provided; if an explicitly requested diff cannot be produced locally and no exact remote base/head is provided for the same comparison, stop blocked/no-review instead of inferring scope from unrelated remote branches, PRs, or GitHub comparisons. Otherwise choose the safest obvious comparison or ask only when it materially changes the review.
+2. Pin the review scope: commit, PR, branch, fixed point, or WIP diff. Treat the first pass as the initial review. For a follow-up, inspect only changes since the preceding review, verify accepted findings, and check regressions caused by those fixes; do not reopen unchanged earlier scope. If the user says WIP, always inspect `git status --short` before choosing the diff. Prefer `git diff <fixed-point>...HEAD` and `git log <fixed-point>..HEAD --oneline` when a fixed point is provided; if an explicitly requested diff cannot be produced locally and no exact remote base/head is provided for the same comparison, stop blocked/no-review instead of inferring scope from unrelated remote branches, PRs, or GitHub comparisons. Otherwise choose the safest obvious comparison or ask only when it materially changes the review.
    - If a fixed-point diff is empty but unstaged changes exist, report the mismatch and include the unstaged diff only when user intent clearly points at WIP; otherwise ask one narrow scope question.
 3. Read repo-local `AGENTS.md`, docs, package scripts, conventions, and change Intent sources: prompt, explicit spec, plan, task notes, issue, or commit message. Use the diff as evidence of touched behavior, not as proof of intent.
 4. State scope, allowed side effects, validation target, and that the Eight-Agent Invariant applies unless the user explicitly requested one track.
 5. Before cleanup tracks, judge two axes separately: **Standards** (repo rules, skill guidance, local conventions) and **Intent** (what the change was trying to accomplish). Account for each material Intent requirement as implemented, partial, missing, contradicted, incorrect, or unrequested scope; give tracks a concise digest or source pointers rather than making each rediscover a large spec. Keep those findings separate from cleanup taste.
 6. Apply the Eight-Agent Invariant for every non-single-track review. For the explicit single-track exception, dispatch only that track.
-7. Implement only findings with clear evidence and low behavior risk when the user asked for fixes. Do not stage, commit, push, or add new dependencies unless explicitly asked.
+7. Implement only findings within the original task scope with clear evidence and low behavior risk when the user asked for fixes. Report pre-existing or out-of-scope findings without changing them. Do not stage, commit, push, or add new dependencies unless explicitly asked.
 8. Finish when every required track is accounted for, findings are deduplicated and judged against Standards and Intent, requested fixes are validated, and skipped validation or residual risk is explicit.
 
 ## Eight-Agent Invariant
@@ -41,6 +41,7 @@ Every non-single-track review pass must use brand-new subagents: exactly eight, 
 - Discover active subagent capacity before dispatch. Start all eight together when at least eight slots are available; otherwise run waves until all eight distinct agents finish.
 - Limited concurrency is not a reason to merge, omit, or replace tracks. If subagents are entirely unavailable, stop and report the blocked invariant.
 - Give each agent the same pinned scope plus its one track. Keep agents read-only: no edits, staging, commits, pushes, or state mutation.
+- Tell independent Codex reviewers not to invoke this skill or any repo post-code review gate recursively.
 - Require file/symbol, category, issue, recommended fix, confidence, evidence, and validation needed. A track may report no finding.
 - For an explicit single-track read-only review, use one fresh subagent when available; if not, perform that track locally, keep it read-only, and disclose that no fresh subagent was available.
 - The main agent owns synthesis, judgment, edits, validation, and completion claims.
