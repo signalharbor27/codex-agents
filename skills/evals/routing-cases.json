@@ -301,6 +301,20 @@
       }
     },
     {
+      "id": "follow-up-review-delta",
+      "prompt": "Run the second review pass on the WIP diff after accepted fixes. Inspect only changes since the first pass, verify those fixes, and fix only high-confidence regressions they introduced. Report pre-existing or unrelated findings without changing them.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "verify-before-completion"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
       "id": "broad-read-only-review",
       "prompt": "Run a broad findings-only review of the current WIP diff across all eight review tracks. Do not change files.",
       "primary_skill": "review-and-simplify-changes",
