@@ -1,6 +1,7 @@
 Read this when the main problem is routing clarity.
 
 Description rules:
+- front-load the key use case and trigger words because Codex may shorten descriptions in a large skill catalog
 - say what the skill is for and when it should fire
 - use explicit `Use when ...` trigger phrasing
 - describe trigger conditions, not workflow
@@ -10,8 +11,10 @@ Description rules:
 - include a boundary when overlap exists
 
 Invocation vocabulary:
-- model-invoked skills keep a model-facing description so the agent can route to them; this spends context load every turn, so the trigger must earn its place
-- user-invoked skills are human-indexed; they spend cognitive load instead of context load, so use them only when human judgment should choose the flow
+- Codex initially catalogs each skill's name, description, and path; every description spends catalog context, so each trigger must earn its place
+- model-invoked skills use the description for implicit matching; keep it precise enough to select the skill without swallowing adjacent work
+- explicit-only skills set `policy.allow_implicit_invocation: false` in `agents/openai.yaml`; their descriptions remain cataloged, and explicit `$skill` invocation still works
+- use explicit-only routing when human judgment should choose the flow and the cost of an implicit false positive is material
 - context pointer means any short phrase that tells the agent when to load deeper material; sharpen the pointer before inlining a whole reference
 
 Bad descriptions:

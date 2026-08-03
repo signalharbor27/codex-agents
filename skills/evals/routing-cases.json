@@ -49,6 +49,48 @@
       }
     },
     {
+      "id": "grill-consequential-rollout-decision",
+      "prompt": "An unresolved rollout decision blocks implementation: existing customers could stay on the old behavior or migrate immediately. Walk me through this interactively, recommend one answer at a time, and wait for each response.",
+      "primary_skill": "grill-me",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["resolve-facts-before-asking", "ask-exactly-one-question", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "one-at-a-time",
+        "stop": "wait-for-answer"
+      }
+    },
+    {
+      "id": "large-specified-work",
+      "prompt": "Implement this approved multi-file refactor plan. All behavior and architecture decisions are settled; keep routine choices agent-owned and verify the existing focused tests.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["inspect-before-editing", "stay-within-change-budget", "verify-before-completion"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "pressure-test-findings-only",
+      "prompt": "Pressure-test this implementation plan and return prioritized findings with evidence. Do not interview me or change files; stop at the review.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["inspect-before-recommending", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
       "id": "routine-refactor",
       "prompt": "Refactor this local parser helper to remove duplication without changing behavior. Keep the diff small and verify the existing focused tests.",
       "primary_skill": "engineering",
@@ -64,7 +106,7 @@
     },
     {
       "id": "greenfield-integration",
-      "prompt": "Build the first usable path for a new internal integration. Use the real entrypoint and provider boundary, keep it thin, and prove one end-to-end behavior before adding options.",
+      "prompt": "Build the first usable path for a new internal integration. Use the real entrypoint and provider boundary, preserve one coherent domain model, and prove one end-to-end behavior before adding options or extension points.",
       "primary_skill": "engineering",
       "expected_modifier_skills": [],
       "expected_references": ["engineering/references/feature-shape.md"],
@@ -78,7 +120,7 @@
     },
     {
       "id": "boundary-change",
-      "prompt": "Design and implement a small application boundary that hides provider quirks from three current callers. Compare it with keeping the code direct and avoid pass-through wrappers.",
+      "prompt": "Design and implement a small application boundary that hides provider quirks from three current callers. Compare direct code with two materially plausible interface shapes, then prefer the fewest concepts that hide the real complexity without becoming a pass-through wrapper.",
       "primary_skill": "engineering",
       "expected_modifier_skills": [],
       "expected_references": ["engineering/references/boundary-design.md"],
@@ -452,6 +494,20 @@
         "mutation": "none",
         "question": "only-if-blocked",
         "stop": "plan"
+      }
+    },
+    {
+      "id": "durable-discovery-plan",
+      "prompt": "This migration will span several sessions. Create an in-repo durable plan that names the destination, verified facts, resolved decisions, dependency-ordered open decisions, not-yet-specifiable work, and the next executable slice; stop before implementation.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/durable-plan.md"],
+      "required_actions": ["inspect-before-editing", "create-requested-plan-file", "single-source-durable-map", "separate-facts-decisions-and-open-questions", "stop-before-implementation"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-plan-file",
+        "question": "only-if-blocked",
+        "stop": "after-artifact"
       }
     },
     {

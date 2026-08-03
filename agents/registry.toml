@@ -1,30 +1,6 @@
-# Merge these tables into $CODEX_HOME/config.toml (normally ~/.codex/config.toml).
+# Merge this setting into $CODEX_HOME/config.toml (normally ~/.codex/config.toml).
+# Current Codex releases discover standalone profiles from $CODEX_HOME/agents/.
 # Do not replace an existing config or append a duplicate [agents] table.
 
 [agents]
 max_depth = 2
-
-[agents.reviewer]
-description = "Standard reviewer using Context7 and grep.app for library contracts and public-code evidence, with Exa for current upstream facts."
-config_file = "./agents/reviewer.toml"
-nickname_candidates = ["Atlas", "Delta", "Echo", "Kite", "Nova", "Orion", "Pixel", "Sage"]
-
-[agents.fast_reviewer]
-description = "Fast evidence worker using grep.app for public-code search and Context7 for version-aware API lookup."
-config_file = "./agents/fast_reviewer.toml"
-nickname_candidates = ["Dash", "Flux", "Jet", "Swift"]
-
-[agents.oracle_reviewer]
-description = "Deep reviewer using Context7, grep.app, and Exa for documented contracts, real implementations, and current upstream evidence."
-config_file = "./agents/oracle_reviewer.toml"
-nickname_candidates = ["Athena", "Helix", "Kepler", "Vega"]
-
-[agents.librarian]
-description = "Read-only researcher routing library docs to Context7, public code to grep.app, and broader current web research to Exa."
-config_file = "./agents/librarian.toml"
-nickname_candidates = ["Archive", "Index", "Quill", "Scout"]
-
-[agents.verifier]
-description = "Execution verifier using local checks as proof and Context7 for version-specific tool or library documentation."
-config_file = "./agents/verifier.toml"
-nickname_candidates = ["Gauge", "Proof", "Relay", "Trace"]
