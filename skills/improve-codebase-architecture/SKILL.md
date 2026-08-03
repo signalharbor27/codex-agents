@@ -28,7 +28,7 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 
 ## Minimal Workflow
 
-1. Inspect the current reality first: structure, major seams, build/test shape, and directly mentioned problem areas.
+1. Inspect the current reality first: structure, major seams, build/test shape, and directly mentioned problem areas. When invoked as a post-code gate, limit the review to the original task diff and its direct effects; report broader or pre-existing findings as separate follow-up candidates without expanding current work.
 2. Map the business/domain terms the code uses, where they conflict, and which docs or decisions already exist.
 3. Identify the highest-cost architecture and testing issues, not every possible cleanup.
 4. Preserve existing guarantees and constraints unless there is evidence they are part of the problem.
