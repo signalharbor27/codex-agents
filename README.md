@@ -18,15 +18,15 @@ Do not stack separate planning, implementation, testing, and final-proof skills.
 
 Routine engineering loads only [engineering/SKILL.md](skills/engineering/SKILL.md). It names present pressure and opens a one-level reference only when that pressure exists:
 
-- new or large feature: `feature-shape.md`
-- consequential module/API ownership: `boundary-design.md`
+- new or large feature, including conceptual integrity: `feature-shape.md`
+- consequential module/API ownership or competing interface shapes: `boundary-design.md`
 - poorly understood or migration-sensitive code: `legacy-change.md`
 - durable state, money, jobs, retries, or external effects: `state-and-effects.md`
 - contracts, schemas, SDKs, rollout, or rollback: `compatibility-and-delivery.md`
 - auth, permissions, abuse, replay, or sensitive data: `security.md`
 - hot paths or capacity: `performance-and-capacity.md`
 - non-obvious proof: `proof.md`
-- explicitly authorized multi-session plan: `durable-plan.md`
+- explicitly authorized multi-session discovery or execution plan: `durable-plan.md`
 
 `debugging` and `test-design` follow the same pattern with their own short, one-level references. Reference files do not link to other references.
 
@@ -35,6 +35,7 @@ This structure keeps strong production guidance available without placing every 
 ## Why These Principles
 
 - Tracer bullets and vertical slices establish a real end-to-end path before broad scaffolding.
+- Conceptual integrity keeps a feature centered on one coherent model while treating every extra concept, state, and option as a reasoning cost.
 - Deep modules and information hiding reduce caller knowledge and change amplification.
 - Characterization seams make legacy changes observable before agents rewrite plausible behavior.
 - Durable state/effect maps expose retries, duplicate delivery, partial failure, and reconciliation before production.
@@ -43,7 +44,7 @@ This structure keeps strong production guidance available without placing every 
 - Measurement-first performance work prevents speculative caches, concurrency, and denormalization.
 - Claim-matched proof keeps tests small while preventing stale or partial completion claims.
 
-The concise references synthesize established work including Hunt and Thomas, Ousterhout, Parnas, Feathers, Fowler, Evans, Beck, Meszaros, Humble and Farley, Nygard, Kleppmann, Google SRE, Brendan Gregg, and OWASP. Each reference states its source basis.
+The concise references synthesize established work including Hunt and Thomas, Brooks, Hoare, Wirth, Dijkstra, Ousterhout, Parnas, Feathers, Fowler, Evans, Beck, Meszaros, Humble and Farley, Nygard, Kleppmann, Google SRE, Brendan Gregg, and OWASP. Each reference states its source basis.
 
 ## Protected Review and Improve Skills
 
@@ -57,7 +58,7 @@ Their only redesign changes are routing names, pressure-reference paths, and ups
 - `designing-data-intensive-systems`: workload, storage, consistency, partitioning, and recovery modifier
 - `writing-rust`: Rust ownership, traits, errors, async, and unsafe modifier
 - `effect-ts`: Effect service, error, layer, runtime, wrapper, and stream modifier
-- `grill-me`: interactive one-question plan pressure test
+- `grill-me`: interactive pressure test for consequential user-owned decisions
 - `receiving-code-review`: validate review feedback against repository truth
 - `using-git-worktrees`: explicitly requested or necessary workspace isolation
 - `finishing-a-development-branch`: verified branch integration choices
@@ -68,15 +69,21 @@ Their only redesign changes are routing names, pressure-reference paths, and ups
 
 [AGENTS.md](AGENTS.md) is a global contract, not repository-specific guidance. Keep workflows in skills; keep safety, permissions, honesty, scope, delegation, verification, and git boundaries in `AGENTS.md`.
 
-After changing it, compare and sync it to:
+After changing it, sync it byte-for-byte to the user instruction source:
 
 ```text
 ~/.agents/AGENTS.md
 ```
 
+Codex CLI discovers global instructions from `$CODEX_HOME/AGENTS.md`, normally
+`~/.codex/AGENTS.md`. Keep that path as a symlink to `~/.agents/AGENTS.md` so
+the repository file, the user source, and the Codex discovery path cannot drift.
+
 ## Custom Agents
 
-Installable profiles live in [agents](agents), with registration tables in [agents/registry.toml](agents/registry.toml).
+Installable profiles live in [agents](agents). Current Codex releases discover
+standalone profile files automatically; [agents/registry.toml](agents/registry.toml)
+contains only shared agent settings.
 
 - `fast_reviewer`: fast mechanical evidence
 - `reviewer`: standard contract and correctness review
@@ -100,7 +107,10 @@ install -m 0644 \
   "$CODEX_HOME/agents/"
 ```
 
-Merge [agents/registry.toml](agents/registry.toml) into the existing `$CODEX_HOME/config.toml`; do not append a second `[agents]` table.
+Merge only the shared settings from [agents/registry.toml](agents/registry.toml)
+into the existing `$CODEX_HOME/config.toml`; do not append a second `[agents]`
+table. Do not add redundant `[agents.<role>]` registrations for profiles already
+installed under `$CODEX_HOME/agents/`.
 
 ## Skill Installation
 
@@ -141,6 +151,6 @@ Live model evaluation is opt-in and requires an explicit case or `--all` plus `-
 
 Current guidance:
 
-- [OpenAI GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/latest-model)
+- [OpenAI GPT-5.6 prompting guidance](https://developers.openai.com/api/docs/guides/model-guidance?model=gpt-5.6#prompting-best-practices)
 - [OpenAI skills documentation](https://learn.chatgpt.com/docs/build-skills)
 - [Matt Pocock's writing-great-skills reference](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-great-skills)

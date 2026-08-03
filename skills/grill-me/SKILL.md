@@ -1,38 +1,37 @@
 ---
 name: grill-me
-description: "Stress-test a plan or design one question at a time. Use when the user says grill me, asks to pressure-test a plan, or branch decisions, assumptions, dependencies, scope, or verification are still unstable."
+description: "Stress-test a plan or design interactively, one decision at a time. Use when the user asks to be grilled or a consequential user-owned decision blocks execution. Not for large but already-specified work."
 ---
 
 # Grill Me
 
 ## Overview
 
-Use this skill when the main task is to challenge a plan or design before execution.
-The goal is shared understanding, not implementation.
+Challenge a plan or design until its consequential user-owned decisions are settled.
+The skill is interactive and read-only; its output is shared understanding, not implementation or a written artifact.
 
 ## When to Use
 
-- The user explicitly says `grill me`
-- A plan feels plausible but still has branch, dependency, or scope risk
-- A design needs stronger pressure-testing before implementation starts
-- You need to expose missing assumptions, weak verification, or unresolved tradeoffs
+- The user asks to be grilled or interactively pressure-tested
+- A consequential product, scope, architecture, or behavior decision blocks execution
+- Several user-owned decisions depend on one another and need to be resolved in order
 
 ## When Not to Use
 
-- Use `engineering` when the task is shaping or implementing the change
+- Use `engineering` for ordinary planning or implementation when no interactive user decision blocks progress
+- Keep large but already-specified work with its current primary skill
+- Use the relevant planning or review skill when the user requests findings rather than an interview
 - Use `debugging` when the failure mode is not yet understood
-- Do not use this for tiny tasks where a light internal plan check is enough
 
 ## Minimal Workflow
 
-1. Read the plan, design, or directly mentioned files fully before questioning it.
-2. Resolve facts from code or other authoritative evidence instead of asking the user. Put consequential product, scope, architecture, and behavior decisions to the user; keep routine implementation choices agent-owned when repo conventions make them clear.
-3. Pick the single highest-leverage unresolved branch decision.
-4. Ask exactly one question per turn. Do not batch multiple branches, preview the rest of the questionnaire, or dump a full report.
-5. For that one question, include a recommended answer, the key tradeoff, and what changes if the answer goes the other way.
-6. Stop and wait for the user's answer. On the next turn, briefly mark the prior branch as resolved, then move to the next single highest-leverage question.
-7. Tighten dependencies, rejected alternatives, scope edges, and verification until the plan is stable.
-8. Leave the grill when the major branch decisions are resolved and the user confirms the plan is ready. Begin implementation only when the original task already authorized it or the user explicitly requests implementation.
+1. Read the plan, design, and directly relevant files. Resolve facts from authoritative evidence instead of asking the user.
+2. Identify the consequential user-owned decisions and their prerequisites. Exclude routine choices that repository evidence or conventions settle.
+3. From decisions whose prerequisites are settled, choose the root-most one; break ties by downstream impact.
+4. Ask exactly one atomic decision question. Include the recommended answer, key tradeoff, and what materially changes with the alternative.
+5. Stop and wait. On the next turn, record the decision briefly, recompute what is now answerable, and ask only the next eligible question.
+6. When no consequential user-owned decision remains, summarize settled decisions, rejected consequential alternatives, factual blockers, and verification expectations. Ask the user to confirm readiness.
+7. Do not create or change code, plans, ADRs, glossaries, questionnaires, or external state during the grill. After confirmation, transition to `engineering` if planning or implementation is authorized.
 
 ## Reference Routing
 
@@ -40,11 +39,10 @@ The goal is shared understanding, not implementation.
 
 ## Failure Modes
 
-- Asking broad unrelated questions instead of resolving one branch at a time
+- Choosing a downstream question before its prerequisites are settled
 - Asking multiple questions in one turn or presenting the whole design tree at once
-- Turning the grill into a report, memo, or questionnaire instead of an interactive state machine
+- Packing several decisions into one nominal question
 - Using user questions as a substitute for code inspection
 - Treating routine implementation details as user-owned decisions
-- Treating plan readiness as implementation authority
-- Grilling forever without converging on stable decisions
-- Stress-testing tiny low-risk work that does not need a standalone grill
+- Treating task size, plan readiness, or prior implementation authority as permission to write during the grill
+- Grilling after no consequential user-owned decision remains

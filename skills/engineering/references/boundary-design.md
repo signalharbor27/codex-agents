@@ -25,6 +25,10 @@ One pass-through wrapper, one implementation, or possible future variation is no
 
 Use the deletion test: if removing the module would not spread meaningful complexity or policy into callers, inline it or keep the existing seam.
 
+## Compare Consequential Alternatives
+
+When two or more materially plausible shapes remain, sketch two or three real caller examples for each. Compare the number of concepts and states, caller knowledge, hidden complexity, misuse risk, migration cost, and fit with the existing domain model. Do not manufacture alternatives for ceremony; recommend the simplest shape that satisfies the real contracts and hides more complexity than it introduces.
+
 ## Agent Guardrails
 
 - Patterns are responses to observed pressure, never goals.
@@ -37,5 +41,7 @@ Use the deletion test: if removing the module would not spread meaningful comple
 
 - John Ousterhout, *A Philosophy of Software Design*: deep modules, information hiding, change amplification, and pulling complexity downward.
 - David Parnas, “On the Criteria To Be Used in Decomposing Systems into Modules”: hiding design decisions likely to change.
+- Fred Brooks, *The Mythical Man-Month*: conceptual integrity and one coherent model across a system.
+- Edsger Dijkstra, “The Humble Programmer”: keeping software within human intellectual control by reducing avoidable complexity.
 - Martin Fowler, *Refactoring*: small behavior-preserving improvements and evidence-based abstraction.
 - Eric Evans, *Domain-Driven Design*: explicit domain language and ownership boundaries.
