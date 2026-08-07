@@ -37,6 +37,7 @@
         "type": "string",
         "enum": [
           "ask-exactly-one-question",
+          "ask-dependency-frontier-round",
           "build-production-complete-slice",
           "build-red-capable-loop",
           "cite-authoritative-sources",
@@ -56,10 +57,13 @@
           "keep-task-read-only",
           "launch-exactly-eight-distinct-read-only-subagents",
           "load-only-present-pressure-references",
+          "narrow-oversized-grill",
           "pin-review-scope",
+          "preserve-stable-question-numbering",
           "preserve-effect-boundary",
           "read-final-diff",
           "report-worktree-location",
+          "require-confirmation-before-transition",
           "require-explicit-branch-integration-choice",
           "resolve-facts-before-asking",
           "separate-facts-decisions-and-open-questions",
@@ -107,6 +111,7 @@
     "question": {
       "type": "string",
       "enum": [
+        "dependency-frontier",
         "one-at-a-time",
         "only-if-blocked",
         "required-before-unapproved-action"

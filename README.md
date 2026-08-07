@@ -14,6 +14,8 @@ Review, audit, branch, handoff, and skill-authoring tasks use their narrower ski
 
 Do not stack separate planning, implementation, testing, and final-proof skills. A primary skill owns its whole loop. Transition only when the task genuinely changes jobs.
 
+`grill-me` is the single model-invoked owner of dependency-aware interactive decision resolution. Natural requests, exact `$grill-me`, or work that already exposes several interdependent consequential user-owned choices can select it directly; after inspection, `engineering` and the two improve skills can load its shared procedure while retaining primary ownership.
+
 ## Progressive Disclosure
 
 Routine engineering loads only [engineering/SKILL.md](skills/engineering/SKILL.md). It names present pressure and opens a one-level reference only when that pressure exists:
@@ -58,7 +60,7 @@ Their only redesign changes are routing names, pressure-reference paths, and ups
 - `designing-data-intensive-systems`: workload, storage, consistency, partitioning, and recovery modifier
 - `writing-rust`: Rust ownership, traits, errors, async, and unsafe modifier
 - `effect-ts`: Effect service, error, layer, runtime, wrapper, and stream modifier
-- `grill-me`: interactive pressure test for consequential user-owned decisions
+- `grill-me`: model-invoked interview owner with a shared procedure for latent consequential decisions
 - `receiving-code-review`: validate review feedback against repository truth
 - `using-git-worktrees`: explicitly requested or necessary workspace isolation
 - `finishing-a-development-branch`: verified branch integration choices
@@ -116,6 +118,8 @@ installed under `$CODEX_HOME/agents/`.
 
 Top-level skill folders under [skills](skills) are installable into `~/.agents/skills/`. Sync each explicit directory rather than replacing the whole global skill root, because that root can contain unrelated skills.
 
+Install `grill-me` as one skill. To enable post-inspection grilling, also sync the consumer skill directories that link to `grill-me/references/frontier.md`; no nested skill invocation or second grilling router is required.
+
 If another installed skill supplies an overlapping umbrella workflow, disable it with an exact `[[skills.config]]` path entry in `~/.codex/config.toml`. Restart Codex after changing discovery configuration.
 
 ## Evals
@@ -126,6 +130,7 @@ The local suite enforces:
 - quoted, trigger-focused descriptions no longer than 240 characters
 - required entrypoint sections and a 120-line `SKILL.md` budget
 - valid local links and one-level pressure references
+- invocation metadata plus implicit and exact `$skill` routing
 - one primary skill, exact modifiers, and exact disclosed references
 - representative routine, pressure, debugging, testing, review, improve, domain, and handoff routes
 - the broad-review eight-agent invariant
