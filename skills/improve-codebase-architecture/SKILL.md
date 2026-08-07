@@ -40,7 +40,7 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 10. Produce a phased plan with scope, expected payoff, dependencies, and verification for each phase.
 11. Keep the review and plan in chat by default. Create or update a target-repo plan file only when the user explicitly requests or has already authorized a durable artifact.
 12. Offer to record durable terms in `CONTEXT.md` or durable tradeoffs in ADRs only when the decision will guide future work.
-13. Pressure-test the draft internally before finalizing it. Use interactive `grill-me` only when the user requests that flow or a consequential unresolved choice requires approval.
+13. Pressure-test the draft internally before finalizing it. Keep one approval inline; load the dependency-frontier grilling reference below only when the user requests an interactive interview or several consequential user-owned decisions depend on one another.
 14. Call out what should not change, what should be deferred, and at least one rejected alternative when the tradeoff is non-trivial.
 
 ## Output Contract
@@ -53,6 +53,7 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 ## Reference Routing
 
 - Read [AGENT_FRIENDLY_REVIEW.md](AGENT_FRIENDLY_REVIEW.md) for the review rubric and planning heuristics.
+- Read [../grill-me/references/frontier.md](../grill-me/references/frontier.md) only for an interactive interview over several interdependent consequential user-owned decisions; retain this skill as primary.
 - Read [../engineering/references/durable-plan.md](../engineering/references/durable-plan.md) only after a durable target-repo plan file is explicitly authorized.
 
 ## Failure Modes

@@ -5,6 +5,7 @@ Executable checks for the active engineering skill surface.
 The suite verifies:
 
 - exact top-level skill inventory
+- exact invocation-policy inventory from `agents/openai.yaml`
 - quoted, trigger-focused descriptions with the configured length budget
 - required entrypoint sections, line limits, and valid local links
 - one-level progressive references with no reference-to-reference chains

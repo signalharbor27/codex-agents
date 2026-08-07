@@ -35,7 +35,7 @@ Hard preservation rule: keep tests that protect real incidents or contracts unle
 6. For large repos, split evidence gathering by subsystem or test layer and use subagents for bounded independent review tracks.
 7. Produce a phased plan covering what to remove, what to keep, what to rewrite, and what new tests would materially increase trust.
 8. Keep the review and plan in chat by default. Create or update a target-repo plan file only when the user explicitly requests or has already authorized a durable artifact.
-9. Pressure-test the draft internally before finalizing it. Use interactive `grill-me` only when the user requests that flow or a consequential unresolved choice requires approval.
+9. Pressure-test the draft internally before finalizing it. Keep one approval inline; load the dependency-frontier grilling reference below only when the user requests an interactive interview or several consequential user-owned decisions depend on one another.
 10. Call out at least one rejected alternative when the tradeoff is non-trivial, especially when removing broad suites or end-to-end coverage.
 
 ## Output Contract
@@ -48,6 +48,7 @@ Hard preservation rule: keep tests that protect real incidents or contracts unle
 ## Reference Routing
 
 - Read [TEST_SUITE_REVIEW.md](TEST_SUITE_REVIEW.md) for the review rubric and bad-vs-good test patterns.
+- Read [../grill-me/references/frontier.md](../grill-me/references/frontier.md) only for an interactive interview over several interdependent consequential user-owned decisions; retain this skill as primary.
 - Read [../engineering/references/durable-plan.md](../engineering/references/durable-plan.md) only after a durable target-repo plan file is explicitly authorized.
 
 ## Failure Modes

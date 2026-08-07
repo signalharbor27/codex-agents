@@ -6,10 +6,15 @@ import { join } from "node:path"
 import {
   collectSubprocess,
   compareResult,
+  formatSkillCatalogLine,
+  hasExactSkillInvocation,
+  parseOpenAiPolicy,
   parseLiveResult,
   parseSkillFrontmatter,
   readJson,
   validateFixtureTopLevel,
+  validateExplicitOnlyInventory,
+  validateExplicitOnlySelections,
   validateResultSchema,
   type RoutingCase,
   type RoutingFixture,
@@ -131,6 +136,56 @@ description: "Use when a \\"quoted\\" trigger applies."
   })
 })
 
+describe("skill invocation policy", () => {
+  test("parses explicit-only metadata and defaults missing policy to implicit", () => {
+    expect(parseOpenAiPolicy("interface:\n  display_name: Grill Me\npolicy:\n  allow_implicit_invocation: false\n"))
+      .toEqual({ allowImplicitInvocation: false })
+    expect(parseOpenAiPolicy("policy:\n  allow_implicit_invocation: true\n"))
+      .toEqual({ allowImplicitInvocation: true })
+    expect(parseOpenAiPolicy("interface:\n  display_name: Engineering\n"))
+      .toEqual({ allowImplicitInvocation: true })
+  })
+
+  test("rejects malformed invocation policy", () => {
+    expect(() => parseOpenAiPolicy("policy:\n  allow_implicit_invocation: no\n", "synthetic.yaml"))
+      .toThrow("synthetic.yaml:2 allow_implicit_invocation must be true or false")
+    expect(() => parseOpenAiPolicy("policy:\n  allow_implicit_invocation : false\n", "synthetic.yaml"))
+      .toThrow("synthetic.yaml:2 allow_implicit_invocation must be true or false")
+  })
+
+  test("recognizes only an exact dollar-prefixed skill token", () => {
+    expect(hasExactSkillInvocation("Use $grill-me to interview me.", "grill-me")).toBe(true)
+    expect(hasExactSkillInvocation("Please grill me interactively.", "grill-me")).toBe(false)
+    expect(hasExactSkillInvocation("Use $grill-me-extra.", "grill-me")).toBe(false)
+  })
+
+  test("rejects implicit fixture selection of an explicit-only skill", () => {
+    const explicitOnly = new Set(["grill-me"])
+    expect(validateExplicitOnlySelections("Please grill me.", ["grill-me"], explicitOnly, "cases[0]")).toEqual([
+      "cases[0] selects explicit-only skill grill-me without exact $grill-me invocation",
+    ])
+    expect(validateExplicitOnlySelections("Use $grill-me.", ["grill-me"], explicitOnly, "cases[0]")).toEqual([])
+  })
+
+  test("rejects missing or changed explicit-only metadata", () => {
+    expect(validateExplicitOnlyInventory([], new Set())).toEqual([])
+    expect(validateExplicitOnlyInventory(["grill-me"], new Set())).toEqual([
+      "explicit_only_skills mismatch; fixture=grill-me actual=",
+    ])
+    expect(validateExplicitOnlyInventory(["grill-me"], new Set(["grill-me"]))).toEqual([])
+    expect(validateExplicitOnlyInventory(["grill-me"], new Set(["grill-me", "grilling"]))).toEqual([
+      "explicit_only_skills mismatch; fixture=grill-me actual=grill-me,grilling",
+    ])
+  })
+
+  test("marks explicit-only skills in the live catalog", () => {
+    expect(formatSkillCatalogLine("grill-me", "Explicit wrapper.", { allowImplicitInvocation: false }))
+      .toBe("- grill-me [explicit-only; exact $grill-me invocation required]: Explicit wrapper.")
+    expect(formatSkillCatalogLine("engineering", "Implicit owner.", { allowImplicitInvocation: true }))
+      .toBe("- engineering: Implicit owner.")
+  })
+})
+
 test("result schema validation rejects property drift", () => {
   const invalid = structuredClone(resultSchema) as Record<string, unknown>
   const properties = invalid.properties as Record<string, unknown>
@@ -155,7 +210,7 @@ test("JSON loading distinguishes missing files from malformed content", async ()
 
 test("fixture contract rejects unknown top-level fields", () => {
   expect(validateFixtureTopLevel({ ...fixture, unexpected: true })).toEqual([
-    "routing fixture must contain exactly version, engineering_skills, skill_references, cases",
+    "routing fixture must contain exactly version, engineering_skills, explicit_only_skills, skill_references, cases",
   ])
 })
 

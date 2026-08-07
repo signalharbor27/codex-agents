@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "engineering_skills": [
     "debugging",
     "describe-pr",
@@ -17,6 +17,7 @@
     "writing-rust",
     "writing-skills"
   ],
+  "explicit_only_skills": [],
   "skill_references": [
     "debugging/references/async-and-flakes.md",
     "debugging/references/root-cause-tracing.md",
@@ -29,18 +30,61 @@
     "engineering/references/proof.md",
     "engineering/references/security.md",
     "engineering/references/state-and-effects.md",
+    "grill-me/references/frontier.md",
     "test-design/references/browser-e2e.md",
     "test-design/references/tdd.md",
     "test-design/references/test-selection.md"
   ],
   "cases": [
     {
-      "id": "grill-a-plan",
-      "prompt": "Grill this implementation plan one question at a time. Resolve repository facts yourself, recommend an answer with each question, and do not implement anything.",
+      "id": "explicit-grill-me",
+      "prompt": "Use $grill-me to pressure-test this implementation plan. Resolve repository facts yourself, ask every currently answerable consequential question, keep question numbers stable across rounds, and do not implement anything.",
       "primary_skill": "grill-me",
       "expected_modifier_skills": [],
-      "expected_references": [],
-      "required_actions": ["resolve-facts-before-asking", "ask-exactly-one-question", "keep-task-read-only"],
+      "expected_references": ["grill-me/references/frontier.md"],
+      "required_actions": ["resolve-facts-before-asking", "ask-dependency-frontier-round", "preserve-stable-question-numbering", "keep-task-read-only", "require-confirmation-before-transition"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "dependency-frontier",
+        "stop": "wait-for-answer"
+      }
+    },
+    {
+      "id": "implicit-grilling-frontier",
+      "prompt": "Grill this rollout design interactively. Several consequential compatibility, migration, and rollback choices are unresolved; ask the currently answerable root decisions together, then recompute the next frontier after my answers.",
+      "primary_skill": "grill-me",
+      "expected_modifier_skills": [],
+      "expected_references": ["grill-me/references/frontier.md"],
+      "required_actions": ["resolve-facts-before-asking", "ask-dependency-frontier-round", "preserve-stable-question-numbering", "keep-task-read-only", "require-confirmation-before-transition"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "dependency-frontier",
+        "stop": "wait-for-answer"
+      }
+    },
+    {
+      "id": "work-triggered-grilling",
+      "prompt": "We need to settle this rollout design. Existing-customer migration, compatibility duration, and rollback promises are consequential choices I own, and each affects the others. Help me resolve them before implementation.",
+      "primary_skill": "grill-me",
+      "expected_modifier_skills": [],
+      "expected_references": ["grill-me/references/frontier.md"],
+      "required_actions": ["resolve-facts-before-asking", "ask-dependency-frontier-round", "preserve-stable-question-numbering", "keep-task-read-only", "require-confirmation-before-transition"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "dependency-frontier",
+        "stop": "wait-for-answer"
+      }
+    },
+    {
+      "id": "implicit-grilling-one-at-a-time",
+      "prompt": "Challenge the consequential choices in this design interactively, but ask exactly one atomic question at a time even when several independent decisions are ready. Resolve repository facts yourself and do not change files.",
+      "primary_skill": "grill-me",
+      "expected_modifier_skills": [],
+      "expected_references": ["grill-me/references/frontier.md"],
+      "required_actions": ["resolve-facts-before-asking", "ask-exactly-one-question", "preserve-stable-question-numbering", "keep-task-read-only", "require-confirmation-before-transition"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "none",
@@ -49,16 +93,16 @@
       }
     },
     {
-      "id": "grill-consequential-rollout-decision",
-      "prompt": "An unresolved rollout decision blocks implementation: existing customers could stay on the old behavior or migrate immediately. Walk me through this interactively, recommend one answer at a time, and wait for each response.",
+      "id": "oversized-grilling-scope",
+      "prompt": "Grill our entire company strategy in one session: product architecture, pricing, hiring, positioning, sales, onboarding, billing, support, integrations, migration, and global rollout. Treat every downstream decision as in scope.",
       "primary_skill": "grill-me",
       "expected_modifier_skills": [],
-      "expected_references": [],
-      "required_actions": ["resolve-facts-before-asking", "ask-exactly-one-question", "keep-task-read-only"],
+      "expected_references": ["grill-me/references/frontier.md"],
+      "required_actions": ["narrow-oversized-grill", "keep-task-read-only", "require-confirmation-before-transition"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "none",
-        "question": "one-at-a-time",
+        "question": "dependency-frontier",
         "stop": "wait-for-answer"
       }
     },
@@ -74,6 +118,20 @@
         "mutation": "requested-repo-writes",
         "question": "only-if-blocked",
         "stop": "after-verification"
+      }
+    },
+    {
+      "id": "single-approval-choice",
+      "prompt": "The implementation and rollout are already settled. Before applying the prepared migration to shared staging, give me your recommendation and ask for the one required approval; do not turn this into a broader interview.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["resolve-facts-before-asking", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "after-user-choice",
+        "question": "required-before-unapproved-action",
+        "stop": "wait-for-answer"
       }
     },
     {
