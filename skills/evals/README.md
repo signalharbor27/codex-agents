@@ -11,7 +11,7 @@ The suite verifies:
 - one-level progressive references with no reference-to-reference chains
 - one primary skill plus exact modifiers and pressure references
 - first action, mutation authority, question boundary, stop condition, and required actions
-- the broad-review exact-eight-agent invariant
+- the static adaptive-review delegation contract and material-topic coverage; behavioral review fixtures remain to be migrated
 
 ## Local Validation
 

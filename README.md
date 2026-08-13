@@ -21,7 +21,7 @@ Do not stack separate planning, implementation, testing, and final-proof skills.
 Routine engineering loads only [engineering/SKILL.md](skills/engineering/SKILL.md). It names present pressure and opens a one-level reference only when that pressure exists:
 
 - new or large feature, including conceptual integrity: `feature-shape.md`
-- consequential module/API ownership or competing interface shapes: `boundary-design.md`
+- consequential ownership, trust boundaries, invariant-bearing types, module/API shape, or competing abstractions: `boundary-design.md`
 - poorly understood or migration-sensitive code: `legacy-change.md`
 - durable state, money, jobs, retries, or external effects: `state-and-effects.md`
 - contracts, schemas, SDKs, rollout, or rollback: `compatibility-and-delivery.md`
@@ -39,6 +39,7 @@ This structure keeps strong production guidance available without placing every 
 - Tracer bullets and vertical slices establish a real end-to-end path before broad scaffolding.
 - Conceptual integrity keeps a feature centered on one coherent model while treating every extra concept, state, and option as a reasoning cost.
 - Deep modules and information hiding reduce caller knowledge and change amplification.
+- Trusted boundary values preserve what parsing proved, while domain-owned operations keep invariants with one responsible module.
 - Characterization seams make legacy changes observable before agents rewrite plausible behavior.
 - Durable state/effect maps expose retries, duplicate delivery, partial failure, and reconciliation before production.
 - Compatibility and expand/migrate/contract sequencing protect mixed-version consumers.
@@ -46,14 +47,12 @@ This structure keeps strong production guidance available without placing every 
 - Measurement-first performance work prevents speculative caches, concurrency, and denormalization.
 - Claim-matched proof keeps tests small while preventing stale or partial completion claims.
 
-The concise references synthesize established work including Hunt and Thomas, Brooks, Hoare, Wirth, Dijkstra, Ousterhout, Parnas, Feathers, Fowler, Evans, Beck, Meszaros, Humble and Farley, Nygard, Kleppmann, Google SRE, Brendan Gregg, and OWASP. Each reference states its source basis.
+The concise references synthesize established work including Hunt and Thomas, Brooks, Hoare, Wirth, Dijkstra, Ousterhout, Parnas, King, Wlaschin, Meyer, Bernhardt, Cockburn, Bogard, Metz, Feathers, Fowler, Evans, Beck, Meszaros, Humble and Farley, Nygard, Kleppmann, Google SRE, Brendan Gregg, and OWASP. Each reference states its source basis.
 
-## Protected Review and Improve Skills
+## Review and Improve Skills
 
-- `review-and-simplify-changes` keeps its exact eight-fresh-agent invariant for every broad review and its explicit single-track exception.
+- `review-and-simplify-changes` selects only material tracks for the pinned diff. It keeps small or tightly coupled reviews with one reviewer and delegates bounded independent tracks when separate context improves coverage; its eight topics are a coverage checklist, not an agent-count invariant.
 - `improve-codebase-architecture` and `improve-test-suite` retain their audit and phased-plan behavior.
-
-Their only redesign changes are routing names, pressure-reference paths, and upstream-prevention classification.
 
 ## Other Skills
 
@@ -133,7 +132,7 @@ The local suite enforces:
 - invocation metadata plus implicit and exact `$skill` routing
 - one primary skill, exact modifiers, and exact disclosed references
 - representative routine, pressure, debugging, testing, review, improve, domain, and handoff routes
-- the broad-review eight-agent invariant
+- the adaptive review delegation contract
 - guarded optional GPT-5.6 SOL `xhigh` live classification
 
 Run:
@@ -154,8 +153,25 @@ Live model evaluation is opt-in and requires an explicit case or `--all` plus `-
 - Add instructions only for observed failure modes and remove sentence-level no-ops.
 - Evaluate task success and required evidence before tokens, latency, or cost.
 
-Current guidance:
+Current agent-behavior authority:
 
-- [OpenAI GPT-5.6 prompting guidance](https://developers.openai.com/api/docs/guides/model-guidance?model=gpt-5.6#prompting-best-practices)
+- [OpenAI GPT-5.6 Sol prompting guidance](https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6)
+- [OpenAI Multi-agent deployment guidance](https://developers.openai.com/api/docs/guides/deployment-checklist#use-multi-agent-for-parallel-work)
+- [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
+- [Codex `AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
 - [OpenAI skills documentation](https://learn.chatgpt.com/docs/build-skills)
 - [Matt Pocock's writing-great-skills reference](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-great-skills)
+
+Use maintained vendor guidance as corroboration for context management, planning, delegation, and verification, not as an OpenAI platform contract:
+
+- [Anthropic context engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) and [Claude Code best practices](https://code.claude.com/docs/en/best-practices)
+- [Cursor rules](https://cursor.com/docs/rules) and [Cursor subagents](https://cursor.com/docs/subagents)
+- [Devin effective instructions](https://docs.devin.ai/essential-guidelines/instructing-devin-effectively)
+
+Do not base current-agent behavior on stale benchmark results.
+
+Canonical SWE sources own code design: module depth and information hiding, domain language and ownership, trusted boundaries and contracts, production tracer bullets, state/effect reasoning, compatibility, and behavior-focused proof. The routed reference that applies the idea names its source basis.
+
+Comparative material such as Ousterhout's *A Philosophy of Software Design* versus *Clean Code* helps explain tradeoffs, but the primary works and the repository's explicit decision rules remain authoritative.
+
+Practitioner material such as Sandi Metz's “The Wrong Abstraction,” Kent C. Dodds's AHA Programming, Dan Abramov's “Goodbye, Clean Code,” Carson Gross's Locality of Behaviour and *The Grug Brained Developer*, and Joel Spolsky's “Architecture Astronauts” is secondary reinforcement. It can explain a rule but does not create independent runtime doctrine.

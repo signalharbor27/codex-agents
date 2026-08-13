@@ -32,7 +32,7 @@ This skill owns inspection, implementation, proof, and the completion claim; do 
 5. Name only pressures present in the task. Load only the matching reference below before editing; routine changes need no reference.
 6. Set a change budget: expected files or boundaries and why each must move. Rejustify the plan before widening it.
 7. Prefer the existing owner and direct code. Add a boundary only when it hides real complexity, protects a stable contract, or has more than one real implementation; otherwise keep it inline.
-8. Implement the smallest complete slice without speculative hooks, duplicate representations, compatibility fallbacks, or unrelated cleanup.
+8. Implement the smallest complete slice. Do not add a hook, defensive branch, fallback, compatibility path, or duplicate representation unless a current caller, applicable failure mode, threat, rollout constraint, or stored-data contract requires it; avoid unrelated cleanup.
 9. Choose the cheapest trustworthy proof through an observable seam. Cover the failure mode or changed behavior, then run the relevant surrounding checks.
 10. Close only affected contracts and operational artifacts: callers, types, migrations, generated outputs, config, docs, observability, or rollback notes.
 11. Inspect the final diff for scope growth, shallow wrappers, redundant tests, and silent behavior changes. Run fresh verification and stop when the evidence supports the requested outcome.
@@ -41,7 +41,7 @@ This skill owns inspection, implementation, proof, and the completion claim; do 
 
 - Read [../grill-me/references/frontier.md](../grill-me/references/frontier.md) when inspection reveals several interdependent consequential user-owned decisions that block the next safe slice.
 - Read [references/feature-shape.md](references/feature-shape.md) for greenfield work, a new integration, or a feature too large for one obvious slice.
-- Read [references/boundary-design.md](references/boundary-design.md) when callers, ownership, module/API shape, or a proposed abstraction is consequential.
+- Read [references/boundary-design.md](references/boundary-design.md) when callers, ownership, trust boundaries, invariant-bearing types, module/API shape, or a proposed abstraction is consequential.
 - Read [references/legacy-change.md](references/legacy-change.md) when behavior is poorly understood, under-tested, tightly coupled, or migration-sensitive.
 - Read [references/state-and-effects.md](references/state-and-effects.md) for money, durable state, external effects, webhooks, jobs, retries, concurrency, or recovery.
 - Read [references/compatibility-and-delivery.md](references/compatibility-and-delivery.md) for public contracts, SDK/schema changes, mixed-version deploys, migrations, rollout, or rollback.
