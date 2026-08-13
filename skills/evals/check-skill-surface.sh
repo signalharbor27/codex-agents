@@ -50,15 +50,16 @@ reject_matches() {
   fi
 }
 
-# Q explicitly requires eight distinct subagents for every broad review. Keep
-# this invariant visible in the authoritative review skill and test behavior in
-# routing-cases.json.
+# Review delegation follows the pinned diff: keep coupled work in one context,
+# use bounded independent reviewers only when separate context improves
+# coverage, and retain the eight substantive topics as a checklist rather than
+# an agent quota.
 review_skill="$ROOT/review-and-simplify-changes/SKILL.md"
-require_match "brand-new subagents" "$review_skill" "broad review must require fresh subagents"
-require_match "exactly eight" "$review_skill" "broad review must require exactly eight subagents"
-require_match "one assigned to each track" "$review_skill" "broad review must preserve one agent per track"
-require_match "waves" "$review_skill" "broad review must preserve capacity-aware waves"
-require_match "single-track" "$review_skill" "broad review must preserve the explicit single-track exception"
+require_match "Adaptive Reviewer Selection" "$review_skill" "review must select reviewers from the pinned diff"
+require_match "small or tightly coupled diff with the main agent" "$review_skill" "coupled reviews must stay in one context"
+require_match "minimum useful bounded set of independent subagents" "$review_skill" "independent review must use bounded delegation"
+require_match "coverage checklist, not an assignment quota" "$review_skill" "review topics must not become an agent quota"
+require_match "main agent owns checklist accounting" "$review_skill" "main agent must own review synthesis and completion"
 
 engineering_skill="$ROOT/engineering/SKILL.md"
 require_match "This skill owns inspection, implementation, proof, and the completion claim" \

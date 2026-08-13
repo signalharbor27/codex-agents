@@ -2,6 +2,8 @@
 
 Load this for greenfield work, a new integration, or a feature too large for one obvious slice.
 
+A vertical slice is the smallest retained path from the real entrypoint, through required domain, state, and effect boundaries, to an observable user or contract result and its trustworthy proof. It is an execution and contract-discovery unit, not a mandatory permanent package layout.
+
 ## Decide Prototype or Tracer Bullet
 
 - Use a throwaway prototype only to answer one uncertainty that inspection or prose cannot settle. Mark it disposable and delete or absorb it before completion.
@@ -29,12 +31,16 @@ For a larger feature, order slices by risk and learning, not by technical layer.
 
 - Do not create repositories, services, interfaces, DTO layers, or factories merely to prepare for later slices.
 - Do not treat mocked horizontal scaffolding as a completed milestone.
+- Do not duplicate shared domain policy across slices; deepen a common owner when repeated policy or invariants become real.
 - Record only decisions that constrain the next slice; avoid architecture inventories and speculative extension points.
 - If the first slice cannot be stated as an observable path, the requirement is still too broad.
 
 ## Source Basis
 
 - Andrew Hunt and David Thomas, *The Pragmatic Programmer*: tracer bullets, prototypes, reversibility, and good-enough scope.
+- Jimmy Bogard, “Vertical Slice Architecture”: organizing change around a complete use case instead of mandatory technical-layer gates.
+- Robert C. Martin, “Screaming Architecture”: top-level structure reveals domains and use cases rather than frameworks.
+- Martin Fowler, “Transaction Script”: a direct procedural use-case flow can be the appropriate complete design for simple domain logic.
 - Steve Freeman and Nat Pryce, *Growing Object-Oriented Software, Guided by Tests*: walking skeletons and end-to-end feedback.
 - Jez Humble and David Farley, *Continuous Delivery*: small, releasable increments and fast feedback.
 - Fred Brooks, *The Mythical Man-Month* and “No Silver Bullet”: conceptual integrity and essential versus accidental complexity.

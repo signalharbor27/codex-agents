@@ -8,7 +8,7 @@ description: "Audit codebase or subsystem architecture for shallow modules, weak
 ## Overview
 
 Use this skill for codebase-level or subsystem-level review when the main job is to diagnose structural problems and propose a practical improvement plan.
-It should produce a critical, evidence-backed plan that makes the codebase simpler, easier for agents to navigate, and easier to verify.
+It should produce a critical, evidence-backed plan that makes the codebase simpler, easier to reason about locally, and easier to verify and hand off in bounded pieces.
 
 ## When to Use
 
@@ -34,7 +34,7 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 4. Preserve existing guarantees and constraints unless there is evidence they are part of the problem.
 5. Compare the current shape against simpler, deeper modules with clearer interfaces; use module/interface/seam/depth/leverage/locality vocabulary and the deletion test.
 6. Treat a one-adapter seam as hypothetical unless it hides real external complexity, policy variation, or a second adapter such as tests.
-7. Check agent-friendliness directly: entrypoints, local reasoning, verification commands, implicit side effects, and navigability.
+7. Check agent-friendliness as local reasoning and bounded evidence handoff: trace real entrypoints into domain ownership, deep module interfaces, explicit side effects, and trustworthy proof seams. Use the engineering references below as the authority for those design concepts instead of restating their doctrine here.
 8. Classify findings as pre-existing debt, regression from the current change, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, or repo-doc/memory candidate.
 9. For large repos or monorepos, split evidence gathering by subsystem and use subagents for bounded independent review tracks such as frontend, backend, shared packages, or build and CI.
 10. Produce a phased plan with scope, expected payoff, dependencies, and verification for each phase.
@@ -45,7 +45,7 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 
 ## Output Contract
 
-- Prioritized findings with file or subsystem evidence, impact, and confidence
+- Prioritized findings with file or subsystem evidence, impact, and confidence; agent-friendly findings trace a real entrypoint through its owner, boundary, effects, and proof seam where applicable
 - A phased plan whose phases each state scope, payoff, dependencies, and verification
 - Explicit preserved behavior, deferred work, rejected alternatives, and open decisions
 - Done when every recommendation traces to evidence and the plan has no hidden consequential choice
@@ -53,6 +53,9 @@ It should produce a critical, evidence-backed plan that makes the codebase simpl
 ## Reference Routing
 
 - Read [AGENT_FRIENDLY_REVIEW.md](AGENT_FRIENDLY_REVIEW.md) for the review rubric and planning heuristics.
+- Read [../engineering/references/boundary-design.md](../engineering/references/boundary-design.md) when judging domain ownership, caller knowledge, or interface depth.
+- Read [../engineering/references/state-and-effects.md](../engineering/references/state-and-effects.md) when important side effects, retries, recovery, or partial failure are present.
+- Read [../engineering/references/proof.md](../engineering/references/proof.md) when the trustworthy proof seam is unclear or a recommendation changes verification shape.
 - Read [../grill-me/references/frontier.md](../grill-me/references/frontier.md) only for an interactive interview over several interdependent consequential user-owned decisions; retain this skill as primary.
 - Read [../engineering/references/durable-plan.md](../engineering/references/durable-plan.md) only after a durable target-repo plan file is explicitly authorized.
 
