@@ -1,6 +1,6 @@
-# Observability Patterns
+# Observability patterns
 
-## Structured Logging with Effect.log
+## Structured logging with Effect.log
 
 Within Effect-native code, prefer the repo's logging abstraction. Use `Effect.log` when the Effect runtime owns log levels, telemetry, or test capture. `console.log` remains reasonable for short-lived local scripts, temporary debugging, or code outside the Effect runtime; remove temporary debug output before completion. `Effect.log` provides:
 - Structured data
@@ -8,7 +8,7 @@ Within Effect-native code, prefer the repo's logging abstraction. Use `Effect.lo
 - Integration with telemetry systems
 - Testability
 
-### Basic Logging
+### Basic logging
 
 ```typescript
 // Simple message
@@ -30,7 +30,7 @@ yield* Effect.logError("Payment failed", { orderId, reason: error.message })
 yield* Effect.logFatal("Database connection lost")
 ```
 
-### Logging in Services
+### Logging in services
 
 ```typescript
 const processOrder = Effect.fn("OrderService.processOrder")(function* (input: OrderInput) {
@@ -51,7 +51,7 @@ const processOrder = Effect.fn("OrderService.processOrder")(function* (input: Or
 })
 ```
 
-## Effect.fn for Automatic Tracing
+## Effect.fn for automatic tracing
 
 Use `Effect.fn` for service methods that should create named spans under the repo's observability policy. Plain functions are appropriate when tracing is disabled, a higher boundary already owns the span, or the helper is too small to justify another span. `Effect.fn` creates spans with proper names:
 
@@ -72,7 +72,7 @@ const processPayment = Effect.fn("PaymentService.processPayment")(
 )
 ```
 
-### Naming Convention
+### Naming convention
 
 Use `ServiceName.methodName` format consistently:
 - `UserService.findById`
@@ -80,9 +80,9 @@ Use `ServiceName.methodName` format consistently:
 - `PaymentService.refund`
 - `NotificationService.sendEmail`
 
-## Span Annotations
+## Span annotations
 
-Add important context to spans, but don't overdo it:
+Add useful context to spans without adding noise:
 
 ```typescript
 const processOrder = Effect.fn("OrderService.process")(function* (orderId: OrderId) {
@@ -98,7 +98,7 @@ const processOrder = Effect.fn("OrderService.process")(function* (orderId: Order
 })
 ```
 
-### What to Annotate
+### What to annotate
 
 **Do annotate:**
 - Entity IDs (orderId, userId, etc.)
@@ -269,7 +269,7 @@ const appConfig = Config.all({
 })
 ```
 
-## Log Level Configuration
+## Log-level configuration
 
 ```typescript
 import { Logger, LogLevel } from "effect"
@@ -296,7 +296,7 @@ const LoggerLive = Layer.unwrapEffect(
 const JsonLoggerLive = Logger.json
 ```
 
-## Combining Observability
+## Combining observability
 
 ```typescript
 const processOrder = Effect.fn("OrderService.process")(function* (input: OrderInput) {

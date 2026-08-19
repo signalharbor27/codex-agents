@@ -1,6 +1,6 @@
-# Merge this setting into $CODEX_HOME/config.toml (normally ~/.codex/config.toml).
-# Current Codex releases discover standalone profiles from $CODEX_HOME/agents/.
-# Do not replace an existing config or append a duplicate [agents] table.
+# Copy this table into $CODEX_HOME/config.toml, usually ~/.codex/config.toml.
+# Preserve the existing configuration and merge into its single [agents] table.
+# Standalone profiles need no registration here; Codex finds them in $CODEX_HOME/agents/.
 
 [agents]
 max_depth = 2

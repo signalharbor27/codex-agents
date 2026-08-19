@@ -1,22 +1,20 @@
-# Testing Effect-TS (Vitest) — Reference
+# Testing Effect-TS with Vitest
 
-This is a pragmatic guide for writing _deterministic_ tests in Effect-TS codebases, especially when using `@effect/vitest`.
+Use this guide to write deterministic Effect-TS tests, especially with `@effect/vitest`.
 
-## The #1 gotcha: `it.effect` uses `TestClock`
+## `it.effect` uses `TestClock`
 
 `@effect/vitest`'s `it.effect` runs your test with a **TestContext** (including **`TestClock`**).
 
-Implications:
-
 - Time starts at **0**.
-- Time does **not** pass unless you advance it.
-- Any `Effect.sleep(...)`, `Schedule.spaced(...)`, retry backoff, polling loop, etc. will **stall forever** unless you call `TestClock.adjust(...)`.
+- Time advances only when the test advances it.
+- `Effect.sleep(...)`, `Schedule.spaced(...)`, retry backoff, and polling loops stall until you call `TestClock.adjust(...)`.
 
-Use `it.live` when you truly want wall-clock time.
+Use `it.live` when the test requires wall-clock time.
 
-## Time: don't use `Date.now()` in Effect code
+## Use the Effect clock instead of Date.now()
 
-If production code uses `Date.now()`, it becomes hard (or impossible) to test deterministically under `TestClock`.
+Production code that calls `Date.now()` is difficult or impossible to test deterministically with `TestClock`.
 
 Prefer Effect's clock service:
 
@@ -31,9 +29,9 @@ const program = Effect.gen(function* () {
 });
 ```
 
-That makes your code controllable via `TestClock`.
+`TestClock` can then control the code's time.
 
-## Replace `Effect.sleep` with `TestClock.adjust` (under `it.effect`)
+## Replace Effect.sleep with TestClock.adjust under it.effect
 
 Instead of:
 
@@ -49,13 +47,13 @@ import { TestClock } from "effect";
 yield * TestClock.adjust("50 millis");
 ```
 
-If you _must_ use real timers (e.g. testing integration with Node timers), switch the whole test to `it.live`.
+If the test must use real timers, such as for Node timer integration, run the whole test with `it.live`.
 
-## Testing retries / backoff / scheduled loops
+## Testing retries, backoff, and scheduled loops
 
 Retry schedules and `Schedule.spaced(...)` don't progress under `TestClock` unless you advance time.
 
-A reliable pattern is:
+Use this pattern:
 
 ```ts
 import { Effect, Fiber, TestClock } from "effect";
@@ -71,17 +69,15 @@ const runWithTime = <A, E, R>(
   });
 ```
 
-Advance _enough_ time for the whole schedule/backoff chain to complete.
+Advance enough time for the entire schedule or backoff chain to finish.
 
-## Streams, watches, and background fibers: always bound + cleanup
+## Bound and clean up streams, watches, and background fibers
 
-Most test “hangs” in Effect come from one of these:
+Most Effect test hangs come from one of these sources:
 
 - A stream that never ends (`Stream.runCollect(stream)` on an infinite stream)
 - A watch/polling loop forked and never interrupted
 - A scoped resource that never gets finalized because the scope never closes
-
-Recommendations:
 
 - Prefer bounded consumption: `Stream.take(stream, n)` / `Stream.takeUntil(...)`.
 - If you fork a fiber, ensure it is interrupted on all paths:
@@ -89,14 +85,14 @@ Recommendations:
   - or run it inside a `Scope` and let scope finalizers do the cleanup.
 - Consider `Effect.timeout(...)` / `Effect.timeoutFail(...)` around anything that could block.
 
-## Concurrency gotcha: `Effect.fork` does **not** mean “the fiber has started”
+## Effect.fork does not mean the fiber has started
 
 When you write a test like:
 
-- fork 2–3 fibers
+- fork two or three fibers
 - then immediately `Deferred.succeed(gate, ...)`
 
-…you have **not** guaranteed that the forked fibers have reached the code you intend to coordinate (e.g. `Deferred.await(gate)`).
+This does not guarantee that the forked fibers have reached the code you intend to coordinate, such as `Deferred.await(gate)`.
 
 `Effect.fork` creates a fiber and schedules it, but the scheduler may not run it until later. If you open the gate too early:
 
@@ -104,7 +100,7 @@ When you write a test like:
 - your “concurrent” test can become **effectively sequential**
 - assertions like “underlying effect executed once” can fail intermittently even though the implementation is correct
 
-### Deterministic pattern: `started` latch + `gate`
+### Deterministic pattern: started latch and gate
 
 If you need to ensure real overlap, add a second `Deferred` that the underlying effect completes as soon as it begins:
 
@@ -141,14 +137,14 @@ Effect.gen(function* () {
 });
 ```
 
-This avoids “we opened the gate before any fiber ran” flakiness and makes concurrency assertions reliable.
+The started latch proves that a fiber reached the coordinated section before the gate opens, so the concurrency assertion cannot pass through accidental sequencing.
 
-## Use `it.scoped` when your test allocates scoped resources
+## Use it.scoped for scoped resources
 
 If your test (or the code under test) uses `Effect.acquireRelease`, `Stream.asyncScoped`, resourceful Layers, etc.,
 prefer `it.scoped` / `it.scopedLive` so finalizers are guaranteed to run when the test completes.
 
-## Don't “escape” the test runtime inside an Effect test
+## Stay within the test runtime
 
 Avoid calling `Effect.runPromise(...)` (or similar “run” APIs) _inside_ an `it.effect` program to drive internal logic.
 It can accidentally run work on a different runtime (e.g. a live clock), defeating `TestClock` determinism.
@@ -158,7 +154,7 @@ Prefer staying inside the Effect you're already running:
 - pass `Effect`s around and `yield*` them
 - if you truly need a Promise boundary, do it at the test boundary, not mid-program
 
-## Quick decision table
+## Quick choices
 
 - Uses timeouts/sleeps/retries/polling? → `it.effect` + `TestClock.adjust(...)`
 - Needs wall clock / Node timers / real delays? → `it.live` (or `it.scopedLive`)

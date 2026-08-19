@@ -1,14 +1,10 @@
-# Critical Rules for Effect-TS
+# Critical rules for Effect-TS
 
-These rules address common mistakes when working with Effect. Understanding why they matter helps write idiomatic Effect
-code.
+These rules cover common Effect mistakes and explain the idiomatic alternative.
 
-## INEFFECTIVE: try-catch in Effect.gen
+## Ineffective: try-catch in Effect.gen
 
-**Avoid `try-catch` blocks inside `Effect.gen` generators for handling Effect failures.**
-
-Effect failures are returned as exits, not thrown as JavaScript exceptions. Using try-catch will not catch Effect
-failures—it only catches synchronous throws from non-Effect code.
+Do not use `try-catch` inside `Effect.gen` to handle Effect failures. Effect failures return as exits rather than JavaScript exceptions; `try-catch` sees only synchronous throws from non-Effect code.
 
 **Problematic:**
 
@@ -40,11 +36,9 @@ Alternative patterns:
 - `Effect.result` to inspect success/failure
 - `Effect.tryPromise` / `Effect.try` for wrapping external code
 
-## AVOID: Type Assertions
+## Avoid type assertions
 
-**Avoid `as never`, `as any`, or `as unknown` type assertions.**
-
-These break TypeScript's type safety and hide real type errors. Always fix the underlying type issues instead.
+Avoid `as never`, `as any`, and `as unknown` assertions. They bypass TypeScript's checks and conceal the actual mismatch. Fix the generic, constructor, import, or function signature that caused the error instead.
 
 **Patterns to avoid:**
 
@@ -64,12 +58,9 @@ const value = something as unknown;
 Note: This is general TypeScript guidance. Occasional assertions may be justified when interfacing with poorly-typed
 external libraries, but document the reason.
 
-## RECOMMENDED: return `yield*` for Errors
+## Recommended: return `yield*` for errors
 
-**Use `return yield*` when yielding errors or interrupts in Effect.gen for clarity.**
-
-The runtime halts on failed yields regardless of `return`, but the explicit `return` makes termination obvious and
-prevents unreachable-code warnings.
+Use `return yield*` for errors or interrupts in `Effect.gen`. A failed yield halts with or without `return`, but the explicit return shows that the branch terminates and avoids unreachable-code warnings.
 
 **Recommended:**
 
@@ -99,9 +90,7 @@ Effect.gen(function* () {
 });
 ```
 
-The `return` keyword makes termination explicit and improves code readability.
-
-## Null vs Option<T> Rule
+## Null versus Option<T>
 
 **Use `Option<T>` internally, `T | null` at boundaries.**
 
@@ -110,4 +99,4 @@ The `return` keyword makes termination explicit and improves code readability.
 - JSON serialization → `T | null` or `T | undefined`
 - External API responses → normalize to `Option<T>` at boundary
 
-See `OPTION_NULL.md` for comprehensive patterns.
+See `OPTION_NULL.md` for detailed patterns.

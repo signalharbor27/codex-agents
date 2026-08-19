@@ -39,7 +39,7 @@ Diagnosis-only requests stop at evidence; fix requests continue through the smal
 - Read [references/async-and-flakes.md](references/async-and-flakes.md) when timing, polling, concurrency, ordering, or intermittent reproduction dominates.
 - After the cause is known, use the matching `engineering` pressure reference only if the repair genuinely involves that pressure.
 
-## Failure Modes
+## Failure modes
 
 - Reading broadly or editing before a red-capable loop exists
 - Treating a command that cannot fail for this bug as proof

@@ -1,17 +1,17 @@
-# Option vs Null Patterns
+# Option versus null patterns
 
-## The Rule
+## Rule
 
 Use `Option<T>` for Effect domain logic. Use `T | null` only at external boundaries.
 
-## When to Use Option<T>
+## When to use Option<T>
 
 - Internal Effect computations
 - Domain models where absence has meaning
 - Function returns that may not produce a value
 - Chain operations that may fail to produce a value
 
-## When to Use T | null
+## When to use T | null
 
 - React state/props (hooks expect nullable primitives)
 - JSON serialization (Option doesn't serialize to JSON)
@@ -19,7 +19,7 @@ Use `Option<T>` for Effect domain logic. Use `T | null` only at external boundar
 - Database query results
 - localStorage/sessionStorage values
 
-## Boundary Normalization
+## Boundary normalization
 
 ```typescript
 import { Option } from "effect"
@@ -33,7 +33,7 @@ const toReact = Option.getOrNull(maybeValue)
 const toJson = Option.getOrUndefined(maybeValue)
 ```
 
-## Common Patterns
+## Common patterns
 
 ```typescript
 // Map over optional value
@@ -51,7 +51,7 @@ if (Option.isSome(maybeValue)) {
 }
 ```
 
-## Avoid Option\<Option<T>> Creep
+## Avoid nested Option\<Option<T>> values
 
 ```typescript
 // WRONG: Nested options from repeated normalization
@@ -64,7 +64,7 @@ const good = Option.fromNullable(x)
 const flattened = Option.flatten(nestedOption)
 ```
 
-## Schema Decoding
+## Schema decoding
 
 ```typescript
 import { Schema } from "effect"
@@ -84,7 +84,7 @@ const ApiUserSchema = Schema.Struct({
 // nickname will be string | null
 ```
 
-## Effect-Atom Integration
+## Effect-Atom integration
 
 ```typescript
 // Atoms with nullable state (for React compat)

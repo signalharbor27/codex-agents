@@ -1,10 +1,10 @@
-# Boundary Design
+# Boundary design
 
 Load this when callers, ownership, trust boundaries, invariant-bearing types, module/API shape, or a proposed abstraction is consequential.
 
-## Start From Callers
+## Start from callers
 
-Write two or three real usage examples and name what callers should not need to know. Include invariants, ordering, errors, configuration, and performance expectations—the interface is more than its type signature.
+Write two or three real usage examples and identify what callers should not need to know. Include invariants, ordering, errors, configuration, and performance expectations. An interface is more than its type signature.
 
 Prefer the existing owner and compare every proposed abstraction with direct code. Add or deepen a module only when it:
 
@@ -15,7 +15,7 @@ Prefer the existing owner and compare every proposed abstraction with direct cod
 
 One pass-through wrapper, one implementation, or possible future variation is not enough.
 
-## Keep Modules Deep
+## Keep modules deep
 
 - Small interface, substantial hidden behavior.
 - Domain names and ownership over technical layer names.
@@ -25,7 +25,7 @@ One pass-through wrapper, one implementation, or possible future variation is no
 
 Use the deletion test: if removing the module would not spread meaningful complexity or policy into callers, inline it or keep the existing seam.
 
-## Design Trusted, Owned Contracts
+## Design trusted, owned contracts
 
 - Keep the normal use-case flow locally legible. Reject invalid or terminal conditions through the repository's established failure channel, but do not hide required authorization, error, recovery, or compatibility semantics merely to make the happy path shorter.
 - At an untrusted HTTP, event, database, IPC, or configuration boundary, parse or narrow once into a trusted representation when doing so removes repeated validation or materially prevents invalid states. Preserve raw or unknown data at ingress until that proof exists.
@@ -33,11 +33,11 @@ Use the deletion test: if removing the module would not spread meaningful comple
 - Model materially different legal states and transitions directly when the language and repository conventions can express them without disproportionate ceremony. Use runtime guards where types cannot carry the proof.
 - Separate deterministic policy from I/O coordination only when the boundary exposes a real invariant, recovery decision, volatile integration, or trustworthy proof seam. Functional cores and ports/adapters are possible shapes, not required layers.
 
-## Compare Consequential Alternatives
+## Compare consequential alternatives
 
 When two or more materially plausible shapes remain, sketch two or three real caller examples for each. Compare the number of concepts and states, caller knowledge, hidden complexity, misuse risk, migration cost, and fit with the existing domain model. Do not manufacture alternatives for ceremony; recommend the simplest shape that satisfies the real contracts and hides more complexity than it introduces.
 
-## Agent Guardrails
+## Agent guardrails
 
 - Patterns are responses to observed pressure, never goals.
 - DRY applies to duplicated knowledge, not merely similar syntax.
@@ -46,7 +46,7 @@ When two or more materially plausible shapes remain, sketch two or three real ca
 - Avoid configuration that merely moves decisions from code to callers.
 - Balance locality with information hiding: keep use-case intent near its entrypoint and hide volatile protocol, storage, and coordination mechanics behind the owner that can explain them.
 
-## Source Basis
+## Source basis
 
 - John Ousterhout, *A Philosophy of Software Design*: deep modules, information hiding, change amplification, and pulling complexity downward.
 - David Parnas, “On the Criteria To Be Used in Decomposing Systems into Modules”: hiding design decisions likely to change.

@@ -1,8 +1,10 @@
-Read this when wrapping a third-party SDK inside Effect.
+Use this guide when an Effect-facing module owns a third-party SDK boundary.
 
-Guidelines:
-- expose one consistent Effect-facing interface
-- keep raw client access behind an explicit boundary
-- choose one error mapping style for the repo and stick to it
-- keep construction separate from use
-- do not leak the raw client if that bypasses tracing or typed errors
+Follow these rules:
+- Expose a single, consistent Effect-facing interface.
+- Put raw client access behind an explicit boundary.
+- Use the repo's chosen error-mapping style consistently.
+- Separate construction from use.
+- Keep the raw client private when exposing it would bypass tracing or typed errors.
+
+The wrapper is complete when callers can use the supported operations without importing the raw SDK or bypassing the Effect contract.

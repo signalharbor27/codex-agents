@@ -1,8 +1,8 @@
-# Test Suite Review
+# Test suite review
 
-Use this when the task is to review a test suite and produce a practical cleanup and improvement plan.
+Use this rubric to review a test suite and produce a practical cleanup and improvement plan.
 
-## Review Axes
+## Review axes
 
 - behavior fit: do tests prove observable behavior through public interfaces
 - seam quality: do tests lock down the right contracts and boundaries
@@ -12,7 +12,7 @@ Use this when the task is to review a test suite and produce a practical cleanup
 - speed and signal: does the suite give fast trustworthy feedback
 - TDD fit: where a cheap failing test would make future changes safer
 
-## Good Tests
+## Strong tests
 
 - exercise real code paths through public interfaces
 - read like behavior specs
@@ -20,7 +20,7 @@ Use this when the task is to review a test suite and produce a practical cleanup
 - prove a real seam, contract, incident, or decision boundary
 - make future bug-fix TDD easier by exposing a cheap trustworthy failing path
 
-## Bad Tests
+## Weak tests
 
 - mock internal collaborators and assert call choreography
 - verify private methods or internal data shape
@@ -29,7 +29,7 @@ Use this when the task is to review a test suite and produce a practical cleanup
 - are so slow or flaky that teams stop trusting them
 - break on harmless refactors even when behavior is unchanged
 
-## Good Review Questions
+## Useful review questions
 
 - Which tests would fail on a harmless internal refactor
 - Which tests prove the same behavior at multiple layers with no extra signal
@@ -37,7 +37,7 @@ Use this when the task is to review a test suite and produce a practical cleanup
 - Which missing seam-level tests would let us delete broad or brittle coverage
 - Where would vertical-slice TDD make future bug fixes safer and cheaper
 
-## Keep / Remove Heuristics
+## Keep or remove heuristics
 
 Keep tests that:
 
@@ -52,11 +52,11 @@ Remove, demote, or rewrite tests that:
 - duplicate broader trustworthy coverage without new signal
 - add maintenance cost without protecting a meaningful risk
 
-## Delegation Fit
+## Delegation fit
 
 For larger repos, delegate bounded review tracks by subsystem or test layer.
 
-Good subagent tracks:
+Useful subagent tracks include:
 
 - frontend or backend test-surface audit
 - integration and contract test review
@@ -66,7 +66,7 @@ Good subagent tracks:
 
 Keep main-thread ownership of synthesis, prioritization, and the final phased plan.
 
-## Avoid
+## Avoid these outcomes
 
 - “more tests = better” reasoning
 - giant replacement plans with no seam-by-seam payoff

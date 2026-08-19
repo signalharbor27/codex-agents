@@ -1,17 +1,17 @@
-# Batch Processing
+# Batch processing
 
-Read this when the main question is bounded recomputation, offline pipelines, large joins, or why batch is simpler than a streaming design.
+Read this reference when bounded recomputation, offline pipelines, large joins, or the relative simplicity of batch processing drives the design.
 
-## Contents
-- Batch vs Stream
+## Topics
+- Batch and stream processing
 - MapReduce
-- Dataflow Engines
-- Join Algorithms
-- Fault Tolerance
+- Dataflow engines
+- Join algorithms
+- Fault tolerance
 
 ---
 
-## Batch vs Stream
+## Batch and stream processing
 
 | Aspect | Batch | Stream |
 |--------|-------|--------|
@@ -20,16 +20,16 @@ Read this when the main question is bounded recomputation, offline pipelines, la
 | Processing | Full dataset available | Incremental |
 | Fault recovery | Rerun from start | Checkpoints |
 
-**Unix philosophy applied**:
-- Inputs are immutable
-- Outputs are complete (don't modify inputs)
-- Programs composable (output of one → input of another)
+**Applying the Unix philosophy**:
+- Keep inputs immutable.
+- Produce complete outputs without modifying inputs.
+- Compose programs by passing one program's output to another.
 
 ---
 
 ## MapReduce
 
-### Execution Model
+### Execution model
 
 ```
 Input → Map → Shuffle → Reduce → Output
@@ -39,7 +39,7 @@ Input → Map → Shuffle → Reduce → Output
 2. **Shuffle**: Group by key, sort
 3. **Reduce**: Aggregate all values for each key
 
-### Example: Word Count
+### Example: word count
 
 ```python
 # Map
@@ -54,27 +54,27 @@ def reduce(word, counts):
 
 ### Characteristics
 
-**Strengths**:
+MapReduce is useful when simple parallel execution and task-level retry matter more than latency:
 - Simple programming model
 - Automatic parallelization
 - Fault tolerant (re-run failed tasks)
 
-**Weaknesses**:
+Its costs are repeated materialization and high latency:
 - Materializes intermediate state to disk
 - Multiple jobs require multiple reads/writes
 - High latency
 
-### MapReduce Workflows
+### MapReduce workflows
 
 **Chained jobs**: Output of one job → input of next.
 
-**Problem**: Each job writes to distributed filesystem. Slow.
+Each chained job writes to the distributed filesystem, so long workflows pay repeated I/O costs.
 
 **Workflow schedulers** (Oozie, Airflow): Manage job dependencies.
 
 ---
 
-## Dataflow Engines
+## Dataflow engines
 
 **Examples**: Spark, Flink, Tez.
 
@@ -102,7 +102,7 @@ def reduce(word, counts):
 **Actions** (trigger execution):
 - collect, count, save
 
-### Fault Tolerance
+### Fault tolerance
 
 **MapReduce**: Re-run failed task from HDFS input.
 
@@ -112,9 +112,9 @@ def reduce(word, counts):
 
 ---
 
-## Join Algorithms
+## Join algorithms
 
-### Sort-Merge Join
+### Sort-merge join
 
 1. Sort both datasets by join key
 2. Merge sorted streams
@@ -130,7 +130,7 @@ Walk through both, emit matches
 - Shuffle: Group by join_key
 - Reduce: Match records from both datasets
 
-### Broadcast Hash Join
+### Broadcast hash join
 
 When one dataset is small:
 1. Load small dataset into hash table
@@ -141,7 +141,7 @@ When one dataset is small:
 
 **Requirement**: Small dataset fits in memory.
 
-### Partitioned Hash Join (Shuffle Hash Join)
+### Partitioned hash join (shuffle hash join)
 
 1. Partition both datasets by join key
 2. Build hash table for one partition
@@ -149,7 +149,7 @@ When one dataset is small:
 
 **Each partition independent**: Parallelizable.
 
-### Choosing Join Strategy
+### Choose a join strategy
 
 ```
 One dataset small (fits in memory)?
@@ -165,9 +165,9 @@ Both datasets large, not co-located?
 
 ---
 
-## MapReduce Patterns
+## MapReduce patterns
 
-### Skewed Joins
+### Skewed joins
 
 **Problem**: One key has many more records (celebrity problem).
 
@@ -180,7 +180,7 @@ Both datasets large, not co-located?
 1. First pass: Sample to identify hot keys
 2. Second pass: Broadcast hot keys, shuffle rest
 
-### Secondary Sort
+### Secondary sort
 
 Sort within each reduce key by secondary attribute.
 
@@ -190,7 +190,7 @@ Sort within each reduce key by secondary attribute.
 3. Sort by composite key
 4. Reducer sees values in secondary_key order
 
-### Map-Side Aggregation (Combiners)
+### Map-side aggregation (combiners)
 
 Reduce data before shuffle.
 
@@ -206,27 +206,23 @@ def combiner(word, counts):
 
 ---
 
-## Output and Side Effects
+## Output and side effects
 
-### Writing Output
+### Write output
 
 **HDFS output**: Write to temp directory, atomic rename on success.
 
-**Database output**: 
-- Bulk load (generate files, have DB import)
-- Don't write directly (retries cause duplicates)
+For database output, generate files and bulk-load them. Do not write directly: task retries can duplicate effects.
 
 ### Idempotency
 
-**Problem**: Failed and retried tasks may produce duplicates.
-
-**Solution**: Deterministic output paths/names. Retry overwrites.
+Failed tasks may retry, so use deterministic output paths and names that a retry can safely replace.
 
 ---
 
-## Batch Processing Philosophy
+## Batch processing principles
 
-### Derived Data
+### Derived data
 
 **Principle**: Batch jobs produce derived datasets from raw data.
 
@@ -235,7 +231,7 @@ def combiner(word, counts):
 - Can reprocess historical data
 - Raw data is source of truth
 
-### Human Fault Tolerance
+### Recovery from human error
 
 **Immutable inputs**: Can always reprocess.
 
@@ -247,7 +243,7 @@ def combiner(word, counts):
 
 ## Beyond MapReduce
 
-### When MapReduce Isn't Enough
+### When MapReduce is not enough
 
 | Limitation | Alternative |
 |------------|-------------|
@@ -256,7 +252,7 @@ def combiner(word, counts):
 | Interactive queries | Presto, Impala, Spark SQL |
 | Graph processing | Pregel, GraphX |
 
-### Lambda Architecture
+### Lambda architecture
 
 Run batch and stream in parallel.
 
@@ -270,6 +266,6 @@ Raw Data → Batch Layer → Batch Views ─┐
 **Speed layer**: Approximate, low latency.
 **Serving layer**: Merge results.
 
-**Problem**: Maintaining two codebases.
+The main cost is maintaining two implementations of the same business logic.
 
 **Alternative (Kappa)**: Stream only, with reprocessing capability.

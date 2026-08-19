@@ -1,11 +1,10 @@
-# Effect + Next.js Integration
+# Effect and Next.js integration
 
-`@prb/effect-next` provides typed helpers for integrating Effect with Next.js 15+ App Router—route handlers, server
-actions, middleware, and React hooks.
+`@prb/effect-next` provides typed helpers that integrate Effect with the Next.js 15+ App Router, including route handlers, server actions, middleware, and React hooks.
 
 ## Core API
 
-### Route Handlers
+### Route handlers
 
 ```typescript
 // app/api/users/[id]/route.ts
@@ -23,7 +22,7 @@ export const GET = effectHandler(
 );
 ```
 
-### Server Actions
+### Server actions
 
 ```typescript
 "use server";
@@ -72,9 +71,9 @@ export const middleware = effectMiddleware(
 );
 ```
 
-## React Hooks
+## React hooks
 
-Client-side hooks for running Effects in React components.
+These client-side hooks run Effects in React components.
 
 ```typescript
 "use client";
@@ -112,9 +111,9 @@ const latest = useStreamLatest(stream, runtime, initialValue);
 const value = useSubscriptionRef(ref, runtime);
 ```
 
-## Request-Scoped Cache
+## Request-scoped cache
 
-Leverage React's `cache()` for request deduplication.
+Use React's `cache()` to deduplicate requests.
 
 ```typescript
 import { reactCache, reactCacheFn, reactCacheWithKey } from "@prb/effect-next/cache";
@@ -148,7 +147,7 @@ export const getUser = reactCacheWithKey(
 );
 ```
 
-## Headers & Cookies
+## Headers and cookies
 
 ```typescript
 import { Headers, Cookies } from "@prb/effect-next/headers";
@@ -188,7 +187,7 @@ Effect.gen(function* () {
 });
 ```
 
-## Testing Kit
+## Testing kit
 
 ```typescript
 import {
@@ -221,10 +220,10 @@ test("should create user", async () => {
 });
 ```
 
-## Best Practices
+## Best practices
 
-1. **Use `Effect.fn()`** — Automatic telemetry spans and better stack traces
-1. **Centralize layers** — Create `AppLayer` with all shared services
-1. **Error handling** — Use `.catchAll()` or `.catchTag()` for Effect-level errors
-1. **Request caching** — Use `reactCache` for request-scoped memoization
-1. **Server-only Effect** — Effect-ts shines server-side; avoid complex Effect in client components
+- Use `Effect.fn()` where automatic telemetry spans and named stack frames are useful.
+- Compose shared services in one `AppLayer` at the application boundary.
+- Handle Effect failures with `.catchAll()` or `.catchTag()` before crossing into Next.js.
+- Use `reactCache` when repeated work should be memoized for one request.
+- Keep complex Effect programs on the server; expose simple data and actions to client components.

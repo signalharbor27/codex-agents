@@ -1,10 +1,10 @@
-# Layer Patterns
+# Layer patterns
 
 ## Dependencies in Effect.Service
 
-**Critical rule:** Always declare dependencies in the `dependencies` array of `Effect.Service`. This ensures proper composition and avoids "leaked dependencies" that require manual wiring at usage sites.
+Declare an `Effect.Service` dependency in its `dependencies` array. This keeps composition explicit and prevents the dependency from leaking into every usage site. The infrastructure-layer exception below applies to services provided once at the application root.
 
-### Correct Pattern
+### Correct pattern
 
 ```typescript
 export class OrderService extends Effect.Service<OrderService>()("OrderService", {
@@ -35,7 +35,7 @@ const AppLive = Layer.mergeAll(
 )
 ```
 
-### Wrong Pattern (Leaked Dependencies)
+### Wrong pattern: leaked dependencies
 
 ```typescript
 // WRONG - Dependencies not declared
@@ -59,9 +59,9 @@ const program = OrderService.create(input).pipe(
 )
 ```
 
-## Infrastructure Layers
+## Infrastructure layers
 
-Infrastructure layers (Database, Redis, HTTP clients) are **acceptable** to leave as "leaked" dependencies because:
+Infrastructure layers such as Database, Redis, and HTTP clients may remain leaked dependencies because:
 
 1. They're provided once at the application root
 2. They don't change between test/production (different implementations, same interface)
@@ -105,7 +105,7 @@ const AppLive = Layer.mergeAll(
 )
 ```
 
-## Layer.mergeAll Over Nested Provides
+## Prefer Layer.mergeAll to nested provides
 
 **Use `Layer.mergeAll`** for composing layers at the same level:
 
@@ -144,7 +144,7 @@ const AppLive = UserService.Default.pipe(
 )
 ```
 
-## Layer.provideMerge for Sequential Composition
+## Layer.provideMerge for sequential composition
 
 **Use `Layer.provideMerge`** when chaining layers that need incremental composition. Unlike `Layer.provide`, `provideMerge` merges the output into the current layer, producing flatter types.
 
@@ -167,9 +167,9 @@ const MainLive = DatabaseLive.pipe(
 
 **Key difference:** `Layer.provide(A, B)` provides B to A but outputs only A's services. `Layer.provideMerge(A, B)` provides B to A and outputs both A's and B's services merged together.
 
-## Layer Deduplication Benefits
+## Layer deduplication
 
-Layers automatically memoize construction - the same service is instantiated only once regardless of how many times it appears in the dependency graph.
+Layers memoize construction automatically. The same service is instantiated once, regardless of how often it appears in the dependency graph.
 
 ```typescript
 // Both UserRepo and OrderRepo depend on DatabaseLive
@@ -201,7 +201,7 @@ const program = myEffect.pipe(
 )
 ```
 
-## TypeScript LSP Performance
+## TypeScript LSP performance
 
 Deeply nested `Layer.provide` chains create complex recursive types that slow down the TypeScript Language Server.
 
@@ -228,13 +228,13 @@ const AppLive = Layer.mergeAll(Layer1, Layer2).pipe(
 // Type is flatter and LSP responds faster
 ```
 
-**Recommendations:**
+To keep layer types tractable:
 - Prefer `Layer.mergeAll` for layers at the same level
 - Use `Layer.provideMerge` instead of chained `Layer.provide` calls
 - Group related layers into intermediate compositions
 - Keep nesting depth shallow (ideally 2-3 levels max)
 
-## layerConfig Pattern
+## layerConfig pattern
 
 For services that need configuration at construction time, use the `layerConfig` static method pattern:
 
@@ -293,9 +293,9 @@ This pattern:
 - Allows different configs per environment
 - Integrates cleanly with `Layer.mergeAll` and `Layer.provideMerge`
 
-## Layer Naming Conventions
+## Layer naming conventions
 
-Use suffixes to indicate layer type:
+Use suffixes to identify the layer type:
 
 - `ServiceLive` - Production implementation
 - `ServiceTest` - Test/mock implementation
@@ -336,7 +336,7 @@ export class UserServiceInMemory extends Effect.Service<UserService>()("UserServ
 }) {}
 ```
 
-## Layer.unwrapEffect for Config-Dependent Layers
+## Layer.unwrapEffect for config-dependent layers
 
 When a layer needs async configuration:
 
@@ -378,7 +378,7 @@ const ValidatedConfigLive = Layer.unwrapEffect(
 )
 ```
 
-## Scoped Layers
+## Scoped layers
 
 For resources that need cleanup:
 
@@ -417,7 +417,7 @@ export class UserRepo extends Effect.Service<UserRepo>()("UserRepo", {
 }) {}
 ```
 
-## Testing Layer Composition
+## Testing layer composition
 
 ```typescript
 // test/setup.ts
@@ -450,7 +450,7 @@ describe("UserService", () => {
 })
 ```
 
-## Layer.effect vs Layer.succeed
+## Layer.effect versus Layer.succeed
 
 ```typescript
 // Layer.succeed - for static values (no effects)
@@ -472,7 +472,7 @@ const LoggerLive = Layer.effect(
 )
 ```
 
-## Lazy Layers
+## Lazy layers
 
 For expensive initialization that should be deferred:
 

@@ -7,8 +7,7 @@ description: "Use when Effect materially shapes services, errors, layers, runtim
 
 ## Overview
 
-Use this as a modifier when Effect-specific constraints change the primary engineering or review task.
-Keep the entrypoint small and load only the references needed for the active task.
+Apply this modifier when Effect changes the design or review constraints. Name the active Effect boundary first, then load only the reference that governs it.
 
 ## When to Use
 
@@ -22,16 +21,16 @@ Keep the entrypoint small and load only the references needed for the active tas
 
 - Use `engineering` as the primary skill for generic module shape or implementation
 - Use `test-design` when framework-agnostic test selection is the primary task
-- Do not route ordinary TypeScript utility work here unless Effect is central
+- Route ordinary TypeScript utility work elsewhere unless Effect is central to it
 
 ## Minimal Workflow
 
-1. State the active Effect boundary: service, runtime, wrapper, stream, or UI integration.
-2. Keep interface shape and error strategy consistent with the rest of the system.
-3. Load only the reference files needed for that boundary.
-4. Verify version-sensitive APIs against the current official Effect documentation; treat local examples as patterns, not API authority.
-5. For guidance or review, finish with the chosen boundary, compatibility assumptions, and verification needed.
-6. During implementation, apply these Effect constraints inside the primary `engineering` loop and use its fresh-verification stop condition.
+1. Name the active Effect boundary: service, runtime, wrapper, stream, or UI integration.
+2. Inspect the repository's service, layer, error, runtime, and testing conventions at that boundary.
+3. Load only the references needed to settle the current design pressure.
+4. Treat local examples as patterns. Verify version-sensitive APIs against the installed version and current official Effect documentation.
+5. For guidance or review, state the chosen boundary, how it fits local conventions, any version assumptions, and the verification needed.
+6. During implementation, apply these constraints within the primary `engineering` loop and stop only when that loop's fresh-verification condition is met.
 
 ## Reference Routing
 
@@ -52,8 +51,8 @@ Keep the entrypoint small and load only the references needed for the active tas
 - Read [references/BEST_PRACTICES/anti-patterns.md](references/BEST_PRACTICES/anti-patterns.md) when reviewing Effect-specific misuse beyond the core rules.
 - Read [CLIENT_WRAPPERS.md](CLIENT_WRAPPERS.md) when wrapping third-party SDKs.
 
-## Failure Modes
+## Failure modes
 
 - Mixing incompatible service or error conventions in one codebase
 - Letting wrapper code leak the raw client and bypass Effect boundaries
-- Treating Effect as a reason to over-engineer otherwise simple modules
+- Using Effect to justify unnecessary complexity in otherwise simple modules

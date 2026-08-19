@@ -1,15 +1,10 @@
-# Service Patterns
+# Service patterns
 
-## Effect.Service Over Context.Tag
+## Effect.Service versus Context.Tag
 
-Follow the service abstraction already established by the repo. For a new business-service boundary, prefer `Effect.Service` when its generated layer, accessors, and dependency declaration reduce wiring. Keep `Context.Tag` or another established pattern for low-level capabilities, compatibility with existing composition, or cases where generated accessors are intentionally unwanted. `Effect.Service` provides:
+Follow the service abstraction already established by the repo. For a new business-service boundary, prefer `Effect.Service` when its generated `Default` layer, accessors, and typed dependency declaration remove real wiring. Keep `Context.Tag` or another established pattern for low-level capabilities, compatibility with existing composition, or cases where generated accessors are intentionally unwanted.
 
-1. **Built-in `Default` layer** - No manual layer creation needed
-2. **Automatic accessors** - Direct method calls via `ServiceName.method()`
-3. **Proper dependency declaration** - Dependencies are explicit and type-checked
-4. **Consistent structure** - All services follow the same pattern
-
-### Basic Service Definition
+### Basic service definition
 
 ```typescript
 import { Effect, Layer } from "effect"
@@ -34,9 +29,9 @@ export class UserService extends Effect.Service<UserService>()("UserService", {
 }) {}
 ```
 
-### Service with Dependencies
+### Service with dependencies
 
-When an `Effect.Service` owns stable dependencies, declare them in the `dependencies` array so its `Default` layer is self-contained. Provide dependencies at a higher composition boundary instead when implementations vary by request, environment, or test, or when the repo intentionally keeps construction external. Declaring owned dependencies here provides:
+When an `Effect.Service` owns stable dependencies, declare them in the `dependencies` array so its `Default` layer is self-contained. Provide dependencies at a higher composition boundary when implementations vary by request, environment, or test, or when the repo intentionally keeps construction external. Declared dependencies give callers:
 - Dependencies are automatically provided when using `ServiceName.Default`
 - Type errors if dependencies are missing
 - No manual `Layer.provide` at usage sites
@@ -78,7 +73,7 @@ export class OrderService extends Effect.Service<OrderService>()("OrderService",
 }) {}
 ```
 
-### Risk: Undeclared Stable Dependencies
+### Risk: undeclared stable dependencies
 
 ```typescript
 // Stable dependency omitted; callers must now provide it manually
@@ -96,11 +91,11 @@ const program = OrderService.create(input).pipe(
 )
 ```
 
-## Effect.fn for Tracing
+## Effect.fn for tracing
 
 Use `Effect.fn` for service methods when the repo relies on Effect tracing or consistent span names. Plain effect-valued functions remain appropriate for small private helpers, established uninstrumented code, or boundaries instrumented elsewhere. `Effect.fn` provides automatic tracing with meaningful span names.
 
-### Naming Convention
+### Naming convention
 
 Use `ServiceName.methodName` format for span names:
 
@@ -120,9 +115,9 @@ const processPayment = Effect.fn("PaymentService.processPayment")(
 )
 ```
 
-### Annotating Spans
+### Annotating spans
 
-Add important context to spans, but don't overdo it:
+Add useful context to spans without adding noise:
 
 ```typescript
 // CORRECT - Important business identifiers
@@ -139,11 +134,11 @@ yield* Effect.annotateCurrentSpan("step", "processing")
 yield* Effect.annotateCurrentSpan("step", "completing")
 ```
 
-## When Context.Tag is Acceptable
+## When Context.Tag is acceptable
 
 `Context.Tag` is appropriate **only** for infrastructure that's injected at runtime:
 
-### Cloudflare Worker Bindings
+### Cloudflare Worker bindings
 
 ```typescript
 import { Context } from "effect"
@@ -171,7 +166,7 @@ const handler = {
 }
 ```
 
-### Database/Redis Clients (Infrastructure)
+### Database and Redis clients
 
 ```typescript
 // Infrastructure provided at app root - acceptable as Context.Tag
@@ -189,7 +184,7 @@ const DatabaseLive = PgClient.layer({
 })
 ```
 
-## Single Responsibility
+## Single responsibility
 
 Each service should have a focused responsibility:
 
@@ -216,9 +211,9 @@ export class AppService extends Effect.Service<AppService>()("AppService", {
 }) {}
 ```
 
-## Service Interface Patterns
+## Service interface patterns
 
-### Return Types
+### Return types
 
 Inside an Effect-native service interface, prefer `Effect` return types so typed errors and requirements remain composable. Promise-returning APIs remain valid at interoperability boundaries or when an established public contract is Promise-based; adapt them once at the boundary.
 
@@ -236,7 +231,7 @@ const findById = async (id: UserId): Promise<User> => {
 }
 ```
 
-### Use Option for Nullable Results
+### Use Option for nullable results
 
 ```typescript
 // CORRECT - findById can fail, findByIdOption returns Option
@@ -257,7 +252,7 @@ const findByIdOption = Effect.fn("UserService.findByIdOption")(
 )
 ```
 
-## Testing Services
+## Testing services
 
 Create test implementations using the same pattern:
 

@@ -1,34 +1,34 @@
-# Distributed Systems
+# Distributed systems
 
-Read this when partial failures, clocks, coordination, consensus, or CAP-style availability vs consistency trade-offs are the main problem.
+Read this reference when partial failures, clocks, coordination, consensus, or CAP-style availability and consistency tradeoffs dominate the problem.
 
-## Contents
-- Faults and Partial Failures
-- Unreliable Networks
-- Unreliable Clocks
-- Knowledge and Truth
-- Consensus Algorithms
+## Topics
+- Faults and partial failures
+- Unreliable networks
+- Unreliable clocks
+- Knowledge and truth
+- Consensus algorithms
 
 ---
 
-## Faults and Partial Failures
+## Faults and partial failures
 
-**Single machine**: Deterministic. Works or doesn't. Crash = total failure.
+A single machine usually presents one visible failure boundary: it responds or it does not.
 
-**Distributed system**: Partial failures. Some nodes work, some don't. Non-deterministic.
+A distributed system can fail partially. Some nodes continue while others are slow, unreachable, or operating on stale information.
 
 **Fundamental problems**:
 1. Cannot tell if remote node is dead or slow
 2. Cannot tell if message was delivered
 3. Cannot trust clocks for ordering
 
-**Design principle**: Assume anything that can fail will fail. Design for fault tolerance.
+Assume that anything capable of failing will eventually fail. Design each operation to tolerate the relevant partial failures.
 
 ---
 
-## Unreliable Networks
+## Unreliable networks
 
-### What Can Go Wrong
+### Possible failures
 
 | Failure Mode | Description |
 |--------------|-------------|
@@ -39,21 +39,20 @@ Read this when partial failures, clocks, coordination, consensus, or CAP-style a
 | Node crash | Destination stops responding |
 | Network partition | Nodes can't communicate |
 
-**Key insight**: From sender's perspective, all failures look the same (no response).
+From the sender's perspective, these failures initially look alike: no response arrives. The sender cannot infer whether the operation ran.
 
 ### Timeouts
 
-**Too short**: False positives (declare dead nodes alive).
-**Too long**: Slow failure detection.
+Short timeouts create false failure detections. Long timeouts delay recovery.
 
-**No "correct" timeout**: Trade-off between detection speed and false positives.
+There is no universally correct timeout; choose one from the measured latency distribution and the cost of false positives versus slow detection.
 
 **Approach**:
 - Measure RTT distribution
 - Set timeout based on p99 or similar
 - Use exponential backoff for retries
 
-### Network Congestion
+### Network congestion
 
 **Causes of variable latency**:
 - Switch queue overflow
@@ -69,9 +68,9 @@ Read this when partial failures, clocks, coordination, consensus, or CAP-style a
 
 ---
 
-## Unreliable Clocks
+## Unreliable clocks
 
-### Time-of-Day Clocks
+### Time-of-day clocks
 
 Synchronized with NTP. Can jump forward or backward.
 
@@ -83,7 +82,7 @@ Synchronized with NTP. Can jump forward or backward.
 
 **Don't use for**: Ordering events, measuring durations.
 
-### Monotonic Clocks
+### Monotonic clocks
 
 Always move forward (on same machine). Good for measuring elapsed time.
 
@@ -91,7 +90,7 @@ Always move forward (on same machine). Good for measuring elapsed time.
 
 **Not safe for**: Comparing across machines (different origins).
 
-### Clock Skew
+### Clock skew
 
 Clocks on different machines drift. Even with NTP, skew of 100ms+ common.
 
@@ -100,7 +99,7 @@ Clocks on different machines drift. Even with NTP, skew of 100ms+ common.
 - Timestamps can violate causality
 - Distributed lock expiry can be wrong
 
-### Logical Clocks
+### Logical clocks
 
 Don't measure physical time. Track event ordering.
 
@@ -124,15 +123,15 @@ Don't measure physical time. Track event ordering.
 
 ---
 
-## Knowledge and Truth
+## Knowledge and truth
 
-### The Truth Is Defined by Majority
+### Majority agreement defines truth
 
 **Problem**: Node can't trust its own state (might be in minority partition).
 
 **Solution**: Quorums. Truth is what majority agrees on.
 
-### Fencing Tokens
+### Fencing tokens
 
 **Problem**: Process with expired lease still thinks it's leader.
 
@@ -152,7 +151,7 @@ Don't measure physical time. Track event ordering.
 3. Only Client B's writes (token 34) succeed
 ```
 
-### Byzantine Faults
+### Byzantine faults
 
 Nodes may behave arbitrarily (bugs, malicious actors).
 
@@ -162,9 +161,9 @@ Nodes may behave arbitrarily (bugs, malicious actors).
 
 ---
 
-## Consensus Algorithms
+## Consensus algorithms
 
-### The Consensus Problem
+### The consensus problem
 
 **Goal**: Get all nodes to agree on a value.
 
@@ -232,7 +231,7 @@ Designed for understandability. Equivalent to Multi-Paxos.
 | Implementation | Many variations | Clearer spec |
 | Adoption | Historical | Modern systems |
 
-### Consensus Use Cases
+### Uses for consensus
 
 | Use Case | Why Consensus Needed |
 |----------|---------------------|
@@ -244,11 +243,11 @@ Designed for understandability. Equivalent to Multi-Paxos.
 
 ---
 
-## CAP Theorem
+## CAP theorem
 
 **Original formulation**: Pick 2 of Consistency, Availability, Partition tolerance.
 
-**Better understanding**:
+**Practical interpretation**:
 - Partitions WILL happen (can't choose)
 - During partition: choose C or A
 - When no partition: can have both
@@ -274,9 +273,9 @@ Extension of CAP:
 
 ---
 
-## Practical Patterns
+## Practical patterns
 
-### Lease-Based Locks
+### Lease-based locks
 
 1. Acquire lock with TTL
 2. Renew before expiry
@@ -288,16 +287,14 @@ Extension of CAP:
 
 ### Idempotency
 
-**Problem**: Network failures cause retries. Retry may execute operation twice.
-
-**Solution**: Make operations idempotent.
+Network uncertainty causes retries, and a retry may execute an operation twice. Make the effect idempotent at the boundary that owns it.
 
 **Techniques**:
 - Unique request ID, dedupe on server
 - Conditional writes (only if state matches)
 - Store operation result, return on retry
 
-### Exactly-Once Semantics
+### Exactly-once semantics
 
 **Reality**: At-most-once or at-least-once.
 
@@ -308,7 +305,7 @@ Extension of CAP:
 
 ---
 
-## Common Misconceptions
+## Common misconceptions
 
 **"Network is reliable"**: It's not. Design for failure.
 

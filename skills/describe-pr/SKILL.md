@@ -7,7 +7,7 @@ description: "Write reviewer-oriented pull request summaries after implementatio
 
 ## Overview
 
-Use this skill when the work exists and the main task is explaining it clearly to reviewers.
+Use this skill after the work is complete, when the main task is explaining it clearly to reviewers.
 Focus on what changed, why it changed, what users will notice, and how someone can verify it quickly.
 The first task action is reading the final diff; do not draft from a plan or file list alone.
 
@@ -38,7 +38,7 @@ The first task action is reading the final diff; do not draft from a plan or fil
 - Use the repo PR template when one exists.
 - Return to the relevant producer and run fresh claim-matched proof if verification state is unclear.
 
-## Failure Modes
+## Failure modes
 
 - Summarizing file churn instead of the change rationale
 - Mixing reviewer guidance with speculative future work

@@ -3,12 +3,12 @@ name: grill-me
 description: "Stress-test consequential choices through a read-only interview. Use when the work contains several interdependent user-owned decisions or the user asks to be grilled; not for routine or settled work."
 ---
 
-# Grill Me
+# Grill me
 
 ## Overview
 
-This model-invoked Codex skill is the single owner of grilling behavior.
-Its interview procedure is a local reference so an existing primary skill can enter the same behavior after inspection without adding a second installable router.
+This model-invoked Codex skill is the sole owner of grilling behavior.
+Its interview procedure is a local reference. An existing primary skill can use the same behavior after inspection without adding another installable router.
 
 ## When to Use
 
@@ -31,7 +31,7 @@ Its interview procedure is a local reference so an existing primary skill can en
 - Read [references/frontier.md](references/frontier.md) for every invocation
 - Existing primary skills may load the same reference when inspection reveals its trigger; they retain primary ownership
 
-## Failure Modes
+## Failure modes
 
 - Failing to invoke `grill-me` because the user did not use its name even though the work meets its trigger
 - Invoking it for routine, factual, single-approval, or already-settled work

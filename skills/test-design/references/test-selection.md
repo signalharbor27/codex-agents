@@ -1,8 +1,8 @@
-# Test Selection
+# Test selection
 
 Load this when the proof layer, doubles, oracle, or case matrix is consequential.
 
-## Pick the Seam
+## Pick the seam
 
 - Pure domain rule: unit or property test.
 - Module/provider contract: contract or component test.
@@ -23,7 +23,7 @@ Choose the lowest layer that observes the real risk. Add a higher layer only for
 
 Do not mock the unit’s own collaborators merely to assert implementation choreography.
 
-## Cases and Oracles
+## Cases and oracles
 
 Partition inputs and state transitions; test boundaries and representative invalid states. For policy matrices, use decision tables. For combinatorial inputs, add pairwise or property coverage only when interactions are plausible.
 

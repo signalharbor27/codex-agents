@@ -1,5 +1,5 @@
 interface:
-  display_name: "Grill Me"
+  display_name: "Grill me"
   short_description: "Stress-test consequential decisions interactively"
 policy:
   allow_implicit_invocation: true

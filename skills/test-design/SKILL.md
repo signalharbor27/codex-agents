@@ -3,12 +3,12 @@ name: test-design
 description: "Use when tests are primary: explicit TDD, proof-layer selection, coverage, assertions, doubles, or characterization, contract, property, state-machine, and browser tests. Not for unknown causes or routine implementation proof."
 ---
 
-# Test Design
+# Test design
 
 ## Overview
 
-Design the smallest set of tests that can falsify the important behavior.
-Routine implementation proof stays inside `engineering`; use this skill when test shape itself is the deliverable or dominant uncertainty.
+Design the smallest test set that can falsify the important behavior.
+Keep routine implementation proof in `engineering`. Use this skill when the test shape is the deliverable or the main uncertainty.
 
 ## When to Use
 
@@ -25,14 +25,14 @@ Routine implementation proof stays inside `engineering`; use this skill when tes
 
 ## Minimal Workflow
 
-1. State the behavior, risk, and observable public or stable seam.
+1. State the behavior claim, the failure risk, and the public or stable seam that can falsify it.
 2. Inspect existing coverage, repository commands, incident history, and the real dependency boundary before adding tests.
 3. Choose the cheapest layer that can fail for the target behavior. Prefer focused contract or integration proof over broad E2E and internal mock choreography.
 4. Derive expected results from an independent oracle: specification example, literal worked result, invariant, trusted fixture, property, or independent implementation.
-5. Keep the boundary under test real. Fake slow or uncontrollable collaborators; mock only a understood external protocol, never the behavior being trusted.
+5. Keep the boundary under test real. Fake slow or uncontrollable collaborators; mock only an understood external protocol, never the behavior being trusted.
 6. Select only relevant cases: happy path, boundary partitions, invalid input, state transition, duplicate/retry, partial failure, permission denial, concurrency, or recovery.
 7. For TDD, complete one vertical red-green-refactor slice at a time and observe the expected failure before production edits.
-8. Run the focused tests and relevant surrounding gate. Remove redundant coverage and state what the suite still does not prove.
+8. Run the focused tests and relevant surrounding gate. Finish only when the target claim can fail for the right reason, redundant coverage is removed, and the remaining proof gap is stated.
 
 ## Reference Routing
 
@@ -41,7 +41,7 @@ Routine implementation proof stays inside `engineering`; use this skill when tes
 - Read [references/browser-e2e.md](references/browser-e2e.md) for browser flows, selectors, visual evidence, or Playwright-style end-to-end work.
 - Read [engineering/references/legacy-change.md](../engineering/references/legacy-change.md) for characterization seams in poorly understood code.
 
-## Failure Modes
+## Failure modes
 
 - More tests without more trust
 - Assertions coupled to private helpers, call order, or internal data shape

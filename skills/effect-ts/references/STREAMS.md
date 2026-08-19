@@ -1,8 +1,8 @@
-# Stream Patterns
+# Stream patterns
 
-Streams are lazy, pull-based sequences of values that can be infinite. Handle with care.
+Streams are lazy, pull-based value sequences that may be infinite. Consume them carefully.
 
-## Create Streams
+## Creating streams
 
 ```typescript
 import { Stream } from "effect"
@@ -26,7 +26,7 @@ Stream.fromAsyncIterable(asyncGenerator(), (error) => new StreamError({ cause: e
 Stream.fromChunk(Chunk.make(1, 2, 3))
 ```
 
-## Consume Streams
+## Consuming streams
 
 ```typescript
 // Collect all values (DANGEROUS for infinite streams)
@@ -45,7 +45,7 @@ const first = yield* Stream.runHead(stream)  // Returns Option<A>
 yield* Stream.runDrain(stream)
 ```
 
-## Bound Consumption (Critical for Safety)
+## Bound consumption for safety
 
 ```typescript
 // WRONG: Hangs forever on infinite stream
@@ -64,7 +64,7 @@ yield* Stream.runCollect(Stream.takeWhile(stream, (x) => x < 100))
 yield* Stream.runCollect(stream).pipe(Effect.timeout("5 seconds"))
 ```
 
-## Transform Streams
+## Transforming streams
 
 ```typescript
 // Map values
@@ -83,7 +83,7 @@ Stream.tap(stream, (x) => Effect.log(`Processing: ${x}`))
 Stream.scan(stream, 0, (acc, x) => acc + x)  // Emits running totals
 ```
 
-## Chunk and Batch
+## Chunking and batching
 
 ```typescript
 // Group into chunks of N
@@ -96,7 +96,7 @@ Stream.groupedWithin(stream, 100, "1 second")
 Stream.rechunk(stream, 1000)
 ```
 
-## Handle Errors in Streams
+## Handling stream errors
 
 ```typescript
 // Catch errors and recover
@@ -109,7 +109,7 @@ Stream.retry(stream, Schedule.exponential("100 millis"))
 Stream.catchTag(stream, "NetworkError", (e) => Stream.empty)
 ```
 
-## Resource Safety
+## Resource safety
 
 ```typescript
 // Bracket pattern for streams
@@ -125,10 +125,10 @@ Stream.scoped(Effect.acquireRelease(open, close))
 Stream.ensuring(stream, cleanup)
 ```
 
-## Common Gotchas
+## Common pitfalls
 
-1. **Infinite streams**: Always bound consumption with `take`, `takeUntil`, or timeout
-1. **Backpressure**: Streams are pull-based; slow consumers automatically apply backpressure
-1. **Resource leaks**: Use scoped/bracket patterns for resources
-1. **Chunking overhead**: Rechunk for better performance with small items
-1. **Error propagation**: Errors terminate the stream; use `catchAll` to recover
+- Bound infinite streams with `take`, `takeUntil`, or a timeout.
+- Pull-based streams automatically apply a slow consumer's pace as backpressure.
+- Manage acquired resources with scoped or bracket patterns.
+- Rechunk small items when per-item overhead is material.
+- Stream errors terminate consumption unless a handler such as `catchAll` recovers them.

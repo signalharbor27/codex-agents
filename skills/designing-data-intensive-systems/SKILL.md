@@ -3,42 +3,41 @@ name: designing-data-intensive-systems
 description: "Use when workload and failure pressure make data/storage architecture central: time series, retention, partitioning, replication, streams, consistency, recovery, or Postgres/Timescale. Acts as an engineering or review modifier."
 ---
 
-# Designing Data-Intensive Systems
+# Designing data-intensive systems
 
 ## Overview
 
-Use this skill when workload shape and operational guarantees drive the decision.
-Keep the entrypoint focused on pressure; push detailed tactics into references.
+Use this skill when workload shape and operational guarantees determine the design. Keep the entry point at that decision level; load a reference only for the pressure the task actually presents.
 
 ## When to Use
 
-- Choosing between database, log, cache, queue, search, or analytical roles
-- Deciding consistency, partitioning, replication, or recovery tradeoffs
-- Evaluating batch vs stream vs CDC shapes
-- Planning Postgres or Timescale changes that depend on actual workload
+- Choose among database, log, cache, queue, search, and analytical roles.
+- Decide tradeoffs in consistency, partitioning, replication, or recovery.
+- Compare batch, stream, and CDC designs.
+- Plan Postgres or Timescale changes based on the actual workload.
 
 ## When Not to Use
 
-- Use `engineering` as the primary skill for ordinary implementation and refactoring
-- Use `engineering/references/boundary-design.md` for module-local architecture debates
-- Do not jump to Postgres or Timescale specifics before workload shape is clear
+- Keep `engineering` as the primary skill for ordinary implementation and refactoring.
+- Use `engineering/references/boundary-design.md` for architecture questions confined to a module.
+- Establish the workload shape before considering Postgres or Timescale details.
 
 ## Minimal Workflow
 
-1. State the workload and correctness pressure.
-2. Name the system roles involved.
-3. Compare 2-3 viable shapes, including a simpler option.
-4. State what should be benchmarked or tested next.
-5. During implementation, apply these workload constraints inside the primary `engineering` loop and use its fresh-verification stop condition.
+1. Describe the workload with concrete read, write, volume, latency, retention, ordering, and failure requirements where they apply.
+2. Name each system role: source of truth, derived view, cache, queue or log, index, analytical store, and recovery path.
+3. Compare two or three viable designs, including the simplest one, against the stated workload and correctness requirements.
+4. Identify the benchmark, failure test, migration proof, or operational observation that would decide the remaining uncertainty.
+5. During implementation, apply these workload constraints within the primary `engineering` loop and stop only when that loop's fresh verification criterion is met.
 
 ## Reference Routing
 
-- Read [FOUNDATIONS.md](FOUNDATIONS.md) for reliability, maintainability, and evolvability framing.
-- Read [PARTITIONING.md](PARTITIONING.md), [REPLICATION.md](REPLICATION.md), [TRANSACTIONS.md](TRANSACTIONS.md), [STREAM.md](STREAM.md), [BATCH.md](BATCH.md), and [DISTRIBUTED.md](DISTRIBUTED.md) based on the active pressure.
-- Read [POSTGRES_TIMESCALE.md](POSTGRES_TIMESCALE.md) when the question moves from architecture into Postgres or Timescale specifics.
+- Read [FOUNDATIONS.md](FOUNDATIONS.md) to frame reliability, maintainability, and evolvability.
+- Choose [PARTITIONING.md](PARTITIONING.md), [REPLICATION.md](REPLICATION.md), [TRANSACTIONS.md](TRANSACTIONS.md), [STREAM.md](STREAM.md), [BATCH.md](BATCH.md), or [DISTRIBUTED.md](DISTRIBUTED.md) according to the current design pressure.
+- Read [POSTGRES_TIMESCALE.md](POSTGRES_TIMESCALE.md) once the question moves from architecture to Postgres or Timescale details.
 
-## Failure Modes
+## Failure modes
 
-- Recommending a data store by habit instead of workload
-- Treating caches, indexes, and sources of truth as interchangeable
-- Jumping into Timescale migration advice before proving the workload fits
+- Recommending a data store from habit rather than workload evidence.
+- Treating caches, indexes, and sources of truth as interchangeable.
+- Advising a Timescale migration before showing that the workload fits.

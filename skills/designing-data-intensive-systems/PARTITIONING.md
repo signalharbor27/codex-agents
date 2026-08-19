@@ -1,19 +1,19 @@
-# Partitioning (Sharding)
+# Partitioning (sharding)
 
-Read this when shard-key choice, hotspot risk, secondary indexes, routing, or rebalancing trade-offs dominate the design.
+Read this reference when shard-key choice, hot-spot risk, secondary indexes, routing, or rebalancing tradeoffs dominate the design.
 
-## Contents
-- Why Partition
-- Partitioning Strategies
-- Secondary Indexes
+## Topics
+- Reasons to partition
+- Partitioning strategies
+- Secondary indexes
 - Rebalancing
-- Request Routing
+- Request routing
 
 ---
 
-## Why Partition
+## Reasons to partition
 
-**Goal**: Spread data and load across multiple machines.
+Partitioning spreads data and load across machines when one node cannot meet the storage or throughput requirement.
 
 **Benefits**:
 - Scalability beyond single node
@@ -25,15 +25,15 @@ Read this when shard-key choice, hotspot risk, secondary indexes, routing, or re
 - Rebalancing complexity
 - Hot spots
 
-**Combined with replication**: Each partition typically has multiple replicas.
+Partitioning and replication solve different problems. Partitioning divides the dataset; replication usually keeps multiple copies of each partition.
 
 ---
 
-## Partitioning Strategies
+## Partitioning strategies
 
-### Key-Range Partitioning
+### Key-range partitioning
 
-**How it works**: Assign contiguous range of keys to each partition.
+Key-range partitioning assigns a contiguous key range to each partition.
 
 ```
 Partition 1: A-F
@@ -51,11 +51,11 @@ Partition 3: N-Z
 
 **Used by**: HBase, BigTable, early MongoDB.
 
-**Mitigation for hot spots**: Prefix key with random element (lose range queries) or application-aware splitting.
+To reduce hot spots, prefix keys with a random element at the cost of range queries, or split ranges using application knowledge.
 
-### Hash Partitioning
+### Hash partitioning
 
-**How it works**: Hash key, assign to partition based on hash range.
+Hash partitioning hashes each key and assigns the result to a partition's hash range.
 
 ```
 partition = hash(key) % num_partitions
@@ -71,7 +71,7 @@ partition = hash(key) % num_partitions
 
 **Used by**: Cassandra, DynamoDB, Riak.
 
-### Compound Keys (Cassandra-style)
+### Compound keys (Cassandra-style)
 
 First column determines partition, remaining columns for sorting within partition.
 
@@ -83,15 +83,15 @@ PRIMARY KEY ((user_id), timestamp)
 - Within partition, sorted by timestamp
 - Range queries within user efficient
 
-**Best of both**: Hash distribution + range queries within entity.
+This combines hash distribution across entities with range queries inside one entity.
 
 ---
 
-## Secondary Indexes
+## Secondary indexes
 
-Primary key determines partition. What about queries on other columns?
+The primary key determines the partition, but queries on other columns need a secondary-index strategy.
 
-### Local Index (Document-partitioned)
+### Local index (document-partitioned)
 
 Each partition maintains index only for its data.
 
@@ -112,7 +112,7 @@ Partition 2: index for N-Z
 
 **Used by**: MongoDB, Cassandra, Elasticsearch.
 
-### Global Index (Term-partitioned)
+### Global index (term-partitioned)
 
 Index itself is partitioned by index term.
 
@@ -133,7 +133,7 @@ Index Partition 2: terms N-Z (across all data)
 
 **Used by**: DynamoDB, Riak.
 
-### Choosing Index Strategy
+### Choose an index strategy
 
 ```
 Write-heavy, read-heavy by primary key?
@@ -150,14 +150,14 @@ Need strong consistency on secondary?
 
 ## Rebalancing
 
-Moving data between partitions when:
+Rebalancing moves data when:
 - Query load increases (add nodes)
 - Node fails (redistribute)
 - Data volume grows
 
 ### Strategies
 
-**DON'T: hash(key) mod N**
+**Avoid `hash(key) mod N`**:
 - Adding node changes partition for most keys
 - Massive data movement
 
@@ -188,17 +188,17 @@ After:  Node 1 [P1, P3], Node 2 [P4, P6], Node 3 [P2, P5]
 
 **Used by**: Cassandra.
 
-### Automatic vs Manual Rebalancing
+### Automatic and manual rebalancing
 
-**Automatic**: Less operational burden, but can cascade (one failure triggers storm).
+Automatic rebalancing lowers routine operational work but can cascade when one failure triggers widespread movement.
 
-**Manual/Semi-automatic**: Human approves rebalancing plan. Safer for production.
+Manual or semi-automatic rebalancing lets an operator inspect the plan before data moves, trading speed for control.
 
 ---
 
-## Request Routing
+## Request routing
 
-How does client know which partition to query?
+The client needs a way to identify the partition for each query.
 
 ### Approaches
 
@@ -223,9 +223,9 @@ Client knows partition mapping, contacts correct node.
 
 **Used by**: MongoDB drivers.
 
-### Service Discovery
+### Service discovery
 
-How routing tier/client learns partition assignments:
+The routing tier or client can learn partition assignments through these methods:
 
 | Method | Description |
 |--------|-------------|
@@ -241,7 +241,7 @@ How routing tier/client learns partition assignments:
 
 ---
 
-## Hot Spots
+## Hot spots
 
 Even with good partitioning, hot spots can occur:
 - Celebrity problem (one user has millions of followers)
@@ -265,7 +265,7 @@ Even with good partitioning, hot spots can occur:
 
 ---
 
-## Cross-Partition Operations
+## Cross-partition operations
 
 **Point queries**: Single partition, fast.
 

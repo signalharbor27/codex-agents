@@ -1,15 +1,12 @@
-# Data Modeling and Implementation Patterns
+# Data modeling and implementation patterns
 
-> Read this when the main decision is type shape, ownership, trait boundaries, or impl organization.
-> Use it to compare alternatives; do not import a pattern without naming the constraint it solves.
+> Read this when the main decision is type shape, ownership, trait boundaries, or impl organization. Compare alternatives against the current constraint rather than importing a pattern by habit.
 
-Patterns for designing data structures, traits, and impl organization.
-
-## Choosing Data Structures
+## Choosing data structures
 
 ### Struct
 
-Use when you have multiple related fields that together form a concept.
+Use a struct when related fields combine to form one concept.
 
 ```rust
 #[derive(Debug, Clone)]
@@ -23,7 +20,7 @@ pub struct User {
 
 ### Enum
 
-Use for mutually exclusive states or state machines. Prefer over boolean flags.
+Use an enum for mutually exclusive states or a state machine. Prefer it to boolean flags.
 
 ```rust
 // DO: enum for states
@@ -44,7 +41,7 @@ pub struct Connection {
 
 ### Newtype
 
-Wrap primitives for type safety and semantic meaning.
+Use a newtype to give primitive values type safety and domain meaning.
 
 ```rust
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -59,7 +56,7 @@ pub struct Milliseconds(u64);
 // Prevents: send_email(user_id, email) vs send_email(email, user_id)
 ```
 
-## Ownership Decisions
+## Ownership decisions
 
 ### `&str` vs `String`
 
@@ -83,7 +80,7 @@ fn collect_even(values: &[i32]) -> Vec<i32> {
 }
 ```
 
-### `Arc<T>` for Shared Ownership
+### `Arc<T>` for shared ownership
 
 ```rust
 // When data is shared across threads or has multiple owners
@@ -100,7 +97,7 @@ impl Clone for SharedState {
 }
 ```
 
-### `Cow<'a, T>` for Flexible Ownership
+### `Cow<'a, T>` for flexible ownership
 
 ```rust
 use std::borrow::Cow;
@@ -115,7 +112,7 @@ fn normalize(input: &str) -> Cow<'_, str> {
 }
 ```
 
-## Impl Organization
+## Impl organization
 
 Place `impl` blocks immediately below the struct/enum.
 
@@ -164,9 +161,9 @@ impl Display for User {
 }
 ```
 
-## Standard Trait Implementations
+## Standard trait implementations
 
-### Conversion Traits
+### Conversion traits
 
 ```rust
 // From: infallible conversion
@@ -190,7 +187,7 @@ impl TryFrom<&str> for Email {
 }
 ```
 
-### Display and Debug
+### Display and debug
 
 ```rust
 // Debug: for developers (derive when possible)
@@ -219,9 +216,9 @@ impl Default for Config {
 }
 ```
 
-## Builder Pattern
+## Builder pattern
 
-Use when constructors have many optional parameters.
+Use a builder when a constructor has many optional parameters.
 
 ```rust
 #[derive(Debug, Clone)]
@@ -276,7 +273,7 @@ impl RequestBuilder {
 }
 ```
 
-## Module Organization
+## Module organization
 
 - Organize by ownership and domain boundaries
 - Use `pub(crate)` over `pub` when possible
@@ -294,7 +291,7 @@ pub use user::User;
 pub use config::Config;
 ```
 
-## Invariants with Types
+## Invariants with types
 
 Model invariants explicitly using types.
 

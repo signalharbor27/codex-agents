@@ -1,6 +1,6 @@
-# Schema Patterns
+# Schema patterns
 
-## Branded Types for IDs
+## Branded ID types
 
 Follow the repo's existing ID representation. Brand IDs when multiple same-shape identifiers cross module or service boundaries and accidental mixing is plausible. Plain validated strings are appropriate for local IDs, single-domain code, or public contracts where brands add friction without meaningful protection.
 
@@ -21,14 +21,14 @@ export const ProductId = Schema.UUID.pipe(Schema.brand("@App/ProductId"))
 export type ProductId = Schema.Schema.Type<typeof ProductId>
 ```
 
-### Branding Convention
+### Branding convention
 
 When introducing brands, follow the repo's current naming convention. If none exists, `@Namespace/EntityName` is a clear default:
 - `@App/UserId` - Main application entities
 - `@Billing/InvoiceId` - Billing domain entities
 - `@External/StripeCustomerId` - External system IDs
 
-### Creating Branded Values
+### Creating branded values
 
 ```typescript
 // From string (validates UUID format)
@@ -41,9 +41,9 @@ const newUserId = UserId.make(crypto.randomUUID())
 const order = yield* orderService.findById(userId) // Error: UserId is not OrderId
 ```
 
-### When NOT to Brand
+### When not to brand
 
-Don't brand simple strings that don't need type safety:
+Leave simple strings unbranded when branding adds no useful type safety:
 
 ```typescript
 // NOT branded - acceptable
@@ -56,7 +56,7 @@ export const EmailAddress = Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\
 // 2. They're typically validated by format, not by type
 ```
 
-## Schema.Struct for Domain Types
+## Schema.Struct for domain types
 
 **Prefer Schema.Struct** over TypeScript interfaces for domain types:
 
@@ -77,7 +77,7 @@ export type User = Schema.Schema.Type<typeof User>
 export type UserEncoded = Schema.Schema.Encoded<typeof User>
 ```
 
-### Input Types for Mutations
+### Input types for mutations
 
 ```typescript
 export const CreateUserInput = Schema.Struct({
@@ -133,7 +133,7 @@ export const PositiveNumber = Schema.transformOrFail(
 )
 ```
 
-### Common Transforms
+### Common transforms
 
 ```typescript
 // JSON string to object
@@ -168,7 +168,7 @@ export const DollarsFromCents = Schema.transform(
 )
 ```
 
-## Schema.Class for Entities with Methods
+## Schema.Class for entities with methods
 
 Use `Schema.Class` when entities need methods:
 
@@ -239,7 +239,7 @@ export const CreateOrderInput = Schema.Struct({
 )
 ```
 
-## Optional Fields
+## Optional fields
 
 Use `Schema.optional` and `Schema.optionalWith`:
 
@@ -259,7 +259,7 @@ export const UserPreferences = Schema.Struct({
 })
 ```
 
-## Union Types and Discriminated Unions
+## Union types and discriminated unions
 
 ```typescript
 // Simple union
@@ -303,7 +303,7 @@ const processPayment = (details: PaymentDetails) => {
 }
 ```
 
-## Enums and Literals
+## Enums and literals
 
 ```typescript
 // Use Literal for small, fixed sets
@@ -321,7 +321,7 @@ export const OrderStatus = Schema.Enums({
 export type OrderStatus = Schema.Schema.Type<typeof OrderStatus>
 ```
 
-## Recursive Schemas
+## Recursive schemas
 
 ```typescript
 interface Category {
@@ -337,7 +337,7 @@ export const Category: Schema.Schema<Category> = Schema.Struct({
 })
 ```
 
-## Decoding and Encoding
+## Decoding and encoding
 
 ```typescript
 // Decode (parse) - use in services
