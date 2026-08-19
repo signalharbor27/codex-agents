@@ -1,4 +1,4 @@
-# Dependency-Frontier Grilling
+# Dependency-frontier grilling
 
 Use this procedure whenever `grill-me` is selected, or when inspection under the current primary skill reveals several interdependent consequential choices that belong to the user and block safe progress. Keep one approval inline, keep routine choices agent-owned, and resolve factual uncertainty through the relevant research, review, or debugging workflow instead of manufacturing a decision.
 
@@ -16,7 +16,7 @@ The session is interactive and read-only. Inspect evidence, but do not change co
 8. Give every question a recommendation and its key tradeoff:
 
    ```text
-   ❓ **Q1 — <title>**: <one decision question>
+   ❓ **Q1. <title>**: <one decision question>
    - **Q1-A.** <option and material consequence>
    - **Q1-B.** <option and material consequence>
    ➡️ **Recommendation: Q1-A.** <reason and key tradeoff>
@@ -27,7 +27,7 @@ The session is interactive and read-only. Inspect evidence, but do not change co
 11. When the frontier is empty and no factual prerequisite is pending, summarize settled decisions, rejected consequential alternatives, material facts or blockers, verification expectations, and remaining explicit assumptions. Ask the user to confirm shared understanding; do not act on the outcome before confirmation, and do not treat confirmation alone as implementation authority.
 12. If the user explicitly ends or replaces the grill, stop this procedure and route the new request under its own skill and authority. If a message only suggests scope expansion, identify the boundary and ask whether to add it; never expand the tree silently.
 
-## Failure Modes
+## Failure modes
 
 - Asking one question by default instead of the whole settled frontier
 - Asking downstream decisions before prerequisites settle, renumbering repeated questions, or mixing option labels

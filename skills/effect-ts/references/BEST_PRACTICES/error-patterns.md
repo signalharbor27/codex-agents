@@ -1,8 +1,8 @@
-# Error Patterns
+# Error patterns
 
-## Why Explicit Error Types?
+## Why explicit error types?
 
-Generic errors like `BadRequestError` or `NotFoundError` seem convenient but create problems:
+Generic errors such as `BadRequestError` or `NotFoundError` look convenient but create ambiguity:
 
 | Generic Error | Problems |
 |--------------|----------|
@@ -11,13 +11,9 @@ Generic errors like `BadRequestError` or `NotFoundError` seem convenient but cre
 | `UnauthorizedError` | Session expired? Wrong credentials? Missing permission? |
 | `InternalServerError` | Retryable? User action needed? |
 
-**Explicit errors enable:**
-1. **Specific UI messages** - "Your session expired" vs generic "Unauthorized"
-2. **Targeted recovery** - Refresh token vs show login page
-3. **Better observability** - Group errors by specific type in dashboards
-4. **Type-safe handling** - `catchTag("SessionExpiredError")` vs generic catch
+Explicit errors let the UI show a specific message, choose a targeted recovery path, group failures by type in observability, and handle known tags with `catchTag` instead of a generic catch.
 
-### Anti-Pattern: Generic Error Mapping
+### Generic error mapping
 
 ```typescript
 // ❌ WRONG - Collapsing to generic HTTP errors
@@ -62,7 +58,7 @@ Result.builder(result)
     .render()
 ```
 
-## Error Naming Conventions
+## Error naming conventions
 
 | Pattern | Example | Use For |
 |---------|---------|---------|
@@ -72,9 +68,9 @@ Result.builder(result)
 | `{Integration}Error` | `WorkOSUserFetchError`, `StripePaymentError` | External service errors |
 | `Invalid{Field}Error` | `InvalidEmailError`, `InvalidPasswordError` | Validation failures |
 
-### Rich Error Context
+### Rich error context
 
-Include context fields that help with debugging and UI handling:
+Include context fields that support debugging and UI handling:
 
 ```typescript
 // Entity errors → include entity ID
@@ -121,7 +117,7 @@ export class SessionExpiredError extends Schema.TaggedError<SessionExpiredError>
 ) {}
 ```
 
-## Schema.TaggedError for Schema-Driven Errors
+## Schema.TaggedError for schema-driven errors
 
 Follow the error representation already established by the repo. Prefer `Schema.TaggedError` when an error crosses RPC, HTTP, persistence, or another schema-driven boundary and needs serialization or annotations. For local-only failures, `Data.TaggedError`, a tagged value, or the repo's existing error type may be simpler. `Schema.TaggedError` provides:
 
@@ -130,7 +126,7 @@ Follow the error representation already established by the repo. Prefer `Schema.
 3. **Consistent structure** - All errors have predictable shape
 4. **HTTP status mapping** - Via `HttpApiSchema.annotations`
 
-### Basic Error Definition
+### Basic error definition
 
 ```typescript
 import { Schema } from "effect"
@@ -172,7 +168,7 @@ export class ForbiddenError extends Schema.TaggedError<ForbiddenError>()(
 ) {}
 ```
 
-### Required Fields
+### Required fields
 
 Errors that cross a human-readable or network boundary should usually have:
 - `message: Schema.String` - Human-readable description
@@ -181,11 +177,11 @@ Errors that cross a human-readable or network boundary should usually have:
 
 Internal sentinel errors may omit a message when the tag and typed context fully describe the failure.
 
-## Error Handling with catchTag/catchTags
+## Error handling with catchTag/catchTags
 
 Prefer `catchTag` or `catchTags` when handling known tagged subsets; they preserve type information and make recovery precise. Use `catchAll` when a boundary intentionally handles the entire error channel, and use `mapError` when translating that whole channel into another contract. Preserve useful cause and context during broad handling.
 
-### catchTag for Single Error Types
+### catchTag for single error types
 
 ```typescript
 const findUser = Effect.fn("UserService.findUser")(function* (id: UserId) {
@@ -200,7 +196,7 @@ const findUser = Effect.fn("UserService.findUser")(function* (id: UserId) {
 })
 ```
 
-### catchTags for Multiple Error Types
+### catchTags for multiple error types
 
 ```typescript
 const processOrder = Effect.fn("OrderService.processOrder")(function* (input: OrderInput) {
@@ -226,7 +222,7 @@ const processOrder = Effect.fn("OrderService.processOrder")(function* (input: Or
 })
 ```
 
-### Why Not catchAll?
+### Why not catchAll?
 
 ```typescript
 // WRONG - Loses type information
@@ -243,9 +239,9 @@ yield* effect.pipe(
 // 4. Frontend can't show specific messages
 ```
 
-## Error Remapping Pattern
+## Error remapping pattern
 
-Create reusable error remapping functions for common transformations:
+Create reusable functions for common error transformations:
 
 ```typescript
 import { Effect } from "effect"
@@ -278,7 +274,7 @@ const findUser = Effect.fn("UserService.findUser")(function* (id: UserId) {
 })
 ```
 
-## Retryable Errors Pattern
+## Retryable errors pattern
 
 For errors that may be transient, add a `retryable` property:
 
@@ -315,7 +311,7 @@ export class ValidationError extends Schema.TaggedError<ValidationError>()(
 ) {}
 ```
 
-### Retry Based on Error Property
+### Retry based on an error property
 
 ```typescript
 import { Effect, Schedule } from "effect"
@@ -336,7 +332,7 @@ const withRetry = <A, E extends { retryable?: boolean }, R>(
 yield* callExternalApi(request).pipe(withRetry)
 ```
 
-## Error Unions for Activities
+## Error unions for activities
 
 When defining workflow activities, use explicit error unions:
 
@@ -375,7 +371,7 @@ yield* Activity.make({
 })
 ```
 
-## HTTP Status Codes (Without Generic Errors)
+## HTTP status codes without generic errors
 
 **Map HTTP status codes at the error level, not by creating generic error classes.** Each explicit error can have its own HTTP status.
 
@@ -423,7 +419,7 @@ Effect.catchTags({
 // Frontend can't distinguish: expired session vs wrong password vs missing token
 ```
 
-### When Generic Errors Are Acceptable
+### When generic errors are acceptable
 
 Generic errors are only acceptable for **truly unrecoverable internal errors** where:
 - The frontend can only show "Something went wrong"
@@ -447,7 +443,7 @@ Effect.catchAll((unexpectedError) =>
 )
 ```
 
-## Error Logging
+## Error logging
 
 Log errors with structured context:
 

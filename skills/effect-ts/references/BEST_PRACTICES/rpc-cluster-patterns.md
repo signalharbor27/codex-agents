@@ -1,6 +1,6 @@
-# RPC & Cluster Patterns
+# RPC and cluster patterns
 
-## RpcGroup for API Organization
+## RpcGroup for API organization
 
 **Use `RpcGroup.make`** to organize related RPC endpoints:
 
@@ -51,10 +51,10 @@ export const UserRpc = RpcGroup.make("User", {
 })
 ```
 
-### Query vs Mutation
+### Query versus mutation
 
-- **Rpc.query** - Read operations, idempotent, cacheable
-- **Rpc.mutation** - Write operations, may have side effects
+- **Rpc.query**: Read operations that are idempotent and cacheable
+- **Rpc.mutation**: Write operations that may have side effects
 
 ```typescript
 // Query - safe to retry, can be cached
@@ -68,9 +68,9 @@ update: Rpc.mutation({ ... }),
 delete: Rpc.mutation({ ... }),
 ```
 
-## Error Unions in RPC
+## Error unions in RPC
 
-**Always use explicit error unions** for RPC error types:
+Give each RPC an explicit error union so callers can handle every declared failure:
 
 ```typescript
 // Explicit union of possible errors
@@ -93,7 +93,7 @@ create: Rpc.mutation({
 }),
 ```
 
-## RPC Middleware for Authentication
+## RPC middleware for authentication
 
 ```typescript
 import { RpcMiddleware, Rpc } from "@effect/rpc"
@@ -148,7 +148,7 @@ export const AuthMiddlewareLive = Layer.effect(
 export const ProtectedUserRpc = UserRpc.middleware(AuthMiddleware)
 ```
 
-## Workflow Definition
+## Workflow definition
 
 **Use `Workflow.make`** with explicit idempotency keys:
 
@@ -181,7 +181,7 @@ export const NotificationWorkflow = Workflow.make({
 })
 ```
 
-### Workflow Implementation
+### Workflow implementation
 
 ```typescript
 import { Activity } from "@effect/workflow"
@@ -246,9 +246,9 @@ export const OrderFulfillmentWorkflowLayer = OrderFulfillmentWorkflow.toLayer(
 )
 ```
 
-## Activity Patterns
+## Activity patterns
 
-**Always include `success` and `error` schemas** in Activity.make:
+Declare both `success` and `error` schemas in `Activity.make`:
 
 ```typescript
 // CORRECT - schemas specified
@@ -271,7 +271,7 @@ yield* Activity.make({
 })
 ```
 
-### Activity Error Handling with Retryable
+### Activity error handling with retryable errors
 
 ```typescript
 export class ExternalApiError extends Schema.TaggedError<ExternalApiError>()(
@@ -305,7 +305,7 @@ yield* Activity.make({
 })
 ```
 
-## ClusterCron for Scheduled Jobs
+## ClusterCron for scheduled jobs
 
 ```typescript
 import { ClusterCron } from "@effect/cluster"
@@ -329,9 +329,9 @@ export const DailyReportCronLayer = DailyReportCron.toLayer(
 )
 ```
 
-## Triggering Workflows
+## Triggering workflows
 
-### From HTTP Handler
+### From an HTTP handler
 
 ```typescript
 import { HttpApi, HttpApiEndpoint } from "@effect/platform"
@@ -362,7 +362,7 @@ const createOrderHandler = Effect.gen(function* () {
 })
 ```
 
-### From Backend Service
+### From a backend service
 
 ```typescript
 export class MessageService extends Effect.Service<MessageService>()("MessageService", {

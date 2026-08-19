@@ -7,8 +7,7 @@ description: "Use when implementing, refactoring, planning, or researching an un
 
 ## Overview
 
-Build the smallest production-complete change that satisfies the requested outcome.
-This skill owns inspection, implementation, proof, and the completion claim; do not stack separate planning, testing, or verification producer skills onto it.
+Build the smallest production-complete change that delivers the requested outcome. This skill owns inspection, implementation, proof, and the completion claim. Keep that loop together; separate planning, testing, or verification producer skills do not share its ownership.
 
 ## When to Use
 
@@ -26,16 +25,16 @@ This skill owns inspection, implementation, proof, and the completion claim; do 
 ## Minimal Workflow
 
 1. Inspect the real entrypoint, current owner, callers, contracts, and existing proof before proposing a shape.
-2. Frame the outcome, evidence of success, behavior that must remain unchanged, allowed side effects, and stop condition.
+2. Frame the outcome in observable terms: success evidence, behavior that must remain unchanged, permitted side effects, and the condition that ends the task.
 3. Keep one consequential approval inline. If several consequential user-owned decisions depend on one another and block a safe slice, load the dependency-frontier grilling reference below; retain engineering ownership and resume only after the user confirms shared understanding.
-4. Choose one production-complete vertical slice. For a small local change, this may be the whole change; do not manufacture phases.
+4. Choose one production-complete vertical slice that reaches a real observable result. A small local change may be the whole slice; do not manufacture phases.
 5. Name only pressures present in the task. Load only the matching reference below before editing; routine changes need no reference.
 6. Set a change budget: expected files or boundaries and why each must move. Rejustify the plan before widening it.
 7. Prefer the existing owner and direct code. Add a boundary only when it hides real complexity, protects a stable contract, or has more than one real implementation; otherwise keep it inline.
 8. Implement the smallest complete slice. Do not add a hook, defensive branch, fallback, compatibility path, or duplicate representation unless a current caller, applicable failure mode, threat, rollout constraint, or stored-data contract requires it; avoid unrelated cleanup.
 9. Choose the cheapest trustworthy proof through an observable seam. Cover the failure mode or changed behavior, then run the relevant surrounding checks.
 10. Close only affected contracts and operational artifacts: callers, types, migrations, generated outputs, config, docs, observability, or rollback notes.
-11. Inspect the final diff for scope growth, shallow wrappers, redundant tests, and silent behavior changes. Run fresh verification and stop when the evidence supports the requested outcome.
+11. Inspect the final diff for scope growth, shallow wrappers, redundant tests, and silent behavior changes. Finish only after fresh verification supports the requested outcome and every changed boundary is accounted for.
 
 ## Reference Routing
 
@@ -50,7 +49,7 @@ This skill owns inspection, implementation, proof, and the completion claim; do 
 - Read [references/proof.md](references/proof.md) only when the trustworthy proof is not obvious or the change has material failure modes.
 - Read [references/durable-plan.md](references/durable-plan.md) only after the user requests or authorizes an in-repo plan that must survive sessions or agents, including discovery work whose route is not yet execution-ready.
 
-## Failure Modes
+## Failure modes
 
 - Horizontal scaffolding before one real path works
 - Broad architecture preflights for pressures that are absent

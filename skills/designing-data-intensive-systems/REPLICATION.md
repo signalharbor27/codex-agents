@@ -1,38 +1,36 @@
 # Replication
 
-Read this when failover, replica lag, read scaling, write topology, conflict resolution, or consistency guarantees between copies are the core issue.
+Read this reference when failover, replica lag, read scaling, write topology, conflict resolution, or consistency guarantees between copies are central to the design.
 
-## Contents
-- Why Replicate
-- Leader-Follower Replication
-- Multi-Leader Replication
-- Leaderless Replication
-- Consistency Models
-- Conflict Resolution
-
----
-
-## Why Replicate
-
-1. **High availability**: Continue operating when nodes fail
-2. **Latency**: Serve from geographically close replica
-3. **Read scalability**: Distribute read load across replicas
-
-**Core challenge**: Keeping replicas in sync when data changes.
+## Topics
+- Reasons to replicate
+- Leader-follower replication
+- Multi-leader replication
+- Leaderless replication
+- Consistency models
+- Conflict resolution
 
 ---
 
-## Leader-Follower Replication
+## Reasons to replicate
+
+Replication can keep a service available after node failure, serve reads from a geographically closer copy, and spread read load across replicas.
+
+The design problem is not creating copies; it is defining what clients may observe while those copies lag, fail, or disagree.
+
+---
+
+## Leader-follower replication
 
 Also called: master-slave, primary-secondary, active-passive.
 
-### How It Works
-1. One node designated as leader (handles writes)
-2. Leader sends replication stream to followers
-3. Followers apply changes in order
-4. Clients read from any replica
+### How it works
+1. Designate one node as leader and route writes to it.
+2. The leader sends an ordered replication stream to followers.
+3. Followers apply that stream.
+4. Clients read from any replica.
 
-### Synchronous vs Asynchronous
+### Synchronous and asynchronous replication
 
 | Type | Behavior | Trade-off |
 |------|----------|-----------|
@@ -40,9 +38,9 @@ Also called: master-slave, primary-secondary, active-passive.
 | Asynchronous | Confirm immediately, replicate later | Lower latency but data loss risk |
 | Semi-synchronous | Wait for 1+ follower, rest async | Compromise |
 
-**Fully synchronous is impractical**: One slow node blocks all writes.
+Waiting for every follower makes one slow or unavailable node block writes, so fully synchronous replication is usually impractical.
 
-### Handling Node Failures
+### Handle node failures
 
 **Follower failure**: Catch up from log position when it recovers.
 
@@ -57,7 +55,7 @@ Also called: master-slave, primary-secondary, active-passive.
 - Stale reads during transition
 - What timeout? Too short = unnecessary failovers, too long = long downtime
 
-### Replication Log Methods
+### Replication log methods
 
 | Method | Description | Used By |
 |--------|-------------|---------|
@@ -68,7 +66,7 @@ Also called: master-slave, primary-secondary, active-passive.
 
 **Logical replication** is most flexible: decouples storage format from replication format.
 
-### Replication Lag Problems
+### Problems caused by replication lag
 
 **Reading your own writes**: User writes, then reads from stale follower.
 - Solution: Read own writes from leader, or track write timestamp.
@@ -81,16 +79,16 @@ Also called: master-slave, primary-secondary, active-passive.
 
 ---
 
-## Multi-Leader Replication
+## Multi-leader replication
 
 Also called: master-master, active-active.
 
-### Use Cases
+### Uses
 - Multi-datacenter operation
 - Offline clients (each device is a "datacenter")
 - Collaborative editing (each user is a leader)
 
-### Multi-Datacenter Topology
+### Multi-datacenter topology
 
 Each datacenter has its own leader. Leaders replicate to each other.
 
@@ -104,7 +102,7 @@ Each datacenter has its own leader. Leaders replicate to each other.
 - Auto-increment keys, triggers, integrity constraints are problematic
 - Much more complex
 
-### Conflict Resolution
+### Conflict resolution
 
 **When do conflicts occur?** When two leaders concurrently modify same record.
 
@@ -119,9 +117,9 @@ Each datacenter has its own leader. Leaders replicate to each other.
 | Keep all versions | Let application decide | Application complexity |
 | CRDT | Conflict-free data types | Limited to certain structures |
 
-**LWW warning**: Achieves convergence by discarding writes. May lose data silently.
+Last-write-wins converges by discarding writes and can therefore lose data silently.
 
-### Replication Topologies
+### Replication topologies
 
 ```
 Circular:       Star:           All-to-all:
@@ -134,16 +132,16 @@ A → B → C → A   A ← C → B       A ↔ B ↔ C
 
 ---
 
-## Leaderless Replication
+## Leaderless replication
 
 Also called: Dynamo-style (after Amazon's Dynamo paper).
 
-### How It Works
+### How it works
 1. Client writes to multiple replicas (or coordinator does)
 2. Read from multiple replicas
 3. Use quorum to determine success
 
-### Quorum Conditions
+### Quorum conditions
 
 For `n` replicas:
 - `w` = write quorum (nodes that must ACK write)
@@ -158,19 +156,19 @@ For `n` replicas:
 | n=3, w=3, r=1 | Fast reads, slow writes |
 | n=3, w=1, r=3 | Fast writes, slow reads |
 
-### Read Repair and Anti-Entropy
+### Read repair and anti-entropy
 
 **Read repair**: When client reads, detect stale values, write current value back.
 
 **Anti-entropy**: Background process compares replicas and syncs differences.
 
-### Sloppy Quorums
+### Sloppy quorums
 
 When quorum nodes unavailable, write to different nodes (hinted handoff).
 
 **Trade-off**: Higher availability but weaker consistency guarantee.
 
-### Detecting Concurrent Writes
+### Detect concurrent writes
 
 **Version vectors**: Track version per replica. Detect concurrent writes vs overwrites.
 
@@ -181,9 +179,9 @@ When quorum nodes unavailable, write to different nodes (hinted handoff).
 
 ---
 
-## Consistency Models
+## Consistency models
 
-### Linearizability (Strong Consistency)
+### Linearizability (strong consistency)
 
 **Definition**: Operations appear instantaneous; once write completes, all reads see it.
 
@@ -207,7 +205,7 @@ When quorum nodes unavailable, write to different nodes (hinted handoff).
 - Single-leader (if reads from leader)
 - Consensus algorithms (Paxos, Raft)
 
-### Causal Consistency
+### Causal consistency
 
 **Definition**: Operations that are causally related are seen in same order by all.
 
@@ -217,11 +215,11 @@ When quorum nodes unavailable, write to different nodes (hinted handoff).
 
 **Implementation**: Logical clocks, version vectors.
 
-### Eventual Consistency
+### Eventual consistency
 
 **Definition**: If no new writes, replicas eventually converge.
 
-**Provides**: Maximum availability.
+Eventual consistency provides maximum availability.
 
 **No guarantee on**:
 - How long "eventually" takes
@@ -230,7 +228,7 @@ When quorum nodes unavailable, write to different nodes (hinted handoff).
 
 ---
 
-## Consistency vs Consensus
+## Consistency and consensus
 
 | Concept | Definition |
 |---------|------------|

@@ -1,8 +1,8 @@
-# Effect Boundary Review Guide
+# Effect boundary review guide
 
-These are strong defaults for Effect-native application code, not universal bans. Follow current official Effect documentation and established repo conventions. Apply each warning at the boundary named by its heading; interoperability, bootstrap, test, and intentionally unrecoverable paths may justify exceptions.
+Treat these as strong defaults for Effect-native application code, not universal bans. Follow current official Effect documentation and established repo conventions. Apply each warning only at the boundary named in its heading. Interoperability, bootstrap, test, and intentionally unrecoverable paths may warrant exceptions.
 
-## Avoid Running Effects Inside Effect-Native Services
+## Avoid running Effects inside Effect-native services
 
 ```typescript
 export class UserService extends Effect.Service<UserService>()("UserService", {
@@ -17,7 +17,7 @@ export class UserService extends Effect.Service<UserService>()("UserService", {
 }) {}
 ```
 
-**Why:** Breaks Effect's composition model, loses error handling, can't be tested, loses tracing.
+**Why:** This breaks Effect's composition model, bypasses error handling, cannot be tested, and loses tracing.
 
 **Correct:**
 ```typescript
@@ -26,7 +26,7 @@ const findById = Effect.fn("UserService.findById")(function* (id: UserId) {
 })
 ```
 
-## Prefer Typed Failures Inside Effect.gen
+## Prefer typed failures inside Effect.gen
 
 ```typescript
 yield* Effect.gen(function* () {
@@ -38,7 +38,7 @@ yield* Effect.gen(function* () {
 })
 ```
 
-**Why:** Throws bypass Effect's error channel, can't be caught with `catchTag`, breaks type safety.
+**Why:** Throws bypass Effect's error channel, cannot be caught with `catchTag`, and weaken type safety.
 
 **Correct:**
 ```typescript
@@ -51,7 +51,7 @@ yield* Effect.gen(function* () {
 })
 ```
 
-## Preserve Error Information in Broad Handling
+## Preserve error information in broad handling
 
 ```typescript
 yield* someEffect.pipe(
@@ -73,7 +73,7 @@ yield* someEffect.pipe(
 )
 ```
 
-## Decode Untrusted Data Instead of Casting
+## Decode untrusted data instead of casting
 
 ```typescript
 const data = someValue as any
@@ -93,7 +93,7 @@ if (isMyType(someValue)) {
 }
 ```
 
-## Keep Effect-Native Service Signatures Composable
+## Keep Effect-native service signatures composable
 
 ```typescript
 export class UserService extends Effect.Service<UserService>()("UserService", {
@@ -118,7 +118,7 @@ const findById = Effect.fn("UserService.findById")(
 )
 ```
 
-## Use the Repo Logging Boundary
+## Use the repo's logging boundary
 
 ```typescript
 console.log("Processing order:", orderId)
@@ -133,7 +133,7 @@ yield* Effect.log("Processing order", { orderId })
 yield* Effect.logError("Operation failed", { error: String(error) })
 ```
 
-## Normalize Environment Configuration at the Boundary
+## Normalize environment configuration at the boundary
 
 ```typescript
 const apiKey = process.env.API_KEY
@@ -150,7 +150,7 @@ const config = yield* Config.all({
 })
 ```
 
-## Replace Deprecated Config.secret
+## Replace deprecated Config.secret
 
 ```typescript
 const secretConfig = Config.all({
@@ -181,7 +181,7 @@ const secretNumber = Config.redacted(Config.integer("SECRET_PORT"))
 //    ^? Redacted<number>
 ```
 
-## Model Domain Absence Deliberately
+## Model domain absence deliberately
 
 ```typescript
 type User = {
@@ -202,7 +202,7 @@ const User = Schema.Struct({
 })
 ```
 
-## Handle Option Absence Explicitly
+## Handle Option absence explicitly
 
 ```typescript
 const user = Option.getOrThrow(maybeUser)
@@ -226,7 +226,7 @@ const name = Option.getOrElse(maybeName, () => "Anonymous")
 const upperName = Option.map(maybeName, (n) => n.toUpperCase())
 ```
 
-## Choose the Service Abstraction by Repo Convention
+## Choose the service abstraction by repo convention
 
 ```typescript
 export class UserService extends Context.Tag("UserService")<
@@ -248,7 +248,7 @@ export class UserService extends Effect.Service<UserService>()("UserService", {
 }) {}
 ```
 
-## Reserve orDie for Defects
+## Reserve orDie for defects
 
 ```typescript
 yield* someEffect.pipe(Effect.orDie)
@@ -271,7 +271,7 @@ yield* someEffect.pipe(
 )
 ```
 
-## Preserve Error Discrimination
+## Preserve error discrimination
 
 ```typescript
 yield* effect.pipe(
@@ -290,7 +290,7 @@ yield* effect.pipe(
 )
 ```
 
-## Keep Composition in One Effect Program
+## Keep composition in one Effect program
 
 ```typescript
 const result = await someEffect.pipe(
@@ -313,7 +313,7 @@ const program = Effect.gen(function* () {
 const result = await Effect.runPromise(program)
 ```
 
-## Use Managed State for Shared Mutation
+## Use managed state for shared mutation
 
 ```typescript
 let counter = 0
@@ -331,7 +331,7 @@ const program = Effect.gen(function* () {
 })
 ```
 
-## Inject Time When Determinism Matters
+## Inject time when determinism matters
 
 ```typescript
 const now = new Date()

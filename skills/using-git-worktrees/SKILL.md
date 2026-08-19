@@ -3,12 +3,11 @@ name: using-git-worktrees
 description: "Create an isolated git worktree. Use when the user requests branch/workspace isolation or current-workspace interference makes it necessary. Not merely because implementation has parallel subagents."
 ---
 
-# Using Git Worktrees
+# Using Git worktrees
 
 ## Overview
 
-Use worktrees when isolation materially reduces risk.
-This is optional setup, not a universal prerequisite.
+Create a worktree only when isolation materially reduces interference or branch risk. Worktrees are optional setup, not a default precondition for implementation.
 
 ## When to Use
 
@@ -24,20 +23,20 @@ This is optional setup, not a universal prerequisite.
 
 ## Minimal Workflow
 
-1. Check whether a worktree is actually needed.
+1. Confirm that isolation solves a current workspace or branch-state problem. Otherwise, stay in the existing workspace.
 2. Prefer a repo-provided worktree or bootstrap script when one exists.
 3. Prefer an existing `.worktrees/` or `worktrees/` directory when present.
 4. Verify project-local worktree directories are ignored before using them.
 5. Infer routine branch, path, and setup choices from repo conventions; ask only when missing, destructive, shared-state, or scope-changing.
-6. Create the worktree and report the location.
-7. If baseline checks fail, report the state before proceeding.
+6. Create the worktree, run its required setup, and report the branch and location.
+7. Verify the baseline before handing off. If it fails, report the exact failing check and whether the failure also exists in the source workspace.
 
 ## Reference Routing
 
 - Use `engineering` as the next primary skill once the isolated workspace is ready and the real task becomes implementation.
 - Use `finishing-a-development-branch` when the isolated branch is complete and needs an integration decision.
 
-## Failure Modes
+## Failure modes
 
 - Treating worktrees as mandatory for trivial work
 - Ignoring a repo bootstrap script and recreating setup by hand

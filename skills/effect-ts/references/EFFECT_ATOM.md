@@ -1,13 +1,12 @@
-# Effect-Atom Reference
+# Effect-Atom reference
 
-Reactive state management library for Effect. Provides atoms (reactive state containers) that integrate with Effect's
-functional programming ecosystem and React.
+Effect-Atom provides reactive state management for Effect. Its atoms are reactive state containers that integrate with Effect and React.
 
 **Source code:** https://github.com/tim-smart/effect-atom (open in browser)
 
 ## Core API
 
-### Creating Atoms
+### Creating atoms
 
 ```typescript
 import { Atom } from "@effect-atom/atom-react"
@@ -30,7 +29,7 @@ const userAtom = Atom.make(
 const persistentAtom = Atom.make(0).pipe(Atom.keepAlive)
 ```
 
-### React Hooks
+### React hooks
 
 ```typescript
 import { useAtomValue, useAtomSet, useAtom } from "@effect-atom/atom-react"
@@ -49,9 +48,9 @@ function Counter() {
 }
 ```
 
-### Atom Families
+### Atom families
 
-Generate stable atom references for dynamic keys:
+Create stable atom references for dynamic keys:
 
 ```typescript
 const userAtomFamily = Atom.family((userId: string) =>
@@ -67,7 +66,7 @@ const userAtomFamily = Atom.family((userId: string) =>
 const userAtom = userAtomFamily("user-123")
 ```
 
-### Atom Functions
+### Atom functions
 
 Create callable effects:
 
@@ -84,7 +83,7 @@ const increment = useAtomSet(incrementFn)
 increment() // Returns Promise<Exit<...>>
 ```
 
-### Atom Runtime
+### Atom runtime
 
 Create atom runtime from Effect layers for dependency injection:
 
@@ -100,9 +99,9 @@ function App() {
 }
 ```
 
-## Advanced Features
+## Advanced features
 
-### URL Search Parameters
+### URL search parameters
 
 Bind atoms to URL search parameters:
 
@@ -113,7 +112,7 @@ const pageAtom = Atom.searchParam("page", {
 })
 ```
 
-### Local Storage Persistence
+### Local storage persistence
 
 ```typescript
 const settingsAtom = Atom.kvs({
@@ -122,7 +121,7 @@ const settingsAtom = Atom.kvs({
 })
 ```
 
-### Scoped Resources
+### Scoped resources
 
 Add finalizers for cleanup when atom rebuilds or unmounts:
 
@@ -136,7 +135,7 @@ const websocketAtom = Atom.make((get) =>
 )
 ```
 
-### Event Listeners with Self-Update
+### Event listeners with self-update
 
 ```typescript
 const windowSizeAtom = Atom.make((get) =>
@@ -154,7 +153,7 @@ const windowSizeAtom = Atom.make((get) =>
 )
 ```
 
-### Reactivity Keys
+### Reactivity keys
 
 Trigger cache invalidation:
 
@@ -168,7 +167,7 @@ const dataAtom = Atom.make(
 )
 ```
 
-### RPC and HTTP API Integration
+### RPC and HTTP API integration
 
 ```typescript
 // RPC client
@@ -178,7 +177,7 @@ const rpcClient = AtomRpc.Tag()
 const httpClient = AtomHttpApi.Tag()
 ```
 
-## Result Handling
+## Result handling
 
 Effectful atoms return `Result` types. Handle with pattern matching:
 
@@ -193,7 +192,7 @@ function UserProfile() {
 }
 ```
 
-### Mutation Results
+### Mutation results
 
 Use `mode: "promiseExit"` for mutation handling:
 
@@ -216,11 +215,11 @@ Pull values from streams:
 const messagesAtom = Atom.pull(messageStream)
 ```
 
-## Best Practices
+## Best practices
 
-1. **Use `Atom.family` for dynamic keys** — Generates stable references, avoids memory leaks
-1. **Apply `Atom.keepAlive` for persistent state** — Prevents reset on unmount
-1. **Use `Atom.runtime` for dependency injection** — Integrates Effect layers with React context
-1. **Implement finalizers for cleanup** — Ensures proper resource management
-1. **Use `mode: "promiseExit"` for mutations** — Provides typed success/failure handling
-1. **Prefer derived atoms over component state** — Keeps state logic centralized
+- Use `Atom.family` for dynamic keys. It creates stable atom references and avoids memory leaks.
+- Apply `Atom.keepAlive` when state must survive component unmounts.
+- Use `Atom.runtime` to provide Effect layers through React context.
+- Register finalizers for listeners and other resources.
+- Use `mode: "promiseExit"` when mutations need typed success and failure handling.
+- Prefer derived atoms when the state belongs to the atom graph rather than one component.

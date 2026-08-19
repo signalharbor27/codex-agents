@@ -1,11 +1,11 @@
-# Rust Documentation Conventions (RFC 1574)
+# Rust documentation conventions (RFC 1574)
 
 > Read this when touching public APIs, crate or module docs, examples, or `# Errors` / `# Panics` / `# Safety` sections.
 > Treat these rules as interface work, not post-hoc polish.
 
-Rules for writing doc comments (`///`) on public Rust items.
+Follow these rules for doc comments (`///`) on public Rust items.
 
-## Summary Sentence
+## Summary sentence
 
 Every doc comment starts with a single-line summary sentence.
 
@@ -21,7 +21,7 @@ Every doc comment starts with a single-line summary sentence.
 /// Use this to parse the input and get the result back.
 ```
 
-## Comment Style
+## Comment style
 
 Use line comments, not block comments.
 
@@ -41,7 +41,7 @@ Use line comments, not block comments.
 
 Use `//!` only for crate-level and module-level docs at the top of the file.
 
-## Section Headings
+## Section headings
 
 Use these exact headings (always plural):
 
@@ -71,7 +71,7 @@ Use these exact headings (always plural):
 /// **Examples:**
 ```
 
-## Type References
+## Type references
 
 Use full generic forms and link with reference-style markdown.
 
@@ -126,7 +126,7 @@ For multiple patterns:
 /// ```
 ```
 
-## Errors Section
+## Errors section
 
 Document what errors can be returned and when.
 
@@ -140,7 +140,7 @@ Document what errors can be returned and when.
 /// [`io::Error`]: std::io::Error
 ```
 
-## Panics Section
+## Panics section
 
 Document conditions that cause panics.
 
@@ -156,7 +156,7 @@ pub fn divide(dividend: i32, divisor: i32) -> i32 {
 }
 ```
 
-## Safety Section
+## Safety section
 
 Required for `unsafe` functions.
 
@@ -172,7 +172,7 @@ pub unsafe fn deref<'a, T>(ptr: *const T) -> &'a T {
 }
 ```
 
-## Module vs Type Docs
+## Module docs vs type docs
 
 - Module docs (`//!`): high-level summaries, when to use this module
 - Type docs (`///`): comprehensive, self-contained
@@ -183,7 +183,7 @@ Some duplication is acceptable.
 
 Use American English spelling: "color" not "colour", "serialize" not "serialise".
 
-## Derives and Attributes
+## Derives and attributes
 
 Document non-obvious derive choices:
 
@@ -201,7 +201,7 @@ pub struct User {
 }
 ```
 
-## Complete Example
+## Complete example
 
 ```rust
 //! Utilities for working with user accounts.

@@ -1,8 +1,8 @@
 # TDD
 
-Load this only for explicit TDD or when a cheap trustworthy failing test is the chosen development loop.
+Load this only for explicit TDD or when the chosen development loop uses a cheap, trustworthy failing test.
 
-Use one vertical loop:
+Work through one vertical loop:
 
 1. Name one observable behavior.
 2. Write one test through the public or stable interface.
@@ -11,7 +11,7 @@ Use one vertical loop:
 5. Run the focused test and relevant neighbors.
 6. Refactor only while green.
 
-Stop using TDD when configuration, generated wiring, mechanical migration, exploratory UI shape, or another proof is cheaper and equally trustworthy.
+Stop using TDD when configuration, generated wiring, mechanical migration, exploratory UI work, or another form of proof is cheaper and equally trustworthy.
 
 Red flags:
 

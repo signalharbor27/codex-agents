@@ -1,13 +1,13 @@
-# Rust Coding Style
+# Rust coding style
 
 > Read this when the active question is code shape: control flow, matching, naming, comments, or review-level idioms.
 > Keep repo-local conventions ahead of any generic preference in this file.
 
-Complete style rules for idiomatic Rust.
+Follow these rules for idiomatic Rust.
 
-## Control Flow: Use `for` Loops
+## Control flow: use `for` loops
 
-Write `for` loops with mutable accumulators instead of iterator chains.
+Write `for` loops with mutable accumulators instead of iterator chains. They keep state changes, early exits, and error paths visible even when iterator shorthand would be shorter.
 
 ```rust
 // DO
@@ -47,9 +47,9 @@ for item in items {
 let found = items.iter().find(|item| item.matches(query));
 ```
 
-## Early Returns: Use `let ... else`
+## Early returns: use `let ... else`
 
-Extract values and exit early on failure. Keeps happy path unindented.
+Extract values and return early on failure. This keeps the happy path unindented.
 
 ```rust
 // DO
@@ -77,7 +77,7 @@ let Some(value) = maybe_value else { continue };
 let Ok(parsed) = input.parse::<i32>() else { continue };
 ```
 
-## Pattern Matching: Minimize `if let`
+## Pattern matching: minimize `if let`
 
 Use `if let` only when the `Some`/`Ok` branch is short and there's no else branch.
 
@@ -100,9 +100,9 @@ match result {
 }
 ```
 
-## Variable Naming: Shadow, Don't Rename
+## Variable naming: shadow, do not rename
 
-Shadow variables through transformations. Avoid prefixes like `raw_`, `parsed_`, `trimmed_`.
+Shadow a variable as it moves through transformations instead of adding lifecycle prefixes such as `raw_`, `parsed_`, or `trimmed_`. The active name should refer to the current valid representation.
 
 ```rust
 // DO
@@ -128,14 +128,14 @@ let canonical_path = input_path.canonicalize()?;
 let config_path = canonical_path.join("config.toml");
 ```
 
-## Comments: Don't Write Them
+## Comments: do not write them
 
-- No inline comments explaining what code does
-- No section headers or dividers (`// --- Section ---`)
-- No TODO comments (use issue tracker)
-- No commented-out code (use version control)
+- Do not add inline comments that explain the code.
+- Replace section dividers (`// --- Section ---`) with clearer functions or modules.
+- Put deferred work in the issue tracker rather than TODO comments.
+- Remove commented-out code; version control already preserves it.
 
-**Exception**: Doc comments (`///`) on public items are required.
+Public items are the exception: they require doc comments (`///`) that follow [DOCS.md](DOCS.md).
 
 ```rust
 // DON'T
@@ -161,7 +161,7 @@ if user.is_valid() {
 fn helper() { }
 ```
 
-## Type Safety: Newtypes Over Primitives
+## Type safety: newtypes over primitives
 
 Wrap strings/integers in newtypes for semantic meaning.
 
@@ -176,7 +176,7 @@ fn send_email(to: Email, from: UserId) { }
 fn send_email(to: String, from: String) { }
 ```
 
-## Type Safety: Enums Over Bools
+## Type safety: enums over bools
 
 Use enums with meaningful variant names instead of `bool` parameters.
 
@@ -204,7 +204,7 @@ fn traverse(dir: Direction) { }
 fn traverse(forward: bool) { }
 ```
 
-## Pattern Matching: Prefer Exhaustive Matches for Closed Enums
+## Pattern matching: prefer exhaustive matches for closed enums
 
 Prefer naming every variant when the enum is closed and each variant has distinct behavior. This preserves compiler feedback when variants are added.
 
@@ -225,7 +225,7 @@ match status {
 
 Use a wildcard when the remaining variants intentionally share behavior, an external enum is non-exhaustive, or the ignored remainder is immaterial at this boundary. Keep the arm narrow and make the intent clear when it is not obvious; follow existing repo conventions rather than escalating a routine implementation choice.
 
-## Pattern Matching: Avoid `matches!` Macro
+## Pattern matching: avoid the `matches!` macro
 
 Use full `match` expressions. Full matches provide better compiler diagnostics when the matched type changes.
 
@@ -241,9 +241,9 @@ let is_ready = match state {
 let is_ready = matches!(state, State::Ready);
 ```
 
-## Destructuring: Always Use Explicit Destructuring
+## Destructuring: name every field
 
-Destructure structs and tuples explicitly to get compiler errors when fields change.
+Destructure structs and tuples explicitly, without `..`. Naming every field makes a shape change produce a compiler error at each affected use site.
 
 ```rust
 // DO
@@ -264,7 +264,7 @@ for entry in entries {
 }
 ```
 
-## Error Handling
+## Error handling
 
 - Prefer `Result<T, E>` over panicking
 - Use `?` for propagation

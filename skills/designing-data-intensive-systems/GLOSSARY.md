@@ -1,6 +1,6 @@
 # Glossary
 
-Quick reference for data systems terminology.
+Use this glossary as a quick reference for data systems terms.
 
 ---
 

@@ -1,26 +1,26 @@
 digraph STYLE_GUIDE {
-    // The style guide for our process DSL, written in the DSL itself
+    // This process DSL style guide is written in the DSL itself.
 
-    // Node type examples with their shapes
+    // Node types and their shapes.
     subgraph cluster_node_types {
         label="NODE TYPES AND SHAPES";
 
-        // Questions are diamonds
+        // Use diamonds for questions.
         "Is this a question?" [shape=diamond];
 
-        // Actions are boxes (default)
+        // Use boxes for actions. This is the default.
         "Take an action" [shape=box];
 
-        // Commands are plaintext
+        // Use plaintext for commands.
         "git commit -m 'msg'" [shape=plaintext];
 
-        // States are ellipses
+        // Use ellipses for states.
         "Current state" [shape=ellipse];
 
-        // Warnings are octagons
+        // Use octagons for warnings.
         "STOP: Critical warning" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
 
-        // Entry/exit are double circles
+        // Use double circles for entry and exit points.
         "Process starts" [shape=doublecircle];
         "Process complete" [shape=doublecircle];
 
@@ -32,7 +32,7 @@ digraph STYLE_GUIDE {
         "NEVER use git add -A" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
     }
 
-    // Edge naming conventions
+    // Edge label conventions.
     subgraph cluster_edge_types {
         label="EDGE LABELS";
 
@@ -58,34 +58,34 @@ digraph STYLE_GUIDE {
         "Process A done" -> "Process B starts" [label="triggers", style=dotted];
     }
 
-    // Naming patterns
+    // Naming conventions.
     subgraph cluster_naming_patterns {
         label="NAMING PATTERNS";
 
-        // Questions end with ?
+        // End questions with ?
         "Should I do X?";
         "Can this be Y?";
         "Is Z true?";
         "Have I done W?";
 
-        // Actions start with verb
+        // Start actions with a verb.
         "Write the test";
         "Search for patterns";
         "Commit changes";
         "Ask for help";
 
-        // Commands are literal
+        // Write commands literally.
         "grep -r 'pattern' .";
         "git status";
         "npm run build";
 
-        // States describe situation
+        // Describe the current situation in state labels.
         "Test is failing";
         "Build complete";
         "Stuck on error";
     }
 
-    // Process structure template
+    // Process structure template.
     subgraph cluster_structure {
         label="PROCESS STRUCTURE TEMPLATE";
 
@@ -108,7 +108,7 @@ digraph STYLE_GUIDE {
         "Alternative action" -> "Process complete";
     }
 
-    // When to use which shape
+    // Choosing a shape.
     subgraph cluster_shape_rules {
         label="WHEN TO USE EACH SHAPE";
 
@@ -144,11 +144,11 @@ digraph STYLE_GUIDE {
         "Is it a state?" -> "Default: use box" [label="no"];
     }
 
-    // Good vs bad examples
+    // Good and bad examples.
     subgraph cluster_examples {
         label="GOOD VS BAD EXAMPLES";
 
-        // Good: specific and shaped correctly
+        // Good examples are specific and use the correct shapes.
         "Test failed" [shape=ellipse];
         "Read error message" [shape=box];
         "Can reproduce?" [shape=diamond];
@@ -159,7 +159,7 @@ digraph STYLE_GUIDE {
         "Read error message" -> "Can reproduce?";
         "Can reproduce?" -> "git diff HEAD~1" [label="yes"];
 
-        // Bad: vague and wrong shapes
+        // Bad examples are vague or use the wrong shapes.
         bad_1 [label="Something wrong", shape=box];  // Should be ellipse (state)
         bad_2 [label="Fix it", shape=box];  // Too vague
         bad_3 [label="Check", shape=box];  // Should be diamond

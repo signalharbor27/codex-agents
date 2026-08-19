@@ -1,30 +1,30 @@
-# Foundations of Data Systems
+# Foundations of data systems
 
-Read this when you need first-principles guidance on workload shape, data models, storage engines, schema evolution, or reliability/scalability trade-offs.
+Read this reference for first-principles guidance on workload shape, data models, storage engines, schema evolution, and tradeoffs in reliability and scalability.
 
-## Contents
-- Reliability, Scalability, Maintainability
-- Data Models
-- Storage Engines
-- Encoding and Schema Evolution
+## Topics
+- Reliability, scalability, and maintainability
+- Data models
+- Storage engines
+- Encoding and schema evolution
 
 ---
 
-## Reliability, Scalability, Maintainability
+## Reliability, scalability, and maintainability
 
 ### Reliability
-System continues working correctly despite faults.
+Reliability means that the system continues to behave correctly when faults occur.
 
-**Hardware faults**: Disk, RAM, network failures. Mitigate with redundancy (RAID, replication, multi-datacenter).
+Hardware faults include disk, memory, and network failures. Redundancy such as RAID, replication, and multiple datacenters can reduce their impact.
 
-**Software faults**: Bugs, resource exhaustion, cascading failures. Mitigate with:
+Software faults include bugs, resource exhaustion, and cascading failures. Limit them with:
 - Process isolation
 - Circuit breakers
 - Crash-only design (restart rather than recover)
 - Chaos engineering
 
-**Human errors**: Misconfigurations (leading cause of outages). Mitigate with:
-- Well-designed APIs that make it hard to do wrong thing
+Human error, especially misconfiguration, is a leading cause of outages. Limit it with:
+- APIs that make invalid or dangerous actions difficult
 - Sandbox environments
 - Gradual rollouts
 - Easy rollback
@@ -32,14 +32,14 @@ System continues working correctly despite faults.
 
 ### Scalability
 
-**Describing load**: Identify load parameters for YOUR system:
+Describe load with parameters that match the system:
 - Requests/second
 - Read/write ratio
 - Active users
 - Cache hit rate
 - Data volume
 
-**Describing performance**: 
+Measure performance in terms that match the workload:
 - Throughput (batch systems)
 - Response time (online systems)
 
@@ -53,24 +53,24 @@ System continues working correctly despite faults.
 
 **Tail latency amplification**: If request fans out to N services, p99 of slowest dominates.
 
-**Scaling approaches**:
-- **Vertical** (scale up): Bigger machine. Simple but limited.
-- **Horizontal** (scale out): More machines. Complex but unlimited ceiling.
-- **Elastic**: Auto-scale based on load. Good for unpredictable workloads.
+Scaling approaches:
+- **Vertical** (scale up): use a larger machine. This is simpler but bounded by one host.
+- **Horizontal** (scale out): distribute work across more machines. This raises the coordination cost.
+- **Elastic**: adjust capacity automatically with load. This suits unpredictable workloads.
 
 ### Maintainability
 
-**Operability**: Easy for ops to keep running. Good monitoring, automation, documentation.
+**Operability**: Operators can understand, monitor, repair, and change the system without unnecessary risk.
 
-**Simplicity**: Manage complexity through abstraction. Remove accidental complexity.
+**Simplicity**: Good abstractions hide necessary complexity; accidental complexity is removed.
 
-**Evolvability**: Easy to make changes. Loose coupling, good tests, incremental deployment.
+**Evolvability**: Loose coupling, trustworthy tests, and incremental deployment make changes safer.
 
 ---
 
-## Data Models
+## Data models
 
-### Relational Model
+### Relational model
 - Tables with rows and columns
 - Schema enforced, normalized
 - Powerful joins, mature query optimizers
@@ -78,7 +78,7 @@ System continues working correctly despite faults.
 
 **Best for**: Business data with many relationships, complex queries, strong consistency needs.
 
-### Document Model
+### Document model
 - Self-contained documents (JSON, BSON)
 - Schema flexible (schema-on-read)
 - Better locality (entire document loaded at once)
@@ -91,7 +91,7 @@ System continues working correctly despite faults.
 - Updates to nested arrays can be awkward
 - Document size limits (16MB MongoDB)
 
-### Graph Model
+### Graph model
 - Vertices (nodes) and edges (relationships)
 - Property graph: nodes and edges have properties
 - Traversal queries natural
@@ -100,7 +100,7 @@ System continues working correctly despite faults.
 
 **Query languages**: Cypher (Neo4j), SPARQL (RDF), Gremlin.
 
-### Comparison: Document vs Relational
+### Compare document and relational models
 
 | Aspect | Document | Relational |
 |--------|----------|------------|
@@ -110,19 +110,19 @@ System continues working correctly despite faults.
 | Locality | Good | Poor (normalized) |
 | Transactions | Limited | Full ACID |
 
-### Schema Evolution
+### Schema evolution
 
 **Schema-on-write** (relational): Database enforces schema. Migration required for changes.
 
 **Schema-on-read** (document): Schema implicit. Application handles variations.
 
-Neither is "schemaless" - schema exists somewhere.
+Neither model is "schemaless" because the schema always exists somewhere.
 
 ---
 
-## Storage Engines
+## Storage engines
 
-### Log-Structured (LSM Trees)
+### Log-structured storage (LSM trees)
 
 **Write path**:
 1. Write to in-memory memtable (sorted)
@@ -168,7 +168,7 @@ Neither is "schemaless" - schema exists somewhere.
 
 **Used by**: PostgreSQL, MySQL (InnoDB), SQL Server.
 
-### LSM vs B-Tree Comparison
+### Compare LSM trees and B-trees
 
 | Aspect | LSM | B-Tree |
 |--------|-----|--------|
@@ -178,7 +178,7 @@ Neither is "schemaless" - schema exists somewhere.
 | Space amplification | Higher | Lower |
 | Best for | Write-heavy | Read-heavy |
 
-### Other Indexes
+### Other indexes
 
 **Secondary indexes**: Index on non-primary columns. Can be:
 - Clustered (data stored with index)
@@ -194,9 +194,9 @@ Neither is "schemaless" - schema exists somewhere.
 
 ---
 
-## Encoding and Schema Evolution
+## Encoding and schema evolution
 
-### Encoding Formats
+### Encoding formats
 
 | Format | Schema | Human-readable | Size | Evolution |
 |--------|--------|----------------|------|-----------|
@@ -206,7 +206,7 @@ Neither is "schemaless" - schema exists somewhere.
 | Avro | Required | No | Smallest | Schema resolution |
 | Thrift | Required | No | Small | Field IDs |
 
-### Schema Evolution Rules
+### Schema evolution rules
 
 **Forward compatibility**: Old code can read new data.
 **Backward compatibility**: New code can read old data.
@@ -221,7 +221,7 @@ Neither is "schemaless" - schema exists somewhere.
 - Remove required field
 - Change field ID/tag
 
-### Dataflow Patterns
+### Dataflow patterns
 
 **Via databases**: Writer encodes, reader decodes. Both schemas must be compatible.
 
@@ -229,7 +229,7 @@ Neither is "schemaless" - schema exists somewhere.
 
 **Via async messaging**: Message schemas must be compatible. Consumer may lag producer.
 
-### Avro Schema Resolution
+### Avro schema resolution
 
 Reader and writer can have different schemas. Avro resolves by:
 1. Match fields by name

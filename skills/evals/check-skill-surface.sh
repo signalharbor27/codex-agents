@@ -6,12 +6,12 @@ ROOT="${1:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 
 if ! command -v bun >/dev/null 2>&1; then
-  echo "bun is required to validate the skill surface" >&2
+  echo "Install bun before validating the skill surface" >&2
   exit 1
 fi
 
-# The Bun validator owns inventory, frontmatter, description and line budgets,
-# local links, one-level references, fixture shape, and cross-field invariants.
+# The Bun validator checks inventory, frontmatter, description and line limits,
+# local links, one-level references, fixture structure, and cross-field rules.
 bun "$SCRIPT_DIR/run-routing-evals.ts" validate --skills-root "$ROOT" --quiet
 
 require_match() {
@@ -45,15 +45,14 @@ reject_matches() {
     rc=$?
   fi
   if ((rc != 1)); then
-    echo "rg failed while scanning for stale guidance" >&2
+    echo "rg could not scan for outdated guidance" >&2
     exit "$rc"
   fi
 }
 
-# Review delegation follows the pinned diff: keep coupled work in one context,
-# use bounded independent reviewers only when separate context improves
-# coverage, and retain the eight substantive topics as a checklist rather than
-# an agent quota.
+# Base review delegation on the pinned diff. Keep coupled work in one context.
+# Use a bounded set of independent reviewers only when separate context improves
+# coverage. Treat the eight substantive topics as a checklist, not an agent quota.
 review_skill="$ROOT/review-and-simplify-changes/SKILL.md"
 require_match "Adaptive Reviewer Selection" "$review_skill" "review must select reviewers from the pinned diff"
 require_match "small or tightly coupled diff with the main agent" "$review_skill" "coupled reviews must stay in one context"

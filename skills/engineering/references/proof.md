@@ -2,7 +2,7 @@
 
 Load this only when the trustworthy proof is not obvious or the change has material failure modes.
 
-## Choose the Cheapest Trustworthy Seam
+## Choose the cheapest trustworthy seam
 
 Start from the claim, then select the lowest-cost evidence that can falsify it:
 
@@ -16,7 +16,7 @@ Start from the claim, then select the lowest-cost evidence that can falsify it:
 
 Prefer existing repository tests and commands. Test through public or stable interfaces and keep the dependency under test real. Fake slow or uncontrollable edges; mock only the external boundary whose protocol is already understood.
 
-## Avoid False Confidence
+## Avoid false confidence
 
 - Derive expected results from an independent oracle: a specification example, literal worked result, invariant, trusted fixture, or independent implementation.
 - Make regression loops red-capable: observe the failure before trusting the fix when practical.
@@ -28,7 +28,7 @@ Prefer existing repository tests and commands. Test through public or stable int
 
 Run the focused proof, then the smallest relevant surrounding gate. Read the current output and inspect the final diff. Report exactly what passed, what was not proved, and any residual operational validation.
 
-## Source Basis
+## Source basis
 
 - Gerard Meszaros, *xUnit Test Patterns*: test doubles, smells, and maintainable verification.
 - Steve Freeman and Nat Pryce, *Growing Object-Oriented Software, Guided by Tests*: tests through meaningful boundaries.

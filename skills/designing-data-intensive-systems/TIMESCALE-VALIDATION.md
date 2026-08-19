@@ -1,6 +1,6 @@
-# Migration Validation Queries
+# Queries for validating a migration
 
-## Chunk Analysis
+## Analyze chunks
 ```sql
 SELECT
     chunk_name,
@@ -13,25 +13,25 @@ WHERE hypertable_name = 'your_table'
 ORDER BY range_start DESC;
 ```
 
-**Look for**: Consistent sizes (within 2x), compression >90%, recent chunks uncompressed.
+Expected result: chunk sizes stay within 2x, compression exceeds 90%, and recent chunks remain uncompressed.
 
-## Query Performance Tests
+## Test query performance
 
-### Time-Range (should show chunk exclusion)
+### Time range: verify chunk exclusion
 ```sql
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT COUNT(*), AVG(value) FROM your_table
 WHERE timestamp >= NOW() - INTERVAL '1 day';
 ```
 
-### Entity + Time (benefits from segment_by)
+### Entity and time: verify `segment_by`
 ```sql
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT * FROM your_table
 WHERE entity_id = 'X' AND timestamp >= NOW() - INTERVAL '1 week';
 ```
 
-### Aggregation (benefits from columnstore)
+### Aggregation: verify columnstore use
 ```sql
 EXPLAIN (ANALYZE, BUFFERS)
 SELECT DATE_TRUNC('hour', timestamp), entity_id, COUNT(*), AVG(value)
@@ -39,11 +39,11 @@ FROM your_table WHERE timestamp >= NOW() - INTERVAL '1 month'
 GROUP BY 1, 2;
 ```
 
-**Good signs**: "Chunks excluded during startup", "Custom Scan (ColumnarScan)", lower buffer reads.
+Expected signs: "Chunks excluded during startup", "Custom Scan (ColumnarScan)", and fewer buffer reads.
 
-**Bad signs**: "Seq Scan" on large chunks, no chunk exclusion.
+Warning signs: "Seq Scan" on large chunks or no chunk exclusion.
 
-## Storage Metrics
+## Measure storage
 ```sql
 SELECT
     hypertable_name,
@@ -55,12 +55,12 @@ FROM timescaledb_information.hypertables
 WHERE hypertable_name = 'your_table';
 ```
 
-## Troubleshooting
+## Diagnose problems
 
-### Poor Chunk Exclusion
-Verify time predicates match partition column.
+### Poor chunk exclusion
+Confirm that time predicates use the partition column.
 
-### Poor Compression
+### Poor compression
 ```sql
 -- Check segment distribution
 SELECT segment_by_col, COUNT(*) as rows
@@ -68,18 +68,18 @@ FROM _timescaledb_internal._hyper_X_Y_chunk  -- actual chunk name
 GROUP BY 1 ORDER BY 2 DESC;
 ```
 
-**<20 rows/segment** = poor segment_by choice.
+Fewer than 20 rows per segment indicates a poor segment_by choice.
 
-### Poor Insert Performance
+### Poor insert performance
 ```sql
 -- Find unused indexes
 SELECT indexname, idx_scan FROM pg_stat_user_indexes
 WHERE tablename LIKE '%your_table%' ORDER BY idx_scan;
 ```
 
-Low `idx_scan` = candidate for dropping.
+A low `idx_scan` value makes an index a candidate for removal after further verification.
 
-## Ongoing Monitoring
+## Monitor the system
 ```sql
 CREATE OR REPLACE VIEW hypertable_status AS
 SELECT

@@ -1,8 +1,8 @@
-# Effect Atom Patterns
+# Effect Atom patterns
 
-Effect Atom is a reactive state management library that integrates with Effect-TS. It provides atoms (reactive containers), automatic dependency tracking, and seamless React integration.
+Effect Atom is a reactive state-management library for Effect-TS. It provides atoms (reactive containers), automatic dependency tracking, and React integration.
 
-## Core Concepts
+## Core concepts
 
 - **Atoms**: Reactive state containers with automatic dependency tracking
 - **Result**: Handles async/effectful computations with initial, success, and failure states
@@ -11,7 +11,7 @@ Effect Atom is a reactive state management library that integrates with Effect-T
 
 ## Creating Atoms
 
-### Basic Atoms
+### Basic atoms
 
 ```typescript
 import { Atom } from "@effect-atom/atom-react"
@@ -25,7 +25,7 @@ const persistentCountAtom = Atom.make(0).pipe(Atom.keepAlive)
 
 **Rule:** Use `Atom.keepAlive` for global state that should persist across component unmounts.
 
-### Derived Atoms
+### Derived atoms
 
 ```typescript
 const countAtom = Atom.make(0)
@@ -37,7 +37,7 @@ const doubleCountAtom = Atom.make((get) => get(countAtom) * 2)
 const tripleCountAtom = Atom.map(countAtom, (count) => count * 3)
 ```
 
-### Atoms with Side Effects
+### Atoms with side effects
 
 ```typescript
 // Track window scroll position
@@ -51,12 +51,12 @@ const scrollYAtom = Atom.make((get) => {
 }).pipe(Atom.keepAlive)
 ```
 
-**Critical:**
+Side-effect atoms must:
 - Use `get.setSelf` to update the atom's own value
 - Always add finalizers with `get.addFinalizer()` to clean up side effects
 - Finalizers run when the atom is rebuilt or disposed
 
-### Atom.transform for Self-Updating Derived State
+### Atom.transform for self-updating derived state
 
 ```typescript
 const resolvedThemeAtom = Atom.transform(themeAtom, (get) => {
@@ -74,9 +74,9 @@ const resolvedThemeAtom = Atom.transform(themeAtom, (get) => {
 })
 ```
 
-## Atom Families
+## Atom families
 
-Use `Atom.family` for per-entity state:
+Use `Atom.family` to hold state for each entity:
 
 ```typescript
 import { Atom } from "@effect-atom/atom-react"
@@ -110,9 +110,9 @@ const modalAtomFamily = Atom.family((type: ModalType) =>
 - Form state per entity
 - Any parameterized state
 
-## React Integration
+## React integration
 
-### Reading Atom Values
+### Reading atom values
 
 ```typescript
 import { useAtomValue } from "@effect-atom/atom-react"
@@ -123,7 +123,7 @@ function Counter() {
 }
 ```
 
-### Updating Atom Values
+### Updating atom values
 
 ```typescript
 import { useAtomSet } from "@effect-atom/atom-react"
@@ -138,7 +138,7 @@ function IncrementButton() {
 }
 ```
 
-### Reading and Writing Together
+### Reading and writing together
 
 ```typescript
 import { useAtom } from "@effect-atom/atom-react"
@@ -154,7 +154,7 @@ function CounterControl() {
 }
 ```
 
-### Mounting Side-Effect Atoms
+### Mounting side-effect atoms
 
 Use `useAtomMount` to activate atoms without reading their value:
 
@@ -173,9 +173,9 @@ function App() {
 
 ## React Mutation Patterns
 
-### Deriving Loading State from result.waiting
+### Deriving loading state from result.waiting
 
-When using mutation atoms with `mode: "promise"`, derive loading state from `result.waiting` instead of managing separate `useState`:
+For mutation atoms with `mode: "promise"`, derive loading state from `result.waiting` instead of maintaining a separate `useState`:
 
 ```typescript
 const [result, mutate] = useAtom(myMutation, { mode: "promise" })
@@ -194,17 +194,13 @@ const handleSubmit = async () => {
 <Button disabled={isLoading}>{isLoading ? "Loading..." : "Submit"}</Button>
 ```
 
-**Why this is preferred:**
-- Single source of truth — loading state lives on the Result
-- No `finally` blocks or manual state resets
-- Automatically synchronized with the mutation lifecycle
+The `Result` then remains the single source of truth for loading state, stays synchronized with the mutation lifecycle, and removes manual resets and `finally` blocks.
 
-### Dialog Components Own Their Mutations
+### Dialog components own their mutations
 
-Move mutation logic INTO dialog components rather than keeping it in page components.
+Put mutation logic in dialog components instead of page components.
 
-**Dialog owns:** mutation hook, loading state, toast notifications
-**Parent provides:** data props, `onSuccess` callback
+The dialog owns the mutation hook, loading state, and toast notifications. The parent supplies data props and an `onSuccess` callback.
 
 ```typescript
 // CORRECT - dialog owns its mutation
@@ -249,9 +245,9 @@ function PaywallPage() {
 }
 ```
 
-### reactivityKeys for Cache Invalidation
+### reactivityKeys for cache invalidation
 
-Mutations can specify `reactivityKeys` to automatically invalidate queries that share the same keys — no manual `refresh()` calls needed.
+Mutations can specify `reactivityKeys` to invalidate queries that share those keys automatically. This removes the need for manual `refresh()` calls.
 
 ```typescript
 // Mutation atom with reactivityKeys
@@ -262,7 +258,7 @@ const archivePaywallMutation = Atom.make(
     { reactivityKeys: ["paywalls"] }
 )
 
-// Query atom with matching reactivityKeys — auto-invalidated after mutation
+// Query atom with matching reactivityKeys, auto-invalidated after mutation
 const paywallsAtom = Atom.make(
     Effect.fn(function* () {
         return yield* paywallService.list()
@@ -271,14 +267,14 @@ const paywallsAtom = Atom.make(
 )
 ```
 
-**Rules:**
+For automatic invalidation:
 - Both the mutation and query must share at least one matching key
 - After the mutation succeeds, all atoms with matching keys re-execute
 - Replaces manual patterns like calling `refreshPaywalls()` after mutations
 
 ## Working with Effects and Results
 
-### Effectful Atoms Return Result
+### Effectful atoms return Result
 
 ```typescript
 import { Atom, Result } from "@effect-atom/atom-react"
@@ -292,7 +288,7 @@ const userAtom = Atom.make(
 ) // Type: Atom<Result<User, Error>>
 ```
 
-### Handling Results with Result.builder (Recommended)
+### Handling results with Result.builder (recommended)
 
 **Use `Result.builder`** for rendering Result types. It provides a chainable API with granular error handling and type narrowing.
 
@@ -310,7 +306,7 @@ function UserProfile() {
 }
 ```
 
-### Result.builder with Tagged Errors
+### Result.builder with tagged errors
 
 **Key advantage**: Handle specific error types with `onErrorTag`:
 
@@ -338,7 +334,7 @@ function ResourceEmbed({ url }: { url: string }) {
 }
 ```
 
-### Result.builder Methods
+### Result.builder methods
 
 | Method | Purpose |
 |--------|---------|
@@ -355,7 +351,7 @@ function ResourceEmbed({ url }: { url: string }) {
 | `orElse(fn)` | Provide fallback value |
 | `orNull()` | Return null for unhandled cases |
 
-### Extracting Values with orElse
+### Extracting values with orElse
 
 For non-rendering use cases, extract values with `orElse`:
 
@@ -372,7 +368,7 @@ function useRepositories() {
 }
 ```
 
-### Result.getOrElse for Simple Extraction
+### Result.getOrElse for simple extraction
 
 For simple value extraction without error handling:
 
@@ -386,7 +382,7 @@ function UserName() {
 }
 ```
 
-### When to Use Each Pattern
+### When to use each pattern
 
 | Pattern | Use Case |
 |---------|----------|
@@ -396,7 +392,7 @@ function UserName() {
 | `Result.getOrElse` | Simple value extraction |
 | `Result.match` | Simple 3-case exhaustive matching |
 
-### Accessing Results in Derived Atoms
+### Accessing results in derived atoms
 
 ```typescript
 const userProfileAtom = Atom.make(
@@ -409,7 +405,7 @@ const userProfileAtom = Atom.make(
 )
 ```
 
-## Batching Updates
+## Batching updates
 
 Use `Atom.batch` for multiple updates:
 
@@ -425,7 +421,7 @@ const openModal = (type: ModalType, metadata?: Record<string, unknown>) => {
 }
 ```
 
-## localStorage Persistence
+## localStorage persistence
 
 ```typescript
 import { BrowserKeyValueStore } from "@effect/platform-browser"
@@ -444,7 +440,7 @@ const themeAtom = Atom.kvs({
 })
 ```
 
-## Anti-Patterns
+## Anti-patterns
 
 ### FORBIDDEN: Creating Atoms Inside Components
 
@@ -624,9 +620,9 @@ function PaywallPage() {
 // ArchivePaywallDialog internally uses useAtom(archivePaywallMutation, { mode: "promise" })
 ```
 
-## Performance Tips
+## Performance tips
 
-### Selective Re-rendering
+### Selective re-rendering
 
 ```typescript
 // WRONG - subscribes to entire state

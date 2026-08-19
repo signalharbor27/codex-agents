@@ -1,24 +1,24 @@
-# Codex Skills
+# Codex skills
 
-This repository is the source for Q's global Codex operating contract, software-engineering skills, and custom subagent profiles. It targets GPT-5.6 SOL at `xhigh`.
+This repository is the source of Q's global Codex operating contract, software-engineering skills, and custom subagent profiles. The configuration targets GPT-5.6 SOL at `xhigh`.
 
-The core rule is simple: select one primary skill for the current job, then disclose only the domain modifiers and references demanded by present evidence.
+Route each job to one primary skill. Add a domain modifier or reference only when evidence from the task requires it.
 
-## Engineering Flow
+## Engineering flow
 
-- `engineering`: understood features, bug fixes, refactors, plans, and research. It owns inspection through fresh verification.
-- `debugging`: unexplained failures. It owns reproduction and root cause, then the smallest authorized fix through proof.
-- `test-design`: tests are the primary task, including explicit TDD, proof-layer selection, doubles, assertions, and focused coverage.
+- `engineering` owns understood features, bug fixes, refactors, plans, and research from inspection through fresh verification.
+- `debugging` owns unexplained failures: reproduce the failure, prove its root cause, then make the smallest authorized fix and verify it.
+- `test-design` owns work where tests are the main task, including explicit TDD, proof-layer selection, doubles, assertions, and focused coverage.
 
-Review, audit, branch, handoff, and skill-authoring tasks use their narrower skill as primary. Rust, Effect, and data-intensive-system skills are modifiers: they add domain constraints without repeating the generic producer workflow.
+Review, audit, branch, handoff, and skill-authoring tasks use their narrower skill as primary. Rust, Effect, and data-intensive-system skills are modifiers. They add domain constraints without repeating the generic producer workflow.
 
 Do not stack separate planning, implementation, testing, and final-proof skills. A primary skill owns its whole loop. Transition only when the task genuinely changes jobs.
 
-`grill-me` is the single model-invoked owner of dependency-aware interactive decision resolution. Natural requests, exact `$grill-me`, or work that already exposes several interdependent consequential user-owned choices can select it directly; after inspection, `engineering` and the two improve skills can load its shared procedure while retaining primary ownership.
+`grill-me` is the sole model-invoked owner of dependency-aware interactive decisions. It can route from a natural request, an exact `$grill-me` invocation, or work that exposes several consequential, interdependent choices owned by the user. After inspection, `engineering` and the two improve skills may load the shared grilling procedure without giving up primary ownership.
 
-## Progressive Disclosure
+## Progressive disclosure
 
-Routine engineering loads only [engineering/SKILL.md](skills/engineering/SKILL.md). It names present pressure and opens a one-level reference only when that pressure exists:
+Routine engineering begins with [engineering/SKILL.md](skills/engineering/SKILL.md) alone. That entrypoint names the active pressure and opens a one-level reference only when the pressure is present:
 
 - new or large feature, including conceptual integrity: `feature-shape.md`
 - consequential ownership, trust boundaries, invariant-bearing types, module/API shape, or competing abstractions: `boundary-design.md`
@@ -32,9 +32,9 @@ Routine engineering loads only [engineering/SKILL.md](skills/engineering/SKILL.m
 
 `debugging` and `test-design` follow the same pattern with their own short, one-level references. Reference files do not link to other references.
 
-This structure keeps strong production guidance available without placing every checklist into every task.
+This structure keeps detailed production guidance available while protecting routine tasks from irrelevant checklists.
 
-## Why These Principles
+## Why these principles
 
 - Tracer bullets and vertical slices establish a real end-to-end path before broad scaffolding.
 - Conceptual integrity keeps a feature centered on one coherent model while treating every extra concept, state, and option as a reasoning cost.
@@ -49,12 +49,12 @@ This structure keeps strong production guidance available without placing every 
 
 The concise references synthesize established work including Hunt and Thomas, Brooks, Hoare, Wirth, Dijkstra, Ousterhout, Parnas, King, Wlaschin, Meyer, Bernhardt, Cockburn, Bogard, Metz, Feathers, Fowler, Evans, Beck, Meszaros, Humble and Farley, Nygard, Kleppmann, Google SRE, Brendan Gregg, and OWASP. Each reference states its source basis.
 
-## Review and Improve Skills
+## Review and improve skills
 
 - `review-and-simplify-changes` selects only material tracks for the pinned diff. It keeps small or tightly coupled reviews with one reviewer and delegates bounded independent tracks when separate context improves coverage; its eight topics are a coverage checklist, not an agent-count invariant.
 - `improve-codebase-architecture` and `improve-test-suite` retain their audit and phased-plan behavior.
 
-## Other Skills
+## Other skills
 
 - `designing-data-intensive-systems`: workload, storage, consistency, partitioning, and recovery modifier
 - `writing-rust`: Rust ownership, traits, errors, async, and unsafe modifier
@@ -66,9 +66,9 @@ The concise references synthesize established work including Hunt and Thomas, Br
 - `describe-pr`: reviewer-oriented summary from the final diff and evidence
 - `writing-skills`: skill routing, descriptions, progressive disclosure, and evals
 
-## Global Operating Contract
+## Global operating contract
 
-[AGENTS.md](AGENTS.md) is a global contract, not repository-specific guidance. Keep workflows in skills; keep safety, permissions, honesty, scope, delegation, verification, and git boundaries in `AGENTS.md`.
+[AGENTS.md](AGENTS.md) defines the global contract rather than repository-specific workflow. Skills own workflows; `AGENTS.md` owns safety, permissions, honesty, scope, delegation, verification, and Git boundaries.
 
 After changing it, sync it byte-for-byte to the user instruction source:
 
@@ -80,11 +80,11 @@ Codex CLI discovers global instructions from `$CODEX_HOME/AGENTS.md`, normally
 `~/.codex/AGENTS.md`. Keep that path as a symlink to `~/.agents/AGENTS.md` so
 the repository file, the user source, and the Codex discovery path cannot drift.
 
-## Custom Agents
+## Custom agents
 
 Installable profiles live in [agents](agents). Current Codex releases discover
-standalone profile files automatically; [agents/registry.toml](agents/registry.toml)
-contains only shared agent settings.
+these standalone files automatically. [agents/registry.toml](agents/registry.toml)
+therefore contains shared agent settings only.
 
 - `fast_reviewer`: fast mechanical evidence
 - `reviewer`: standard contract and correctness review
@@ -92,7 +92,7 @@ contains only shared agent settings.
 - `librarian`: version-aware documentation and current-source research
 - `verifier`: fresh local command evidence after implementation
 
-The main agent owns scope, approvals, write coordination, synthesis, and the completion claim. Subagents receive bounded briefs and return evidence.
+The main agent retains scope, approvals, write coordination, synthesis, and the completion claim. Each subagent receives a bounded brief and returns evidence for the main agent to judge.
 
 Install the profiles:
 
@@ -113,17 +113,17 @@ into the existing `$CODEX_HOME/config.toml`; do not append a second `[agents]`
 table. Do not add redundant `[agents.<role>]` registrations for profiles already
 installed under `$CODEX_HOME/agents/`.
 
-## Skill Installation
+## Skill installation
 
-Top-level skill folders under [skills](skills) are installable into `~/.agents/skills/`. Sync each explicit directory rather than replacing the whole global skill root, because that root can contain unrelated skills.
+Install top-level folders from [skills](skills) into `~/.agents/skills/`. Sync the intended directories individually; replacing the global skill root could delete unrelated installed skills.
 
-Install `grill-me` as one skill. To enable post-inspection grilling, also sync the consumer skill directories that link to `grill-me/references/frontier.md`; no nested skill invocation or second grilling router is required.
+Install `grill-me` as a single skill. For post-inspection grilling, also sync the consumer skill directories that link to `grill-me/references/frontier.md`. They reuse the procedure directly, so they do not need nested invocation or another grilling router.
 
 If another installed skill supplies an overlapping umbrella workflow, disable it with an exact `[[skills.config]]` path entry in `~/.codex/config.toml`. Restart Codex after changing discovery configuration.
 
 ## Evals
 
-The local suite enforces:
+The local suite checks the skill inventory and behavior contract:
 
 - exact top-level skill inventory
 - quoted, trigger-focused descriptions no longer than 240 characters
@@ -143,9 +143,9 @@ bun test skills/evals/run-routing-evals.test.ts
 bun skills/evals/run-routing-evals.ts dry-run
 ```
 
-Live model evaluation is opt-in and requires an explicit case or `--all` plus `--allow-live`; see [skills/evals/README.md](skills/evals/README.md).
+Live model evaluation remains opt-in. It requires an explicit case or `--all` together with `--allow-live`; [skills/evals/README.md](skills/evals/README.md) documents the guarded runner.
 
-## Prompt Design Basis
+## Prompt design basis
 
 - Start with outcomes, success evidence, important constraints, authority, and stop condition.
 - Give the model freedom for routine choices; use strict ordered steps only where sequence protects correctness.

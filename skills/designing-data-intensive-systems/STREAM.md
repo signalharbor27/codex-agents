@@ -1,26 +1,26 @@
-# Stream Processing
+# Stream processing
 
-Read this when event flow, CDC, event sourcing, low-latency processing, or exactly-once / replay claims are the main design pressure.
+Read this reference when event flow, CDC, event sourcing, low-latency processing, or exactly-once and replay claims drive the design.
 
-## Contents
-- Event Streams
-- Message Brokers
-- Change Data Capture
-- Event Sourcing
-- Stream Processing Patterns
-- Fault Tolerance
+## Topics
+- Event streams
+- Message brokers
+- Change data capture
+- Event sourcing
+- Stream processing patterns
+- Fault tolerance
 
 ---
 
-## Event Streams
+## Event streams
 
-**Event**: Immutable fact that happened at a point in time.
+An event records an immutable fact at a point in time.
 
-**Stream**: Unbounded sequence of events.
+A stream is an unbounded sequence of events.
 
-**Key insight**: Batch is a special case of streaming (bounded stream).
+A bounded stream can be processed as a batch, which makes batch processing a special case of stream processing.
 
-### Event vs Message
+### Events and messages
 
 | Aspect | Event | Message |
 |--------|-------|---------|
@@ -31,18 +31,18 @@ Read this when event flow, CDC, event sourcing, low-latency processing, or exact
 
 ---
 
-## Message Brokers
+## Message brokers
 
-### Direct Messaging
+### Direct messaging
 
-Producer → Consumer directly.
+The producer sends directly to the consumer.
 
-**Problems**:
+This couples their availability and pace:
 - Producer blocked if consumer slow
 - Data loss if consumer offline
 - No replay
 
-### Message Queue (JMS/AMQP style)
+### Message queue (JMS/AMQP style)
 
 **Characteristics**:
 - Messages deleted after ACK
@@ -53,7 +53,7 @@ Producer → Consumer directly.
 
 **Use case**: Task distribution, load balancing.
 
-### Log-Based Broker
+### Log-based broker
 
 **Characteristics**:
 - Append-only log
@@ -81,11 +81,11 @@ Producer → Consumer directly.
 
 ---
 
-## Change Data Capture (CDC)
+## Change data capture (CDC)
 
-Capture database changes as event stream.
+Change data capture publishes database changes as an event stream.
 
-### Implementation Methods
+### Implementation methods
 
 **Trigger-based**: Database triggers write to event table.
 - Simple but high overhead.
@@ -98,7 +98,7 @@ Capture database changes as event stream.
 - Requires timestamp/version column.
 - May miss rapid changes.
 
-### CDC Architecture
+### CDC architecture
 
 ```
 Database → CDC Connector → Message Broker → Consumers
@@ -111,22 +111,20 @@ Database → CDC Connector → Message Broker → Consumers
 - Consumers decoupled from database
 - Can rebuild derived data by replaying
 
-### Initial Snapshot
+### Initial snapshot
 
-**Problem**: How to get existing data when starting CDC?
-
-**Solution**: 
+To include data that predates the CDC stream:
 1. Take consistent snapshot
 2. Record log position at snapshot time
 3. Stream changes from that position
 
 ---
 
-## Event Sourcing
+## Event sourcing
 
-Store state changes as sequence of events, not current state.
+Event sourcing stores state changes as an event sequence rather than storing only the latest state.
 
-### Traditional vs Event Sourced
+### Traditional and event-sourced state
 
 **Traditional (state-based)**:
 ```sql
@@ -140,7 +138,7 @@ Event: AccountDebited { account_id: 1, amount: 10, timestamp: ... }
 -- All history preserved
 ```
 
-### Deriving State
+### Derive state
 
 ```
 Events → Fold/Aggregate → Current State
@@ -169,7 +167,7 @@ Events → Fold/Aggregate → Current State
 | Eventual consistency | Careful UI design |
 | Deleting data (GDPR) | Crypto-shredding, tombstones |
 
-### Commands vs Events
+### Commands and events
 
 **Commands**: Intent, may be rejected. "WithdrawMoney"
 
@@ -179,9 +177,9 @@ Events → Fold/Aggregate → Current State
 
 ---
 
-## Stream Processing Patterns
+## Stream processing patterns
 
-### Stream-Table Duality
+### Stream-table duality
 
 **Stream**: Changelog of table over time.
 **Table**: Point-in-time snapshot of stream.
@@ -196,7 +194,7 @@ Table ←─ materialize ─ Stream
 - Stream + Table → Stream (enrichment)
 - Table + Table → Table (join)
 
-### Stateless Processing
+### Stateless processing
 
 Transform each event independently.
 
@@ -210,7 +208,7 @@ events.filter(lambda e: e.type == 'purchase')
 events.map(lambda e: {..., total: e.price * e.quantity})
 ```
 
-### Stateful Processing
+### Stateful processing
 
 Maintain state across events.
 
@@ -238,13 +236,13 @@ Hopping (5 min, 1 min advance): [0-5) [1-6) [2-7) ...
 Session (5 min gap): [events until 5 min silence]
 ```
 
-### Event Time vs Processing Time
+### Event time and processing time
 
 **Event time**: When event occurred (in event).
 
 **Processing time**: When event processed (wall clock).
 
-**Problem**: Events arrive out of order.
+Event time and processing time diverge when events arrive out of order.
 
 **Watermarks**: Declare "no more events before time T".
 
@@ -255,9 +253,9 @@ Session (5 min gap): [events until 5 min silence]
 
 ---
 
-## Stream Joins
+## Stream joins
 
-### Stream-Stream Join
+### Stream-stream join
 
 Join events from two streams within time window.
 
@@ -269,7 +267,7 @@ clicks.join(impressions)
 
 **State required**: Buffer events until window closes.
 
-### Stream-Table Join (Enrichment)
+### Stream-table join (enrichment)
 
 Lookup reference data for each event.
 
@@ -283,7 +281,7 @@ orders.join(products)
 - Periodic snapshot
 - External database lookup (slow)
 
-### Table-Table Join
+### Table-table join
 
 Both sides are materialized streams.
 
@@ -291,23 +289,23 @@ Both sides are materialized streams.
 
 ---
 
-## Fault Tolerance
+## Fault tolerance
 
-### At-Least-Once
+### At-least-once
 
 Retry on failure. May produce duplicates.
 
 **Implementation**: ACK after processing, retry if no ACK.
 
-### At-Most-Once
+### At-most-once
 
 Don't retry. May lose events.
 
 **Implementation**: ACK immediately, no retry.
 
-### Exactly-Once (Effectively)
+### Effectively exactly-once
 
-No duplicates, no loss. Requires special handling.
+The processing result has no duplicate effects and no event loss. Reaching that result requires special handling.
 
 **Approaches**:
 
@@ -324,7 +322,7 @@ No duplicates, no loss. Requires special handling.
 - On failure, restore from checkpoint
 - Replay from checkpoint offset
 
-### Microbatch vs Continuous
+### Microbatch and continuous processing
 
 **Microbatch** (Spark Streaming):
 - Small batches processed as batch jobs
@@ -340,7 +338,7 @@ No duplicates, no loss. Requires special handling.
 
 ## Architectures
 
-### Kappa Architecture
+### Kappa architecture
 
 Stream-only. Reprocess by replaying from log.
 
@@ -354,7 +352,7 @@ Raw Events → Stream Processing → Derived Views
 - Retain raw events long enough
 - Reprocessing fast enough
 
-### Event-Driven Microservices
+### Event-driven microservices
 
 Services communicate via events, not sync calls.
 

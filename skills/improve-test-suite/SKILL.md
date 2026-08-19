@@ -3,13 +3,11 @@ name: improve-test-suite
 description: "Audit a repo or subsystem test suite for brittle, over-mocked, flaky, redundant, slow, or low-signal tests. Use when you want a phased plan to remove bad coverage and add stronger behavior-focused seam tests."
 ---
 
-# Improve Test Suite
+# Improve test suite
 
 ## Overview
 
-Use this skill for repo-level or subsystem-level test review when the main job is to diagnose weak, redundant, brittle, or low-signal tests and produce a practical plan to improve them.
-It should bias toward fewer, more trustworthy tests tied to real behavior through public interfaces.
-Hard preservation rule: keep tests that protect real incidents or contracts unless evidence proves them redundant or misleading.
+Diagnose weak, redundant, brittle, or low-signal tests across a repository or subsystem, then produce a practical improvement plan. Prefer a smaller suite that proves real behavior through public interfaces. Preserve tests tied to incidents or contracts unless evidence shows that another test covers the same risk more reliably.
 
 ## When to Use
 
@@ -27,23 +25,23 @@ Hard preservation rule: keep tests that protect real incidents or contracts unle
 
 ## Minimal Workflow
 
-1. Pin the repo or subsystem review scope, then inspect suite shape, layers, speed, mocks, and directly mentioned pain points. When invoked as a post-code gate, limit the review to the original task diff and its direct effects; report broader or pre-existing findings as separate follow-up candidates without expanding current work.
+1. Pin the repository or subsystem boundary. Inspect suite layers, runtime, reliability, doubles, and named pain points. For a post-code gate, limit findings to the original diff and its direct effects; list broader or pre-existing issues separately.
 2. Before recommending any removal, inventory incident and contract provenance.
-3. Identify the highest-cost test problems: brittle internals, duplicate coverage, mock theater, slow low-signal flows, and missing seam-level proof.
+3. Find the highest-cost test problems: brittle internals, duplicate coverage, mock theater, slow low-signal flows, and missing seam-level proof.
 4. Compare the current suite against a simpler shape: boundary-focused tests, public interfaces, and cheap trustworthy signals.
 5. Classify findings as pre-existing test debt, regression from the current change, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, or repo-doc/memory candidate.
 6. For large repos, split evidence gathering by subsystem or test layer and use subagents for bounded independent review tracks.
-7. Produce a phased plan covering what to remove, what to keep, what to rewrite, and what new tests would materially increase trust.
-8. Keep the review and plan in chat by default. Create or update a target-repo plan file only when the user explicitly requests or has already authorized a durable artifact.
-9. Pressure-test the draft internally before finalizing it. Keep one approval inline; load the dependency-frontier grilling reference below only when the user requests an interactive interview or several consequential user-owned decisions depend on one another.
-10. Call out at least one rejected alternative when the tradeoff is non-trivial, especially when removing broad suites or end-to-end coverage.
+7. Write a dependency-ordered plan that identifies what to keep, remove, rewrite, and add. Each change must name the behavior or cost it addresses and how to verify the new suite shape.
+8. Keep the review and plan in chat unless the user explicitly requests or has already authorized a durable target-repository plan file.
+9. Pressure-test the draft before finalizing it. Keep one approval inline. Load the dependency-frontier grilling reference only when the user asks for an interactive interview or several consequential, user-owned decisions depend on each other.
+10. State at least one rejected alternative when the tradeoff is non-trivial, especially when removing broad suites or end-to-end coverage.
 
-## Output Contract
+## Output contract
 
 - Prioritized findings with test locations, behavior risk, evidence, and confidence
 - A keep/remove/rewrite/add plan with dependencies and verification for each phase
 - Explicit incident coverage to preserve, deferred work, rejected alternatives, and open decisions
-- Done when each recommendation improves trust or cost with evidence and removal risk is addressed
+- Completion requires evidence that each recommendation improves trust or cost, with every removal risk addressed.
 
 ## Reference Routing
 
@@ -51,10 +49,10 @@ Hard preservation rule: keep tests that protect real incidents or contracts unle
 - Read [../grill-me/references/frontier.md](../grill-me/references/frontier.md) only for an interactive interview over several interdependent consequential user-owned decisions; retain this skill as primary.
 - Read [../engineering/references/durable-plan.md](../engineering/references/durable-plan.md) only after a durable target-repo plan file is explicitly authorized.
 
-## Failure Modes
+## Failure modes
 
-- Treating the task like “add more tests” instead of improving trust
+- Treating the task as "add more tests" instead of improving trust
 - Deleting incident-proven regression tests because they look ugly
 - Preserving mock-heavy implementation tests that break on harmless refactors
 - Recommending broad end-to-end expansion when seam-level tests would be cheaper and stronger
-- Producing a list of complaints instead of a phased cleanup plan
+- Returning complaints instead of a phased cleanup plan

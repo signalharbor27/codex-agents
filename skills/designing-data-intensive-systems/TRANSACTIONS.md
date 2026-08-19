@@ -1,47 +1,47 @@
 # Transactions
 
-Read this when you need to reason about isolation anomalies, ACID semantics, deadlocks, serializability, or why distributed transactions are risky.
+Read this reference to reason about isolation anomalies, ACID semantics, deadlocks, serializability, or the risks of distributed transactions.
 
-## Contents
-- ACID Semantics
-- Isolation Levels
-- Isolation Anomalies
-- Implementation Mechanisms
-- Distributed Transactions
+## Topics
+- ACID semantics
+- Isolation levels
+- Isolation anomalies
+- Implementation mechanisms
+- Distributed transactions
 
 ---
 
-## ACID Semantics
+## ACID semantics
 
 ### Atomicity
-**Definition**: Transaction either fully completes or fully aborts (all-or-nothing).
+A transaction either completes in full or aborts in full.
 
-**NOT** about concurrency (that's isolation).
+Atomicity does not define concurrency behavior; isolation does.
 
 **Implementation**: Write-ahead log (WAL) enables rollback.
 
 ### Consistency
-**Definition**: Database invariants are maintained (application-defined).
+Consistency means that a transaction preserves the application's database invariants.
 
-**Actually application's responsibility**: Database just provides atomicity and isolation.
+The application defines those invariants. The database supplies mechanisms such as atomicity, isolation, and constraints that help enforce them.
 
 ### Isolation
-**Definition**: Concurrent transactions don't interfere with each other.
+Isolation controls what concurrent transactions may observe and how their operations interact.
 
 **Ideal**: Serializability (result same as if run sequentially).
 
-**Reality**: Weaker levels for performance.
+Systems often choose weaker isolation levels to trade some guarantees for performance or concurrency.
 
 ### Durability
-**Definition**: Committed data survives crashes.
+Durability means that committed data survives the failures covered by the storage design.
 
 **Implementation**: WAL flushed to disk, replication.
 
-**NOT absolute**: Disk can fail, datacenter can be destroyed. Durability is about reducing risk.
+It is not absolute: disks and datacenters can fail. The design reduces that risk through logging, replication, and recovery.
 
 ---
 
-## Isolation Levels
+## Isolation levels
 
 | Level | Prevents | Allows |
 |-------|----------|--------|
@@ -56,9 +56,9 @@ Read this when you need to reason about isolation anomalies, ACID semantics, dea
 
 ---
 
-## Isolation Anomalies
+## Isolation anomalies
 
-### Dirty Read
+### Dirty read
 Reading uncommitted data from another transaction.
 
 ```
@@ -69,7 +69,7 @@ T1: ROLLBACK  -- balance is actually 50
 
 **Prevented by**: Read Committed and above.
 
-### Dirty Write
+### Dirty write
 Overwriting uncommitted data from another transaction.
 
 ```
@@ -79,7 +79,7 @@ T2: UPDATE listings SET buyer = 'Bob' WHERE id = 1  -- before T1 commits
 
 **Prevented by**: All levels (row-level locks on write).
 
-### Non-repeatable Read (Read Skew)
+### Non-repeatable read (read skew)
 Same query returns different results within transaction.
 
 ```
@@ -92,7 +92,7 @@ T1: SELECT balance WHERE id = 1  -- returns 400 (different!)
 
 **Prevented by**: Snapshot Isolation and above.
 
-### Phantom Read
+### Phantom read
 New rows appear matching a query condition.
 
 ```
@@ -103,7 +103,7 @@ T1: SELECT * FROM employees WHERE dept = 'eng'  -- returns 11 rows
 
 **Prevented by**: Serializable. (Snapshot prevents for reads, not for write conflicts.)
 
-### Lost Update
+### Lost update
 Two transactions read-modify-write, second overwrites first.
 
 ```
@@ -121,7 +121,7 @@ T2: write(counter, y + 1)  -- counter = 11 (lost T1's increment!)
 
 **Snapshot Isolation**: PostgreSQL detects, MySQL does not.
 
-### Write Skew
+### Write skew
 Two transactions read same data, make different writes that violate constraint.
 
 ```
@@ -146,9 +146,9 @@ T2: UPDATE doctors SET on_call = false WHERE name = 'Bob'; COMMIT
 
 ---
 
-## Implementation Mechanisms
+## Implementation mechanisms
 
-### Two-Phase Locking (2PL)
+### Two-phase locking (2PL)
 
 **Rule**: 
 - Growing phase: acquire locks, don't release
@@ -170,7 +170,7 @@ SELECT * FROM bookings WHERE room = 123 AND time = '10:00'
 - Lock contention under high load
 - Long transactions block others
 
-### Snapshot Isolation (MVCC)
+### Snapshot isolation (MVCC)
 
 **Principle**: Each transaction sees consistent snapshot from start.
 
@@ -186,7 +186,7 @@ SELECT * FROM bookings WHERE room = 123 AND time = '10:00'
 
 **No read locks needed**: Reads never block, writes never block reads.
 
-### Serializable Snapshot Isolation (SSI)
+### Serializable snapshot isolation (SSI)
 
 **Goal**: Serializable performance close to Snapshot Isolation.
 
@@ -206,9 +206,9 @@ SELECT * FROM bookings WHERE room = 123 AND time = '10:00'
 
 ---
 
-## Distributed Transactions
+## Distributed transactions
 
-### Two-Phase Commit (2PC)
+### Two-phase commit (2PC)
 
 **Coordinator-based protocol**:
 
@@ -227,7 +227,7 @@ SELECT * FROM bookings WHERE room = 123 AND time = '10:00'
 - Participants hold locks during in-doubt period
 - Latency (multiple round trips)
 
-### Coordinator Failure
+### Coordinator failure
 
 **If coordinator dies during 2PC**:
 - Participants that voted yes must wait
@@ -237,7 +237,7 @@ SELECT * FROM bookings WHERE room = 123 AND time = '10:00'
 
 **Mitigation**: Replicate coordinator (Paxos/Raft), but adds complexity.
 
-### XA Transactions
+### XA transactions
 
 **Standard API for distributed transactions** (Java JTA, etc.).
 
@@ -246,7 +246,7 @@ SELECT * FROM bookings WHERE room = 123 AND time = '10:00'
 - Locks held across network roundtrips
 - Performance impact
 
-### Heterogeneous vs Homogeneous
+### Heterogeneous and homogeneous systems
 
 **Homogeneous**: All participants are same database type.
 - Internal protocols
@@ -259,9 +259,9 @@ SELECT * FROM bookings WHERE room = 123 AND time = '10:00'
 
 ---
 
-## Practical Recommendations
+## Practical recommendations
 
-### When to Use What
+### Choose an approach
 
 | Scenario | Recommendation |
 |----------|----------------|
@@ -270,7 +270,7 @@ SELECT * FROM bookings WHERE room = 123 AND time = '10:00'
 | Financial transactions | Serializable or explicit locking |
 | Distributed systems | Avoid 2PC; use sagas |
 
-### Saga Pattern (Alternative to Distributed Transactions)
+### Saga pattern as an alternative to distributed transactions
 
 Break transaction into local transactions + compensating actions.
 
@@ -286,7 +286,7 @@ If step 3 fails:
 
 **Trade-off**: Eventual consistency, but no distributed locking.
 
-### Optimistic vs Pessimistic
+### Optimistic and pessimistic concurrency
 
 | Approach | When to Use |
 |----------|-------------|

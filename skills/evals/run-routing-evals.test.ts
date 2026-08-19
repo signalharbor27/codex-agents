@@ -35,29 +35,29 @@ const validResult: RoutingResult = {
   stop: "after-verification",
 }
 
-describe("live result boundary", () => {
-  test("uses structured-output-compatible constraints", () => {
+describe("live result validation", () => {
+  test("uses constraints supported by structured output", () => {
     expect(JSON.stringify(resultSchema)).not.toContain('"uniqueItems"')
   })
 
-  test("accepts one strict schema-shaped JSON object", () => {
+  test("accepts one JSON object that strictly follows the schema", () => {
     expect(parseLiveResult(JSON.stringify(validResult), fixture, resultSchema)).toEqual(validResult)
   })
 
-  test("rejects prefixed output", () => {
+  test("rejects output before the JSON object", () => {
     expect(() => parseLiveResult(`progress\n${JSON.stringify(validResult)}`, fixture, resultSchema)).toThrow(
       "did not return JSON",
     )
   })
 
-  test("rejects missing fields", () => {
+  test("rejects a result with missing fields", () => {
     const { stop: _stop, ...incomplete } = validResult
     expect(() => parseLiveResult(JSON.stringify(incomplete), fixture, resultSchema)).toThrow(
       "must contain exactly",
     )
   })
 
-  test("rejects duplicate references", () => {
+  test("rejects repeated references", () => {
     const duplicate = {
       ...validResult,
       references: [
@@ -70,7 +70,7 @@ describe("live result boundary", () => {
     )
   })
 
-  test("rejects a primary skill repeated as a modifier", () => {
+  test("rejects the primary skill when it also appears as a modifier", () => {
     const duplicate = { ...validResult, modifier_skills: ["engineering"] }
     expect(() => parseLiveResult(JSON.stringify(duplicate), fixture, resultSchema)).toThrow(
       "repeats primary skill as modifier",
@@ -78,10 +78,10 @@ describe("live result boundary", () => {
   })
 })
 
-test("comparison rejects unnecessary modifiers and references", () => {
+test("comparison rejects unneeded modifiers and references", () => {
   const routingCase: RoutingCase = {
     id: "routine-test",
-    prompt: "Synthetic routine engineering request.",
+    prompt: "Synthetic request for routine engineering work.",
     primary_skill: "engineering",
     expected_modifier_skills: [],
     expected_references: [],
@@ -104,10 +104,10 @@ test("comparison rejects unnecessary modifiers and references", () => {
   ])
 })
 
-test("accepts explicit alternatives for expectation fields", () => {
+test("accepts listed alternatives in expectation fields", () => {
   const routingCase: RoutingCase = {
     id: "alternative-test",
-    prompt: "Synthetic expectation alternative.",
+    prompt: "Synthetic request with alternative expectations.",
     primary_skill: "engineering",
     expected_modifier_skills: [],
     expected_references: [],
@@ -122,7 +122,7 @@ test("accepts explicit alternatives for expectation fields", () => {
   expect(compareResult(routingCase, validResult)).toEqual([])
 })
 
-test("decodes quoted frontmatter descriptions", () => {
+test("parses quoted frontmatter descriptions", () => {
   const frontmatter = parseSkillFrontmatter(`---
 name: synthetic
 description: "Use when a \\"quoted\\" trigger applies."
@@ -137,7 +137,7 @@ description: "Use when a \\"quoted\\" trigger applies."
 })
 
 describe("skill invocation policy", () => {
-  test("parses explicit-only metadata and defaults missing policy to implicit", () => {
+  test("parses explicit-only metadata and treats a missing policy as implicit", () => {
     expect(parseOpenAiPolicy("interface:\n  display_name: Grill Me\npolicy:\n  allow_implicit_invocation: false\n"))
       .toEqual({ allowImplicitInvocation: false })
     expect(parseOpenAiPolicy("policy:\n  allow_implicit_invocation: true\n"))
@@ -146,20 +146,20 @@ describe("skill invocation policy", () => {
       .toEqual({ allowImplicitInvocation: true })
   })
 
-  test("rejects malformed invocation policy", () => {
+  test("rejects an invalid invocation policy", () => {
     expect(() => parseOpenAiPolicy("policy:\n  allow_implicit_invocation: no\n", "synthetic.yaml"))
       .toThrow("synthetic.yaml:2 allow_implicit_invocation must be true or false")
     expect(() => parseOpenAiPolicy("policy:\n  allow_implicit_invocation : false\n", "synthetic.yaml"))
       .toThrow("synthetic.yaml:2 allow_implicit_invocation must be true or false")
   })
 
-  test("recognizes only an exact dollar-prefixed skill token", () => {
+  test("recognizes only an exact skill token with a dollar prefix", () => {
     expect(hasExactSkillInvocation("Use $grill-me to interview me.", "grill-me")).toBe(true)
     expect(hasExactSkillInvocation("Please grill me interactively.", "grill-me")).toBe(false)
     expect(hasExactSkillInvocation("Use $grill-me-extra.", "grill-me")).toBe(false)
   })
 
-  test("rejects implicit fixture selection of an explicit-only skill", () => {
+  test("rejects an implicit fixture selection for an explicit-only skill", () => {
     const explicitOnly = new Set(["grill-me"])
     expect(validateExplicitOnlySelections("Please grill me.", ["grill-me"], explicitOnly, "cases[0]")).toEqual([
       "cases[0] selects explicit-only skill grill-me without exact $grill-me invocation",
@@ -167,7 +167,7 @@ describe("skill invocation policy", () => {
     expect(validateExplicitOnlySelections("Use $grill-me.", ["grill-me"], explicitOnly, "cases[0]")).toEqual([])
   })
 
-  test("rejects missing or changed explicit-only metadata", () => {
+  test("rejects explicit-only metadata that is missing or changed", () => {
     expect(validateExplicitOnlyInventory([], new Set())).toEqual([])
     expect(validateExplicitOnlyInventory(["grill-me"], new Set())).toEqual([
       "explicit_only_skills mismatch; fixture=grill-me actual=",
@@ -178,7 +178,7 @@ describe("skill invocation policy", () => {
     ])
   })
 
-  test("marks explicit-only skills in the live catalog", () => {
+  test("labels explicit-only skills in the live catalog", () => {
     expect(formatSkillCatalogLine("grill-me", "Explicit wrapper.", { allowImplicitInvocation: false }))
       .toBe("- grill-me [explicit-only; exact $grill-me invocation required]: Explicit wrapper.")
     expect(formatSkillCatalogLine("engineering", "Implicit owner.", { allowImplicitInvocation: true }))
@@ -186,7 +186,7 @@ describe("skill invocation policy", () => {
   })
 })
 
-test("result schema validation rejects property drift", () => {
+test("result schema validation rejects a changed property type", () => {
   const invalid = structuredClone(resultSchema) as Record<string, unknown>
   const properties = invalid.properties as Record<string, unknown>
   const primary = properties.primary_skill as Record<string, unknown>
@@ -196,7 +196,7 @@ test("result schema validation rejects property drift", () => {
   )
 })
 
-test("JSON loading distinguishes missing files from malformed content", async () => {
+test("JSON loading distinguishes a missing file from invalid content", async () => {
   const directory = await mkdtemp(join(tmpdir(), "routing-evals-json-"))
   const malformed = join(directory, "malformed.json")
   try {
@@ -208,13 +208,13 @@ test("JSON loading distinguishes missing files from malformed content", async ()
   }
 })
 
-test("fixture contract rejects unknown top-level fields", () => {
+test("fixture validation rejects unknown top-level fields", () => {
   expect(validateFixtureTopLevel({ ...fixture, unexpected: true })).toEqual([
     "routing fixture must contain exactly version, engineering_skills, explicit_only_skills, skill_references, cases",
   ])
 })
 
-test("subprocess timeout kills a TERM-resistant process group", async () => {
+test("a subprocess timeout kills a process group that ignores TERM", async () => {
   const setsid = Bun.which("setsid")
   const cmd = setsid ? [setsid, "sh", "-c", "trap '' TERM; sleep 5"] : ["sleep", "5"]
   const child = Bun.spawn({ cmd, stdin: "ignore", stdout: "pipe", stderr: "pipe" })
@@ -226,7 +226,7 @@ test("subprocess timeout kills a TERM-resistant process group", async () => {
   expect(await child.exited).not.toBe(0)
 })
 
-test("surface check propagates rg operational failures", async () => {
+test("the surface check reports rg execution failures", async () => {
   const directory = await mkdtemp(join(tmpdir(), "routing-evals-rg-"))
   const rg = join(directory, "rg")
   try {

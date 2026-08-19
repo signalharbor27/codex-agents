@@ -1,15 +1,15 @@
-# Async and Flakes
+# Async and flakes
 
 Load this when timing, polling, concurrency, ordering, or intermittent reproduction dominates.
 
-## Raise the Signal
+## Raise the signal
 
 - Repeat with a recorded seed, input, environment, and concurrency.
 - Capture timestamps and stable correlation IDs at the smallest relevant boundaries.
 - Vary one pressure at a time: scheduling, latency, clock, worker count, resource limit, or dependency response.
 - Compare distributions and failure rates, not one passing rerun.
 
-## Wait for Conditions
+## Wait for conditions
 
 Replace arbitrary sleeps with polling or event synchronization on the actual postcondition. Use a bounded deadline, preserve the last observed state in the failure, and fail immediately on terminal error states.
 

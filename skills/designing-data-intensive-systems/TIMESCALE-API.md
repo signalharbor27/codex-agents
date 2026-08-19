@@ -1,6 +1,6 @@
-# TimescaleDB API Reference
+# TimescaleDB API reference
 
-## Deprecated → New
+## Deprecated and replacement APIs
 
 ### Parameters
 | Deprecated | New |
@@ -24,7 +24,7 @@
 | `hypertable_compression_settings` | `hypertable_columnstore_settings` |
 | `chunk_compression_settings` | `chunk_columnstore_settings` |
 
-### Stats Functions
+### Statistics functions
 | Deprecated | New |
 |------------|-----|
 | `hypertable_compression_stats()` | `hypertable_columnstore_stats()` |

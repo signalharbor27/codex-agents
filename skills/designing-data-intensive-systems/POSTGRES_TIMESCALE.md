@@ -1,7 +1,7 @@
-Read this when the architecture question has narrowed into Postgres or Timescale specifics.
+Read this reference once an architecture question has narrowed to Postgres or Timescale details.
 
-Rules:
-- prove the workload before recommending Timescale
-- do not assume hypertables, compression, retention, or continuous aggregates by default
-- validate migrations with row-count checks, application-level behavior checks, and rollback planning
-- keep Postgres table design tied to actual access patterns, not generic normalization dogma
+Follow these rules:
+- Show that the workload fits before recommending Timescale.
+- Treat hypertables, compression, retention, and continuous aggregates as choices, not defaults.
+- Validate migrations with row-count checks and application behavior checks, and plan the rollback.
+- Base Postgres table design on actual access patterns rather than generic normalization rules.

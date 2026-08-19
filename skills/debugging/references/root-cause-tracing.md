@@ -1,4 +1,4 @@
-# Root-Cause Tracing
+# Root-cause tracing
 
 Load this when a bad value or state must be followed through several callers or components.
 

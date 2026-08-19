@@ -7,8 +7,7 @@ description: "Use when Rust ownership, borrowing, traits, errors, async, or unsa
 
 ## Overview
 
-Use this skill when Rust-specific constraints change what good design looks like.
-Keep the entrypoint focused on pressure and route idioms to references.
+Apply this modifier when Rust's ownership, type, error, async, or unsafe rules materially constrain the design. Keep generic implementation work in the primary skill and load only the Rust reference needed for the current pressure.
 
 ## When to Use
 
@@ -24,11 +23,11 @@ Keep the entrypoint focused on pressure and route idioms to references.
 
 ## Minimal Workflow
 
-1. Inspect the current API and call sites.
-2. State the Rust-specific pressure.
-3. Prefer the simplest safe shape that keeps invariants obvious.
-4. Name the soundness, ergonomics, and API-stability tradeoffs.
-5. For guidance or review, finish with the recommended API or ownership shape, material tradeoffs, and verification needed.
+1. Inspect the current API, call sites, owned and borrowed data, error surface, and repository conventions.
+2. State the Rust-specific pressure: ownership, lifetime coupling, trait shape, state modeling, async behavior, or an unsafe boundary.
+3. Compare safe shapes that keep the invariants explicit, then prefer the one with the simplest ownership story.
+4. Make soundness, ergonomics, and API-stability tradeoffs explicit where they differ.
+5. For guidance or review, finish with the recommended API or ownership shape, the material tradeoffs, and the compiler, test, doctest, or lint evidence needed.
 6. During implementation, apply these Rust constraints as a modifier inside the primary `engineering` loop and use its fresh-verification stop condition.
 
 ## Reference Routing
@@ -38,7 +37,7 @@ Keep the entrypoint focused on pressure and route idioms to references.
 - Read [DOCS.md](DOCS.md) for docs and doctests.
 - Read [SSR.md](SSR.md) when a Rust refactor spans many sites and rust-analyzer structural search and replace is safer than manual edits.
 
-## Failure Modes
+## Failure modes
 
 - Importing patterns from other languages without Rust-specific justification
 - Hiding lifetime or ownership coupling behind “ergonomic” APIs

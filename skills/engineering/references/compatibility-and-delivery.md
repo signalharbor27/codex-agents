@@ -1,8 +1,8 @@
-# Compatibility and Delivery
+# Compatibility and delivery
 
 Load this for public contracts, SDK/schema changes, mixed-version deploys, migrations, rollout, or rollback.
 
-## Find the Observable Contract
+## Find the observable contract
 
 Inventory consumers and persisted artifacts before changing:
 
@@ -13,7 +13,7 @@ Inventory consumers and persisted artifacts before changing:
 
 Classify the change as additive, breaking, or ambiguous. Prefer additive evolution when consumers cannot move atomically.
 
-## Keep Checkpoints Green
+## Keep checkpoints green
 
 For a wide change, use expand/migrate/contract:
 
@@ -25,7 +25,7 @@ For a wide change, use expand/migrate/contract:
 
 For schema changes, distinguish branch-local migration cleanup from migrations already applied to shared environments. Shared history is append-only unless an explicitly approved repair says otherwise.
 
-## Delivery Evidence
+## Delivery evidence
 
 - focused compatibility or migration test;
 - mixed-version or old-data read proof where relevant;
@@ -33,11 +33,11 @@ For schema changes, distinguish branch-local migration cleanup from migrations a
 - required config, secret, worker, queue, or runbook step;
 - smoke or runtime observation matched to the changed risk.
 
-## Agent Guardrails
+## Agent guardrails
 
 Do not create compatibility shims without an identified consumer and removal condition. Do not run every gate by ritual; select gates that prove the changed contract and repository health.
 
-## Source Basis
+## Source basis
 
 - Jez Humble and David Farley, *Continuous Delivery*: small batches, deployability, rollback, and automated evidence.
 - Martin Fowler, “Parallel Change”: expand-and-contract evolution.

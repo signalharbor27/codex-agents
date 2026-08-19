@@ -1,6 +1,6 @@
-# Effect Language Server Reference
+# Effect language server reference
 
-The Effect Language Service is a TypeScript language plugin that provides Effect-specific diagnostics, completions, refactors, and hover information. It catches errors that TypeScript alone cannot detect.
+The Effect Language Service is a TypeScript plugin with Effect-specific diagnostics, completions, refactors, and hover information. It detects errors that TypeScript alone cannot find.
 
 ## Installation
 
@@ -18,7 +18,7 @@ Add to `tsconfig.json`:
 }
 ```
 
-## Editor Setup
+## Editor setup
 
 ### VSCode
 
@@ -55,7 +55,7 @@ require('lspconfig').tsserver.setup({
                                                 (projectile-project-root)))))
 ```
 
-## Configuration Options
+## Configuration options
 
 Configure in `tsconfig.json` under the plugin entry:
 
@@ -99,7 +99,7 @@ Configure in `tsconfig.json` under the plugin entry:
 | `unnecessaryFlatMap` | ✓ | Detects flatMap that could be map |
 | `unnecessaryMap` | ✓ | Detects map with identity function |
 
-### Quick Info
+### Quick info
 
 | Feature | Default | Description |
 |---------|---------|-------------|
@@ -113,7 +113,7 @@ Configure in `tsconfig.json` under the plugin entry:
 | `durationStrings` | ✓ | Auto-complete Duration.decode strings |
 | `brands` | ✓ | Auto-complete Schema brand strings |
 
-### Key Patterns
+### Key patterns
 
 Configure recognized Effect-like patterns:
 
@@ -132,11 +132,11 @@ Configure recognized Effect-like patterns:
 }
 ```
 
-## CLI Tools
+## CLI tools
 
-The language service includes CLI commands for CI/CD integration and development workflows.
+The language service includes CLI commands for development and CI/CD workflows.
 
-### Setup Check
+### Setup check
 
 Verify installation:
 
@@ -144,7 +144,7 @@ Verify installation:
 npx effect-language-service setup
 ```
 
-### Build-Time Diagnostics
+### Build-time diagnostics
 
 Patch TypeScript to run language service diagnostics during `tsc`:
 
@@ -160,7 +160,7 @@ To unpatch:
 npx effect-language-service unpatch
 ```
 
-### Project-Wide Diagnostics
+### Project-wide diagnostics
 
 Run all diagnostics without patching:
 
@@ -169,7 +169,7 @@ npx effect-language-service diagnostics
 npx effect-language-service diagnostics --fix  # Auto-fix where possible
 ```
 
-### Quick Fixes
+### Quick fixes
 
 Apply quick fixes interactively:
 
@@ -177,7 +177,7 @@ Apply quick fixes interactively:
 npx effect-language-service quickfixes
 ```
 
-### Code Generation
+### Code generation
 
 Generate boilerplate from Effect patterns:
 
@@ -185,7 +185,7 @@ Generate boilerplate from Effect patterns:
 npx effect-language-service codegen
 ```
 
-### Project Overview
+### Project overview
 
 Get a summary of Effect usage in your project:
 
@@ -199,7 +199,7 @@ Shows:
 - Layer composition graph
 - Schema definitions
 
-### Layer Information
+### Layer information
 
 Analyze Layer dependencies:
 
@@ -208,7 +208,7 @@ npx effect-language-service layerinfo
 npx effect-language-service layerinfo --graph  # Output as graph
 ```
 
-## Common Diagnostics
+## Common diagnostics
 
 ### Floating Effect
 
@@ -222,7 +222,7 @@ yield* Effect.succeed(42)
 await Effect.runPromise(Effect.succeed(42))
 ```
 
-### Missing Requirements
+### Missing requirements
 
 ```typescript
 // ERROR: UserService is required but not provided
@@ -231,7 +231,7 @@ const program = UserService.findById(id)
 const MainLive = Layer.provide(program, UserService.Default)
 ```
 
-### Yield Non-Effect
+### Yield non-Effect
 
 ```typescript
 // ERROR: Yielding a non-Effect value
@@ -241,7 +241,7 @@ yield* Promise.resolve(42)
 yield* Effect.promise(() => Promise.resolve(42))
 ```
 
-### Forbidden Tags
+### Forbidden tags
 
 ```typescript
 // ERROR: "Error" is a forbidden error tag (too generic)
@@ -256,19 +256,19 @@ class UserNotFoundError extends Schema.TaggedError<UserNotFoundError>()(
 
 ## Troubleshooting
 
-### Language Service Not Loading
+### Language service not loading
 
 1. Ensure `typescript` is in devDependencies (not just dependencies)
 2. Restart the TypeScript server (VSCode: Cmd+Shift+P → "TypeScript: Restart TS Server")
 3. Verify workspace TypeScript is selected
 
-### Diagnostics Not Appearing
+### Diagnostics not appearing
 
 1. Check `tsconfig.json` plugin configuration
 2. Ensure the file is included in the TypeScript project
 3. Check for `"diagnostics": { "allEnabled": false }` in config
 
-### Performance Issues
+### Performance issues
 
 For large codebases, disable expensive diagnostics:
 
