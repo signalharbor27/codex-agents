@@ -101,9 +101,9 @@ Flag a finding only when it improves one of those principles with evidence. Do n
 
 ## Upstream prevention
 
-Before finalizing, classify important findings as pre-existing debt, regression from current changes, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, repo-doc candidate, or memory candidate.
+Before finalizing, classify important findings as pre-existing debt, regression from current changes, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, or repo-doc candidate.
 If a producer skill should have prevented a repeated or high-cost issue, propose the smallest skill/reference update instead of expanding this review skill.
-Do not auto-edit memory, repo docs, or skills unless the user asked for that mutation.
+Do not auto-edit repo docs or skills unless the user asked for that mutation.
 
 ## Validation
 

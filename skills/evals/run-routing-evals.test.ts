@@ -5,6 +5,9 @@ import { join } from "node:path"
 
 import {
   collectSubprocess,
+  codexExecArgs,
+  parseArgs,
+  validateCase,
   compareResult,
   formatSkillCatalogLine,
   hasExactSkillInvocation,
@@ -247,4 +250,45 @@ test("the surface check reports rg execution failures", async () => {
   } finally {
     await rm(directory, { recursive: true, force: true })
   }
+})
+
+
+describe("eval model selection", () => {
+  test("defaults to deployed model and accepts explicit comparison runs", () => {
+    const defaults = parseArgs(["dry-run"])
+    expect(defaults.model).toBe("gpt-6-astra")
+    expect(defaults.effort).toBe("high")
+    const comparison = parseArgs(["dry-run", "--model", "gpt-5.6-sol", "--effort", "xhigh"])
+    const args = codexExecArgs("/tmp/example", "task", comparison.model, comparison.effort)
+    expect(args).toContain("gpt-5.6-sol")
+    expect(args).toContain('model_reasoning_effort="xhigh"')
+    expect(args).toContain("read-only")
+  })
+  test("guards live calls and rejects config injection", () => {
+    expect(() => parseArgs(["live", "--case", "routine-refactor"])).toThrow("--allow-live")
+    expect(() => parseArgs(["live", "--allow-live"])).toThrow("requires --case")
+    expect(() => parseArgs(["dry-run", "--effort", 'high" bad=true'])).toThrow("invalid reasoning")
+    expect(() => parseArgs(["dry-run", "--model", "model with spaces"])).toThrow("invalid model")
+  })
+})
+
+describe("adaptive review contract", () => {
+  const validate = (entry: RoutingCase) => validateCase(entry, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(fixture.explicit_only_skills), resultSchema)
+  test("allows local coupled review and independent tracks without an agent quota", () => {
+    for (const id of ["small-coupled-review", "independent-review-tracks", "single-track-read-only-review"]) {
+      expect(validate(fixture.cases.find(entry => entry.id === id)!)).toEqual([])
+    }
+  })
+  test("rejects missing coverage accounting and conflicting delegation", () => {
+    const entry = structuredClone(fixture.cases.find(entry => entry.id === "small-coupled-review")!)
+    entry.required_actions = entry.required_actions.filter(action => action !== "account-for-all-review-topics")
+    expect(validate(entry)).toContain("cases[0] adaptive review must account for all review topics")
+    entry.required_actions.push("delegate-independent-tracks")
+    expect(validate(entry)).toContain("cases[0] coupled review cannot require independent delegation")
+  })
+  test("rejects obsolete fixed reviewer quotas", () => {
+    const entry = structuredClone(fixture.cases.find(entry => entry.id === "small-coupled-review")!)
+    entry.required_actions.push("launch-exactly-eight-distinct-read-only-subagents")
+    expect(validate(entry)).toContain("cases[0] references unknown action launch-exactly-eight-distinct-read-only-subagents")
+  })
 })

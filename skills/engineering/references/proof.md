@@ -26,7 +26,9 @@ Prefer existing repository tests and commands. Test through public or stable int
 
 ## Completion
 
-Run the focused proof, then the smallest relevant surrounding gate. Read the current output and inspect the final diff. Report exactly what passed, what was not proved, and any residual operational validation.
+Run focused proof and the smallest required surrounding checks. Read the output and inspect the final diff. Reuse current-turn evidence while the tested code and relevant state remain unchanged. Repeat or broaden checks only for new edits, failures, changed state, or unresolved risks. Report what passed and any material proof gaps.
+
+An existing reproduction, replay, or runtime observation may supply the regression signal. Add a persistent test when it adds durable protection; avoid checks that merely repeat implementation details.
 
 ## Source basis
 

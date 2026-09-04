@@ -30,10 +30,10 @@ Design skills that route predictably, disclose only the relevant detail, and mak
 4. Give each ordered step a checkable completion criterion. Replace vague endpoints such as "understand the code" with evidence the agent can observe.
 5. Preserve existing guarantees when replacing a skill, script, or check unless one is explicitly retired and justified.
 6. Keep the entrypoint small. For new skills, aim for about 100 lines when practical. Reserve strict absolutes for safety, permissions, honesty, verification, output contracts, and explicit user rules.
-7. For GPT-5.6, start with the smallest prompt that passes representative evals. State outcomes, evidence, important constraints or permissions, and required output; add process only when order is necessary or an eval exposes a gap.
+7. Start with the smallest prompt that passes representative evals on the deployed model. State outcomes, evidence, important constraints or permissions, and required output; add process only when order is necessary or an eval exposes a gap.
 8. Keep each meaning in one authoritative place. Apply the sentence-level no-op test and delete instructions that do not change routing, execution, or completion behavior.
 9. Test routing, execution, completion, and output shape with representative prompts against the deployed model and configuration.
-10. Before declaring a skill change complete, run the skill-surface check and selected behavioral evals fresh. Read their actual output.
+10. Before declaring a skill change complete, parse frontmatter and run the repository's skill-surface check and selected behavioral evals. For this skill repository, use `skills/evals/check-skill-surface.sh`. Read current results; report unavailable checks or live-eval blockers without claiming behavioral success.
 11. Merge or delete overlapping skills instead of preserving every niche router.
 
 ## Reference Routing

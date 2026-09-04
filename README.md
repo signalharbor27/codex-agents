@@ -1,6 +1,6 @@
 # Codex skills
 
-This repository is the source of Q's global Codex operating contract, software-engineering skills, and custom subagent profiles. The configuration targets GPT-5.6 SOL at `xhigh`.
+Q's global Codex instructions, engineering skills, and custom agents. Main model and evaluation default: GPT-6 Astra at `high`. Custom agents set their own models and reasoning efforts.
 
 Route each job to one primary skill. Add a domain modifier or reference only when evidence from the task requires it.
 
@@ -70,15 +70,14 @@ The concise references synthesize established work including Hunt and Thomas, Br
 
 [AGENTS.md](AGENTS.md) defines the global contract rather than repository-specific workflow. Skills own workflows; `AGENTS.md` owns safety, permissions, honesty, scope, delegation, verification, and Git boundaries.
 
-After changing it, sync it byte-for-byte to the user instruction source:
+Codex discovers global instructions from `$CODEX_HOME/AGENTS.md`, normally
+`~/.codex/AGENTS.md`. Q's `~/.codex/AGENTS.md` links to `~/.agents/AGENTS.md`,
+which links to this repository's `AGENTS.md`. Edits here therefore update the
+global source immediately. Verify the links before editing; on another machine,
+sync the approved file and compare bytes. Start a new Codex task to load updates.
 
-```text
-~/.agents/AGENTS.md
-```
-
-Codex CLI discovers global instructions from `$CODEX_HOME/AGENTS.md`, normally
-`~/.codex/AGENTS.md`. Keep that path as a symlink to `~/.agents/AGENTS.md` so
-the repository file, the user source, and the Codex discovery path cannot drift.
+Global defaults use short, telegram-style output. They preserve required evidence,
+existing authorization, and explicit boundaries for Git and shared state.
 
 ## Custom agents
 
@@ -86,27 +85,33 @@ Installable profiles live in [agents](agents). Current Codex releases discover
 these standalone files automatically. [agents/registry.toml](agents/registry.toml)
 therefore contains shared agent settings only.
 
-- `fast_reviewer`: fast mechanical evidence
-- `reviewer`: standard contract and correctness review
-- `oracle_reviewer`: subtle or high-consequence judgment
-- `librarian`: version-aware documentation and current-source research
-- `verifier`: fresh local command evidence after implementation
+- `fast_reviewer`: `gpt-5.6-luna` / `xhigh`, mechanical evidence
+- `reviewer`: `gpt-6-astra` / `medium`, standard correctness and contracts
+- `oracle_reviewer`: `gpt-6-astra` / `xhigh`, difficult cross-system judgment
+- `librarian`: `gpt-5.6-luna` / `xhigh`, external documentation and research
+- `verifier`: `gpt-5.6-terra` / `medium`, command verification
 
 The main agent retains scope, approvals, write coordination, synthesis, and the completion claim. Each subagent receives a bounded brief and returns evidence for the main agent to judge.
 
-Install the profiles:
+Install approved profiles and verify each copy. Explicit profile settings override
+the parent model and effort; changing the main model does not update these roles.
 
 ```bash
-CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-install -d "$CODEX_HOME/agents"
+codex_profile_root="${CODEX_HOME:-$HOME/.codex}"
+install -d "$codex_profile_root/agents"
 install -m 0644 \
   agents/fast_reviewer.toml \
   agents/librarian.toml \
   agents/oracle_reviewer.toml \
   agents/reviewer.toml \
   agents/verifier.toml \
-  "$CODEX_HOME/agents/"
+  "$codex_profile_root/agents/"
+for agent in fast_reviewer librarian oracle_reviewer reviewer verifier; do
+  cmp "agents/$agent.toml" "$codex_profile_root/agents/$agent.toml" || exit 1
+done
 ```
+
+Start a new Codex task after installation and verify the exposed role settings.
 
 Merge only the shared settings from [agents/registry.toml](agents/registry.toml)
 into the existing `$CODEX_HOME/config.toml`; do not append a second `[agents]`
@@ -133,17 +138,18 @@ The local suite checks the skill inventory and behavior contract:
 - one primary skill, exact modifiers, and exact disclosed references
 - representative routine, pressure, debugging, testing, review, improve, domain, and handoff routes
 - the adaptive review delegation contract
-- guarded optional GPT-5.6 SOL `xhigh` live classification
+- guarded live routing classification, defaulting to GPT-6 Astra / `high`
+- isolated execution cases for authorization, skill citations, proof reuse, and continuation
 
 Run:
 
 ```bash
 bash skills/evals/check-skill-surface.sh
-bun test skills/evals/run-routing-evals.test.ts
+bun test skills/evals
 bun skills/evals/run-routing-evals.ts dry-run
 ```
 
-Live model evaluation remains opt-in. It requires an explicit case or `--all` together with `--allow-live`; [skills/evals/README.md](skills/evals/README.md) documents the guarded runner.
+Live evaluation requires `--allow-live` and an explicit case or `--all`. Model and effort overrides support labeled comparisons. Routing classification proves selection; execution cases inspect actual artifacts and tool activity. Scripted continuation does not prove mid-turn steering. See [the eval README](skills/evals/README.md) for commands and limits.
 
 ## Prompt design basis
 
@@ -155,7 +161,7 @@ Live model evaluation remains opt-in. It requires an explicit case or `--all` to
 
 Current agent-behavior authority:
 
-- [OpenAI GPT-5.6 Sol prompting guidance](https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6)
+- [OpenAI GPT-6 Astra guidance](https://developers.openai.com/api/docs/guides/latest-model)
 - [OpenAI Multi-agent deployment guidance](https://developers.openai.com/api/docs/guides/deployment-checklist#use-multi-agent-for-parallel-work)
 - [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
 - [Codex `AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md)

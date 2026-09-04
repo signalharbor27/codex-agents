@@ -29,11 +29,11 @@ Diagnose weak, redundant, brittle, or low-signal tests across a repository or su
 2. Before recommending any removal, inventory incident and contract provenance.
 3. Find the highest-cost test problems: brittle internals, duplicate coverage, mock theater, slow low-signal flows, and missing seam-level proof.
 4. Compare the current suite against a simpler shape: boundary-focused tests, public interfaces, and cheap trustworthy signals.
-5. Classify findings as pre-existing test debt, regression from the current change, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, or repo-doc/memory candidate.
+5. Classify findings as pre-existing test debt, regression from the current change, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, or repo-doc candidate.
 6. For large repos, split evidence gathering by subsystem or test layer and use subagents for bounded independent review tracks.
 7. Write a dependency-ordered plan that identifies what to keep, remove, rewrite, and add. Each change must name the behavior or cost it addresses and how to verify the new suite shape.
 8. Keep the review and plan in chat unless the user explicitly requests or has already authorized a durable target-repository plan file.
-9. Pressure-test the draft before finalizing it. Keep one approval inline. Load the dependency-frontier grilling reference only when the user asks for an interactive interview or several consequential, user-owned decisions depend on each other.
+9. Pressure-test the draft before finalizing it. Handle a single unresolved approval inline; do not ask again for settled decisions. Load the dependency-frontier grilling reference only when the user asks for an interactive interview or several consequential, user-owned decisions depend on each other.
 10. State at least one rejected alternative when the tradeoff is non-trivial, especially when removing broad suites or end-to-end coverage.
 
 ## Output contract
