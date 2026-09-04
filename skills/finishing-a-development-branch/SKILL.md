@@ -7,7 +7,7 @@ description: "Close out completed branch work with an explicit integration choic
 
 ## Overview
 
-Close a branch-based task by verifying its state and letting the user choose what happens next. Preserve the work until that choice explicitly authorizes cleanup.
+Verify the branch state and carry out the authorized integration choice. Ask only when the choice is still open. Preserve work until cleanup is explicitly authorized.
 
 ## When to Use
 
@@ -22,13 +22,13 @@ Close a branch-based task by verifying its state and letting the user choose wha
 ## Minimal Workflow
 
 1. Inspect the branch, worktree, dirty state, commits, and relevant checks. Do not present an integration option as ready unless its required checks have passed.
-2. Present only viable choices: merge, open a PR, keep the branch, or discard it. State what each choice will change.
-3. Wait for an explicit choice before changing branch state. Treat discard and cleanup as destructive actions that need separate confirmation.
+2. Use the integration choice already authorized by the user. If none is settled, present only viable choices: merge, open a PR, keep the branch, or discard it. State what each would change.
+3. Proceed once the selected action and required checks are authorized and satisfied. Do not ask the user to repeat a choice. Discard and cleanup require their own explicit authorization; a merge or PR request does not grant it.
 4. Preserve the worktree for PR and keep-as-is choices. Finish when the selected action is complete and the resulting branch and worktree state are verified.
 
 ## Reference Routing
 
-- Run the repository's claim-matched proof fresh before presenting completion choices.
+- Reuse current-turn proof for unchanged code at the verified head and relevant state. Run missing checks or repeat stale evidence when code, state, or integration requirements change.
 - Use `describe-pr` when the next step is writing or updating the PR summary.
 
 ## Failure modes

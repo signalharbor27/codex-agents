@@ -30,8 +30,8 @@ Diagnosis-only requests stop at evidence; fix requests continue through the smal
 4. Locate the failing boundary. Rank a small set of falsifiable hypotheses and test the highest-signal one with one variable changed.
 5. Trace the cause backward until it explains both the failure and the working comparison. State the violated behavior or contract, not merely the crashing line.
 6. If the request is diagnosis-only, stop with evidence, ruled-out hypotheses, and the next discriminating check.
-7. If a fix is authorized, add or preserve a regression signal at the observable seam, make the smallest source-level repair, and avoid unrelated mitigation or redesign.
-8. Run the red-capable loop, relevant surrounding checks, and any claim-matched runtime observation fresh. Remove probes and throwaway harnesses before completion.
+7. If a fix is authorized, use the existing reproduction or add a regression signal at the observable seam. Add a persistent test when it gives durable protection beyond existing evidence. Make the smallest repair; avoid unrelated mitigation or redesign.
+8. Run the reproduction, required surrounding checks, and runtime observations needed to prove the fix. After they pass, repeat or broaden checks only for new edits, failures, changed relevant state, or unresolved risks. Remove temporary probes and harnesses before completion.
 
 ## Reference Routing
 

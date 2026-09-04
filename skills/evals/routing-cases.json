@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "engineering_skills": [
     "debugging",
     "describe-pr",
@@ -42,7 +42,7 @@
       "primary_skill": "grill-me",
       "expected_modifier_skills": [],
       "expected_references": ["grill-me/references/frontier.md"],
-      "required_actions": ["resolve-facts-before-asking", "ask-dependency-frontier-round", "preserve-stable-question-numbering", "keep-task-read-only", "require-confirmation-before-transition"],
+      "required_actions": ["resolve-facts-before-asking", "ask-dependency-frontier-round", "preserve-stable-question-numbering", "keep-task-read-only", "recap-decisions-before-transition"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "none",
@@ -56,7 +56,7 @@
       "primary_skill": "grill-me",
       "expected_modifier_skills": [],
       "expected_references": ["grill-me/references/frontier.md"],
-      "required_actions": ["resolve-facts-before-asking", "ask-dependency-frontier-round", "preserve-stable-question-numbering", "keep-task-read-only", "require-confirmation-before-transition"],
+      "required_actions": ["resolve-facts-before-asking", "ask-dependency-frontier-round", "preserve-stable-question-numbering", "keep-task-read-only", "recap-decisions-before-transition"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "none",
@@ -70,7 +70,7 @@
       "primary_skill": "grill-me",
       "expected_modifier_skills": [],
       "expected_references": ["grill-me/references/frontier.md"],
-      "required_actions": ["resolve-facts-before-asking", "ask-dependency-frontier-round", "preserve-stable-question-numbering", "keep-task-read-only", "require-confirmation-before-transition"],
+      "required_actions": ["resolve-facts-before-asking", "ask-dependency-frontier-round", "preserve-stable-question-numbering", "keep-task-read-only", "recap-decisions-before-transition"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "none",
@@ -84,7 +84,7 @@
       "primary_skill": "grill-me",
       "expected_modifier_skills": [],
       "expected_references": ["grill-me/references/frontier.md"],
-      "required_actions": ["resolve-facts-before-asking", "ask-exactly-one-question", "preserve-stable-question-numbering", "keep-task-read-only", "require-confirmation-before-transition"],
+      "required_actions": ["resolve-facts-before-asking", "ask-exactly-one-question", "preserve-stable-question-numbering", "keep-task-read-only", "recap-decisions-before-transition"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "none",
@@ -98,7 +98,7 @@
       "primary_skill": "grill-me",
       "expected_modifier_skills": [],
       "expected_references": ["grill-me/references/frontier.md"],
-      "required_actions": ["narrow-oversized-grill", "keep-task-read-only", "require-confirmation-before-transition"],
+      "required_actions": ["narrow-oversized-grill", "keep-task-read-only", "recap-decisions-before-transition"],
       "expectations": {
         "first_action": "inspect-current-state",
         "mutation": "none",
@@ -378,7 +378,7 @@
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
       "expected_references": [],
-      "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "verify-before-completion"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "requested-repo-writes",
@@ -392,7 +392,7 @@
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
       "expected_references": [],
-      "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "keep-standards-and-intent-separate", "trace-each-material-intent-requirement", "verify-before-completion"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-standards-and-intent-separate", "trace-each-material-intent-requirement", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "requested-repo-writes",
@@ -406,7 +406,7 @@
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
       "expected_references": [],
-      "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "verify-before-completion"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "requested-repo-writes",
@@ -420,7 +420,35 @@
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
       "expected_references": [],
-      "required_actions": ["pin-review-scope", "launch-exactly-eight-distinct-read-only-subagents", "keep-task-read-only"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
+      "id": "small-coupled-review",
+      "prompt": "Review this small WIP diff: one pure function and its sole caller changed together. All evidence fits in one context. Cover the material review topics and return findings only.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-coupled-review-local", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
+      "id": "independent-review-tracks",
+      "prompt": "Review this WIP diff with two independent changes: an isolated SQL migration and an unrelated browser accessibility fix. Each is large enough for a separate specialist context. Cover the material review topics and return findings only.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-independent-tracks", "keep-task-read-only"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "none",
@@ -619,7 +647,7 @@
       "required_actions": ["verify-branch-state", "require-explicit-branch-integration-choice"],
       "expectations": {
         "first_action": "verify-branch-state",
-        "mutation": "after-user-choice",
+        "mutation": "none",
         "question": "required-before-unapproved-action",
         "stop": "present-options"
       }

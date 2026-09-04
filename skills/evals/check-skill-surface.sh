@@ -66,7 +66,7 @@ require_match "This skill owns inspection, implementation, proof, and the comple
 require_match "routine changes need no reference" \
   "$engineering_skill" "engineering must preserve pressure-based progressive disclosure"
 
-stale_prompt_pattern='GPT-5\.5|gpt-5\.5|Amp GPT|Context7|140-320|software-engineering-flow|writing-software|testing-software|systematic-debugging|verification-before-completion'
+stale_prompt_pattern='GPT-5\.5|gpt-5\.5|currently means GPT-5\.6|For GPT-5\.6, start|Amp GPT|Context7|140-320|software-engineering-flow|writing-software|testing-software|systematic-debugging|verification-before-completion'
 reject_matches "$stale_prompt_pattern" "found stale model, tool, path, or retired skill vocabulary in active guidance" \
   "$ROOT" "$REPO_ROOT/AGENTS.md" "$REPO_ROOT/README.md" --glob '*.md' --glob '!evals/**'
 

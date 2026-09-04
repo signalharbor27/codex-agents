@@ -24,7 +24,7 @@ Its interview procedure is a local reference. An existing primary skill can use 
 ## Minimal Workflow
 
 1. Read [the dependency-frontier grilling procedure](references/frontier.md) before asking a question or taking any other task action.
-2. Follow that procedure as the sole behavioral authority for this invocation and stop at its confirmation gate.
+2. Follow the procedure within the user's authority. End a standalone interview with settled decisions. If another primary skill loaded it during authorized work, resume that work when decisions are settled; ask for confirmation only when unresolved assumptions or authority require it.
 
 ## Reference Routing
 

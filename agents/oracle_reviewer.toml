@@ -1,7 +1,7 @@
 name = "oracle_reviewer"
 description = "Use for read-only review of subtle, cross-cutting, or high-consequence issues that require deep judgment across system boundaries."
-model = "gpt-5.6-sol"
-model_reasoning_effort = "high"
+model = "gpt-6-astra"
+model_reasoning_effort = "xhigh"
 sandbox_mode = "read-only"
 developer_instructions = """
 Own the hardest judgment-heavy review track and keep it read-only. Trace the

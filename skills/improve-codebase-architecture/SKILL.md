@@ -34,12 +34,12 @@ Diagnose structural problems in a codebase or subsystem, then turn the evidence 
 5. Compare the current shape against simpler, deeper modules with clearer interfaces; use module/interface/seam/depth/leverage/locality vocabulary and the deletion test.
 6. Treat a one-adapter seam as hypothetical unless it hides real external complexity, policy variation, or a second adapter such as tests.
 7. Judge agent-friendliness by local reasoning and bounded evidence handoff. Trace real entrypoints through domain ownership, deep module interfaces, explicit side effects, and trustworthy proof seams. Treat the engineering references below as authoritative for these design concepts rather than repeating them here.
-8. Classify findings as pre-existing debt, regression from the current change, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, or repo-doc/memory candidate.
+8. Classify findings as pre-existing debt, regression from the current change, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, or repo-doc candidate.
 9. For large repos or monorepos, split evidence gathering by subsystem and use subagents for bounded independent review tracks such as frontend, backend, shared packages, or build and CI.
 10. Write a dependency-ordered plan. Each phase must name its scope, expected payoff, prerequisites, preserved behavior, and verification.
 11. Keep the review and plan in chat unless the user explicitly requests or has already authorized a durable target-repository plan file.
 12. Offer to record terms in `CONTEXT.md` or tradeoffs in ADRs only when they will guide future work.
-13. Pressure-test the draft before finalizing it. Keep one approval inline. Load the dependency-frontier grilling reference only when the user asks for an interactive interview or several consequential, user-owned decisions depend on each other.
+13. Pressure-test the draft before finalizing it. Handle a single unresolved approval inline; do not ask again for settled decisions. Load the dependency-frontier grilling reference only when the user asks for an interactive interview or several consequential, user-owned decisions depend on each other.
 14. State what must remain unchanged, what should wait, and at least one rejected alternative when the tradeoff is non-trivial.
 
 ## Output contract

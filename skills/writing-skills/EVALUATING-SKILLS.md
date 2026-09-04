@@ -1,6 +1,6 @@
 Read this reference to validate whether a skill improves agent behavior.
 
-Start with the smallest prompt that passes representative routing and behavior checks. Test the deployed model and configuration. For this repository, that currently means GPT-5.6 (`gpt-5.6` routes to `gpt-5.6-sol`).
+Start with the smallest prompt that passes representative routing and behavior checks. Test the deployed model and configuration. This repository defaults to GPT-6 Astra at `high`. Record model and reasoning effort with each result; use explicit overrides for comparisons with other configurations.
 
 Use representative prompts to evaluate:
 - routing: does the right skill fire?
@@ -30,4 +30,6 @@ Use the local suite:
 - `skills/evals/check-skill-surface.sh`
 - `skills/evals/routing-cases.json`
 
-Structural checks support behavioral evals but do not replace them. Prefer a small eval set that catches real failures over an oversized suite of theatrical pressure tests.
+Routing classification checks skill selection and intended actions. It does not prove execution, permission handling, verification stopping, or response to steering. Use bounded execution cases for those claims: authorized continuation, a real approval boundary with an exact skill citation, sufficient proof without redundant checks, and a new requirement that preserves the original objective. Label between-turn continuation separately from actual mid-turn steering.
+
+Structural checks support behavioral evals but do not replace them. Prefer a small set that catches real failures. Require explicit live selection; keep execution fixtures isolated from the working repository and shared services.

@@ -7,8 +7,8 @@ const SCRIPT_DIR = import.meta.dir
 const CASES_PATH = join(SCRIPT_DIR, "routing-cases.json")
 const RESULT_SCHEMA_PATH = join(SCRIPT_DIR, "routing-result.schema.json")
 const DEFAULT_SKILLS_ROOT = resolve(SCRIPT_DIR, "..")
-const LIVE_MODEL = "gpt-5.6-sol"
-const LIVE_REASONING_EFFORT = "xhigh"
+export const LIVE_MODEL = "gpt-6-astra"
+export const LIVE_REASONING_EFFORT = "high"
 const LIVE_TIMEOUT_MS = 120_000
 const TERMINATION_GRACE_MS = 250
 const SETSID = process.platform === "win32" ? null : Bun.which("setsid")
@@ -72,6 +72,8 @@ type CliOptions = {
   allowLive: boolean
   quiet: boolean
   skillsRoot: string
+  model: string
+  effort: string
 }
 
 const TOP_LEVEL_KEYS = [
@@ -106,13 +108,13 @@ function usage(): never {
   console.error(`Usage:
   bun skills/evals/run-routing-evals.ts validate [--skills-root PATH] [--quiet]
   bun skills/evals/run-routing-evals.ts dry-run [--case ID]
-  bun skills/evals/run-routing-evals.ts live (--case ID | --all) --allow-live
+  bun skills/evals/run-routing-evals.ts live (--case ID | --all) --allow-live [--model MODEL] [--effort EFFORT]
 
 Live mode runs codex exec with ${LIVE_MODEL} at ${LIVE_REASONING_EFFORT} in a read-only sandbox.`)
   process.exit(2)
 }
 
-function parseArgs(argv: string[]): CliOptions {
+export function parseArgs(argv: string[]): CliOptions {
   const mode = argv.shift()
   if (mode !== "validate" && mode !== "dry-run" && mode !== "live") usage()
   const options: CliOptions = {
@@ -121,16 +123,21 @@ function parseArgs(argv: string[]): CliOptions {
     allowLive: false,
     quiet: false,
     skillsRoot: DEFAULT_SKILLS_ROOT,
+    model: LIVE_MODEL,
+    effort: LIVE_REASONING_EFFORT,
   }
   while (argv.length > 0) {
     const arg = argv.shift()
     if (arg === "--case") options.caseId = argv.shift() ?? usage()
     else if (arg === "--skills-root") options.skillsRoot = resolve(argv.shift() ?? usage())
+    else if (arg === "--model") options.model = argv.shift() ?? usage()
+    else if (arg === "--effort") options.effort = argv.shift() ?? usage()
     else if (arg === "--all") options.all = true
     else if (arg === "--allow-live") options.allowLive = true
     else if (arg === "--quiet") options.quiet = true
     else usage()
   }
+  validateModelOptions(options.model, options.effort)
   if (options.caseId && options.all) usage()
   if (mode === "live" && !options.caseId && !options.all) {
     throw new Error("live mode requires --case ID or --all")
@@ -139,6 +146,13 @@ function parseArgs(argv: string[]): CliOptions {
     throw new Error("live mode requires --allow-live because it makes external model calls")
   }
   return options
+}
+
+export function validateModelOptions(model: string, effort: string): void {
+  if (!/^[a-z0-9][a-z0-9._-]*$/i.test(model)) throw new Error("invalid model identifier")
+  if (!["low", "medium", "high", "xhigh", "max", "ultra"].includes(effort)) {
+    throw new Error("invalid reasoning effort")
+  }
 }
 
 export async function readJson(path: string): Promise<unknown> {
@@ -488,7 +502,7 @@ function strings(value: unknown): string[] | null {
     : null
 }
 
-function validateCase(
+export function validateCase(
   value: unknown,
   index: number,
   skills: Set<string>,
@@ -564,9 +578,15 @@ function validateCase(
     if (!/(diff|wip|commit|branch|pr\b)/i.test(String(value.prompt))) {
       errors.push(`${label} review-and-simplify prompt must pin a diff-like scope`)
     }
-    const broad = caseActions.includes("launch-exactly-eight-distinct-read-only-subagents")
+    const broad = caseActions.includes("select-minimum-useful-reviewers")
     const single = caseActions.includes("honor-single-track-scope")
-    if (broad === single) errors.push(`${label} review must be broad-eight or explicit single-track`)
+    if (broad === single) errors.push(`${label} review must select adaptive coverage or explicit single-track`)
+    if (broad && !caseActions.includes("account-for-all-review-topics")) {
+      errors.push(`${label} adaptive review must account for all review topics`)
+    }
+    if (caseActions.includes("keep-coupled-review-local") && caseActions.includes("delegate-independent-tracks")) {
+      errors.push(`${label} coupled review cannot require independent delegation`)
+    }
     if (!caseActions.includes("pin-review-scope")) errors.push(`${label} review must pin scope`)
     if (single && !caseActions.includes("keep-task-read-only")) {
       errors.push(`${label} single-track review must remain read-only`)
@@ -585,7 +605,7 @@ async function validateFixture(skillsRoot: string): Promise<ValidatedSuite> {
   const topErrors = validateFixtureTopLevel(fixture)
   if (!isRecord(fixture)) throw new Error(topErrors.join("\n"))
   const errors = [...topErrors, ...linkErrors, ...validateResultSchema(resultSchema)]
-  if (fixture.version !== 4) errors.push("routing fixture version must be 4")
+  if (fixture.version !== 5) errors.push("routing fixture version must be 5")
   const skillSurface = await validateSkillEntrypoints(skillsRoot, actualSkills)
   errors.push(...skillSurface.errors)
   errors.push(...(await validateProgressiveReferences(skillsRoot, fixture.skill_references)))
@@ -754,7 +774,8 @@ export function compareResult(routingCase: RoutingCase, result: RoutingResult): 
   return failures
 }
 
-function codexExecArgs(repoRoot: string, prompt: string): string[] {
+export function codexExecArgs(repoRoot: string, prompt: string, model = LIVE_MODEL, effort = LIVE_REASONING_EFFORT): string[] {
+  validateModelOptions(model, effort)
   const args = [
     "codex",
     "exec",
@@ -765,9 +786,9 @@ function codexExecArgs(repoRoot: string, prompt: string): string[] {
     "--color",
     "never",
     "--model",
-    LIVE_MODEL,
+    model,
     "-c",
-    `model_reasoning_effort="${LIVE_REASONING_EFFORT}"`,
+    `model_reasoning_effort="${effort}"`,
     "--output-schema",
     RESULT_SCHEMA_PATH,
     "--cd",
@@ -823,6 +844,7 @@ export async function terminateSubprocess(
   if (!(await exitsWithin(child, graceMs))) throw new Error(`subprocess ${child.pid} did not exit after SIGKILL`)
 }
 
+export const shutdownCleanups = new Set<() => Promise<void>>()
 let shuttingDown = false
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.on(signal, () => {
@@ -830,7 +852,10 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
     shuttingDown = true
     void Promise.all(
       [...activeChildren].map(([child, processGroup]) => terminateSubprocess(child, processGroup)),
-    ).finally(() => process.exit(signal === "SIGINT" ? 130 : 143))
+    ).finally(async () => {
+      await Promise.allSettled([...shutdownCleanups].map(cleanup => cleanup()))
+      process.exit(signal === "SIGINT" ? 130 : 143)
+    })
   })
 }
 
@@ -872,10 +897,12 @@ async function runLiveCase(
   fixture: RoutingFixture,
   resultSchema: unknown,
   skillsRoot: string,
+  model: string,
+  effort: string,
 ): Promise<{ result: RoutingResult; failures: string[] }> {
   const repoRoot = dirname(skillsRoot)
   const prompt = await buildLivePrompt(routingCase, fixture, skillsRoot)
-  const args = codexExecArgs(repoRoot, prompt)
+  const args = codexExecArgs(repoRoot, prompt, model, effort)
   const child = Bun.spawn({ cmd: args, cwd: repoRoot, stdin: "ignore", stdout: "pipe", stderr: "pipe" })
   const { stdout, stderr, exitCode } = await collectSubprocess(
     child,
@@ -904,10 +931,10 @@ async function main(): Promise<void> {
     for (const routingCase of cases) {
       console.log(JSON.stringify({
         case: routingCase.id,
-        model: LIVE_MODEL,
-        reasoning_effort: LIVE_REASONING_EFFORT,
+        model: options.model,
+        reasoning_effort: options.effort,
         external_call: false,
-        would_execute: codexExecArgs(dirname(options.skillsRoot), "<ROUTING_EVAL_PROMPT>"),
+        would_execute: codexExecArgs(dirname(options.skillsRoot), "<ROUTING_EVAL_PROMPT>", options.model, options.effort),
         contract: {
           primary_skill: routingCase.primary_skill,
           modifier_skills: routingCase.expected_modifier_skills,
@@ -923,11 +950,11 @@ async function main(): Promise<void> {
   let failed = false
   for (const routingCase of cases) {
     try {
-      const { result, failures } = await runLiveCase(routingCase, fixture, resultSchema, options.skillsRoot)
-      if (failures.length === 0) console.log(`PASS ${routingCase.id}`)
+      const { result, failures } = await runLiveCase(routingCase, fixture, resultSchema, options.skillsRoot, options.model, options.effort)
+      if (failures.length === 0) console.log(`PASS ${routingCase.id} model=${options.model} effort=${options.effort}`)
       else {
         failed = true
-        console.error(`FAIL ${routingCase.id}\n- ${failures.join("\n- ")}\nactual ${JSON.stringify(result)}`)
+        console.error(`FAIL ${routingCase.id} model=${options.model} effort=${options.effort}\n- ${failures.join("\n- ")}\nactual ${JSON.stringify(result)}`)
       }
     } catch (error) {
       failed = true
