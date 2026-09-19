@@ -1,6 +1,6 @@
 # Feature shape
 
-Load this for greenfield work, a new integration, or a feature too large for one obvious slice.
+Load this for greenfield work, a new integration, or planning multiple slices and their parallel implementation.
 
 A vertical slice is the smallest retained path from the real entrypoint, through required domain, state, and effect boundaries, to an observable user or contract result and its trustworthy proof. It is an execution and contract-discovery unit, not a mandatory permanent package layout.
 
@@ -19,6 +19,19 @@ A vertical slice is the smallest retained path from the real entrypoint, through
 - Defer optional variants, generalized configuration, and broad polish until the slice exposes a real need.
 
 For a larger feature, order slices by risk and learning, not by technical layer. Each slice should be useful or should retire a named uncertainty while keeping the system green.
+
+## Design for parallel implementation
+
+Consider parallel execution while choosing slice boundaries. Separate implementation blockers from integration dependencies: an agreed interface can unblock parallel coding while end-to-end proof still waits for its implementation. Map those dependencies, identify which work unlocks the rest, and group slices that can proceed together. Refine later slices using what the tracer bullet reveals.
+
+- Give each slice an observable outcome, real entrypoint, prerequisites, owned files or boundaries, shared contracts, acceptance criteria, and proof. Include relevant skill/reference pointers and material failure or rollout constraints in the worker's brief.
+- Assign each shared schema, interface, migration, or domain invariant one owner. Settle contracts and necessary setup before dependent workers start. Coordinate contract changes with affected workers and update their acceptance criteria.
+- Choose concurrent slices with non-overlapping writes and compatible shared assumptions. Serialize conflicting work; keep independent work moving. Do not split one tightly coupled behavior by frontend/backend/test layers or add abstractions just to occupy more agents.
+- Dispatch ready slices together within available capacity. Start newly unblocked work without waiting for unrelated slices. Use the smallest agent set that reduces time to a verified integrated outcome.
+- Workers implement and run focused proof. For substantial delegated slices, use fresh independent acceptance review grounded in the requirements and repository evidence. Use a reviewer for code and contract judgment, and a verifier for command evidence; respect each role's permissions. Verification can overlap unrelated implementation when the tested files and dependencies are stable.
+- The main agent integrates completed slices continuously and checks their callers, wiring, shared invariants, and failure paths. Keep integration-dependent acceptance open until the real wiring is verified. Recheck affected boundaries after integration changes. Finish with review and required verification of the combined system at a known revision or stable working state, including the real end-to-end behavior.
+
+Keep this plan in chat unless a durable plan file is requested or already authorized. Small or inseparable changes can remain one slice with one implementer.
 
 ## Preserve conceptual integrity
 
