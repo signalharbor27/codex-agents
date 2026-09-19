@@ -7,7 +7,7 @@ description: "Use when implementing, refactoring, planning, or researching an un
 
 ## Overview
 
-Build the smallest production-complete change that delivers the requested outcome. This skill owns inspection, implementation, proof, and the completion claim. Keep that loop together; separate planning, testing, or verification producer skills do not share its ownership.
+Build the smallest production-complete change that delivers the requested outcome. The main agent owns the plan, shared contracts, integration, and completion claim. It can delegate implementation and independent verification within this loop; implementation workers use this skill with the relevant domain guidance.
 
 ## When to Use
 
@@ -27,7 +27,7 @@ Build the smallest production-complete change that delivers the requested outcom
 1. Inspect the real entrypoint, current owner, callers, contracts, and existing proof before proposing a shape.
 2. Frame the outcome in observable terms: success evidence, behavior that must remain unchanged, permitted side effects, and the condition that ends the task.
 3. Ask only for unresolved consequential decisions or missing authority. Handle one decision inline; load the grilling reference when several dependent decisions block a safe slice. Retain engineering ownership and resume once decisions are settled and the next action is authorized. Do not reconfirm authority already given.
-4. Start substantial work with a production-shaped tracer bullet: one retained path through the required boundaries to observable behavior and proof. Continue with vertical slices until the requested outcome is complete. A small change may need only one slice.
+4. Start substantial work with a production-shaped tracer bullet: one retained path through the required boundaries to observable behavior and proof. Design the remaining slices for parallel implementation from the outset, with explicit dependencies, shared contracts, ownership, and acceptance criteria. Dispatch independent slices as their prerequisites settle; keep coupled work sequential. Continue until the requested outcome is complete. A small change may need only one slice.
 5. Name only pressures present in the task. Load only the matching reference below before editing; routine changes need no reference.
 6. Keep an internal scope estimate of the boundaries likely to change. Revise it as inspection reveals necessary work; report material scope changes. Routine file choices need no advance approval or narrated file list.
 7. Prefer the existing owner and direct code. Add a boundary only when it hides real complexity, protects a stable contract, or has more than one real implementation; otherwise keep it inline.
@@ -39,7 +39,7 @@ Build the smallest production-complete change that delivers the requested outcom
 ## Reference Routing
 
 - Read [../grill-me/references/frontier.md](../grill-me/references/frontier.md) when inspection reveals several interdependent consequential user-owned decisions that block the next safe slice.
-- Read [references/feature-shape.md](references/feature-shape.md) for greenfield work, a new integration, or a feature too large for one obvious slice.
+- Read [references/feature-shape.md](references/feature-shape.md) for greenfield work, a new integration, or planning multiple slices and their parallel implementation.
 - Read [references/boundary-design.md](references/boundary-design.md) when callers, ownership, trust boundaries, invariant-bearing types, module/API shape, or a proposed abstraction is consequential.
 - Read [references/legacy-change.md](references/legacy-change.md) when behavior is poorly understood, under-tested, tightly coupled, or migration-sensitive.
 - Read [references/state-and-effects.md](references/state-and-effects.md) for money, durable state, external effects, webhooks, jobs, retries, concurrency, or recovery.
