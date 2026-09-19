@@ -34,7 +34,7 @@ Build the smallest production-complete change that delivers the requested outcom
 8. Implement the smallest complete slice. Do not add a hook, defensive branch, fallback, compatibility path, or duplicate representation unless a current caller, applicable failure mode, threat, rollout constraint, or stored-data contract requires it; avoid unrelated cleanup.
 9. Choose the cheapest trustworthy proof through an observable seam. Cover the changed behavior and required surrounding checks. Add persistent tests only when they provide meaningful protection beyond existing evidence. After checks pass, broaden or repeat them only for new edits, failures, changed relevant state, or unresolved risks.
 10. Close only affected contracts and operational artifacts: callers, types, migrations, generated outputs, config, docs, observability, or rollback notes.
-11. Inspect the final diff for scope growth, shallow wrappers, redundant tests, and silent behavior changes. Finish when evidence supports the entire requested outcome and every changed boundary is accounted for. Reuse earlier proof after confirming the tested code and relevant state are unchanged; rerun affected checks otherwise.
+11. Before implementation handoff or an intended commit, apply `review-and-simplify-changes` and finish its review/fix loop on the combined intended diff. Retain ownership of integration and completion. Finish when evidence supports the entire requested outcome and every changed boundary is accounted for. Reuse earlier proof after confirming the tested code and relevant state are unchanged; rerun affected checks otherwise.
 
 ## Reference Routing
 

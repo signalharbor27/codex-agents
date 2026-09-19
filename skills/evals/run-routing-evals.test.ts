@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { chmod, mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises"
+import { chmod, cp, mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -297,6 +297,115 @@ describe("adaptive review contract", () => {
   })
 })
 
+describe("progressive review contract", () => {
+  const entry = (id: string) => fixture.cases.find(candidate => candidate.id === id)!
+  const resultFor = (routingCase: RoutingCase): RoutingResult => ({
+    primary_skill: routingCase.primary_skill,
+    modifier_skills: [...routingCase.expected_modifier_skills],
+    references: [...routingCase.expected_references],
+    actions: [...routingCase.required_actions],
+    ...Object.fromEntries(Object.entries(routingCase.expectations).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
+  } as RoutingResult)
+  const validate = (value: unknown) => validateCase(value, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)
+
+  test("completion and commit cases require review without naming the skill", () => {
+    for (const id of ["implementation-complete-needs-review", "commit-ready-needs-review"]) {
+      const routingCase = entry(id)
+      expect(routingCase.prompt).not.toContain("review-and-simplify-changes")
+      const result = resultFor(routingCase)
+      expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
+      expect(compareResult(routingCase, result)).toEqual([])
+      expect(compareResult(routingCase, { ...result, primary_skill: "engineering", actions: ["verify-before-completion"] })).toContain(
+        "missing required action apply-post-implementation-review",
+      )
+      expect(compareResult(routingCase, { ...result, primary_skill: "engineering" })).toContain(
+        "primary_skill: expected review-and-simplify-changes, got engineering",
+      )
+    }
+  })
+
+  test("an initial pass cannot substitute a delta for the full intended diff", () => {
+    const routingCase = entry("implementation-complete-needs-review")
+    const result = resultFor(routingCase)
+    result.actions = result.actions.filter(action => action !== "review-entire-intended-diff")
+    result.actions.push("review-delta-since-last-snapshot")
+    expect(compareResult(routingCase, result)).toEqual(["missing required action review-entire-intended-diff"])
+  })
+
+  test("a valid follow-up rejects a full repeat and keeps affected context and open findings", () => {
+    const routingCase = entry("follow-up-review-delta")
+    const result = resultFor(routingCase)
+    expect(compareResult(routingCase, result)).toEqual([])
+    expect(compareResult(routingCase, { ...result, actions: [...result.actions, "review-entire-intended-diff"] })).toEqual([
+      "forbidden action review-entire-intended-diff",
+    ])
+    for (const action of ["review-delta-since-last-snapshot", "trace-affected-contracts", "carry-unresolved-findings-forward", "confirm-final-review-coverage"]) {
+      expect(compareResult(routingCase, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([
+        `missing required action ${action}`,
+      ])
+    }
+  })
+
+  test("one explicit local reviewer satisfies minimum reviewer selection", () => {
+    const routingCase = entry("follow-up-review-delta")
+    const result = resultFor(routingCase)
+    result.actions = result.actions.filter(action => action !== "select-minimum-useful-reviewers")
+    result.actions.push("keep-coupled-review-local")
+    expect(compareResult(routingCase, result)).toEqual([])
+  })
+
+  test("missing reviewer selection and arbitrary delegation still fail", () => {
+    const routingCase = entry("follow-up-review-delta")
+    const result = resultFor(routingCase)
+    result.actions = result.actions.filter(action => action !== "select-minimum-useful-reviewers")
+    expect(compareResult(routingCase, result)).toEqual(["missing required action select-minimum-useful-reviewers"])
+    result.actions.push("delegate-independent-tracks")
+    expect(compareResult(routingCase, result)).toEqual(["missing required action select-minimum-useful-reviewers"])
+  })
+
+  test("a missing snapshot cannot pass with assumed incremental coverage", () => {
+    const routingCase = entry("follow-up-review-missing-snapshot")
+    const result = resultFor(routingCase)
+    result.actions = result.actions.filter(action => !["recover-review-snapshot-or-full-scope", "review-entire-intended-diff"].includes(action))
+    result.actions.push("review-delta-since-last-snapshot")
+    expect(compareResult(routingCase, result)).toEqual([
+      "missing required action recover-review-snapshot-or-full-scope",
+      "missing required action review-entire-intended-diff",
+    ])
+  })
+
+  test("slice checks alone cannot close unreviewed combined wiring", () => {
+    const routingCase = entry("combined-slice-review")
+    const result = resultFor(routingCase)
+    result.actions = result.actions.filter(action => action !== "apply-post-implementation-review")
+    expect(compareResult(routingCase, result)).toEqual([])
+    result.actions = result.actions.filter(action => action !== "review-combined-integration")
+    expect(compareResult(routingCase, result)).toEqual(["missing required action review-combined-integration"])
+  })
+
+  test("standalone review remains read-only and delegation loads its own reference", () => {
+    const readOnly = entry("broad-read-only-review")
+    expect(compareResult(readOnly, { ...resultFor(readOnly), mutation: "requested-repo-writes" })).toEqual([
+      "mutation: expected none, got requested-repo-writes",
+    ])
+    const delegated = entry("independent-review-tracks")
+    expect(compareResult(delegated, { ...resultFor(delegated), references: [] })).toEqual([
+      "references: expected review-and-simplify-changes/references/delegated-review.md, got ",
+    ])
+  })
+
+  test("forbidden actions are optional, known, unique, and disjoint from required actions", () => {
+    const routingCase = entry("follow-up-review-delta")
+    expect(validate(routingCase)).toEqual([])
+    expect(validate(entry("broad-read-only-review"))).toEqual([])
+    expect(validate({ ...routingCase, forbidden_actions: "review-entire-intended-diff" })).toContain("cases[0].forbidden_actions must be a string array")
+    expect(validate({ ...routingCase, forbidden_actions: ["review-entire-intended-diff", "review-entire-intended-diff"] })).toContain("cases[0].forbidden_actions must not contain duplicates")
+    expect(validate({ ...routingCase, forbidden_actions: ["unknown-review-action"] })).toContain("cases[0] references unknown action unknown-review-action")
+    expect(validate({ ...routingCase, forbidden_actions: ["review-delta-since-last-snapshot"] })).toContain("cases[0] both requires and forbids action review-delta-since-last-snapshot")
+    expect(validate({ ...routingCase, unexpected: true }).some(error => error.includes("optional forbidden_actions only"))).toBe(true)
+  })
+})
+
 describe("invocation coverage and catalog stress", () => {
   test("all descriptions have positive and near-negative cases; none is a valid route", () => {
     expect(validateInvocationCoverage(fixture)).toEqual([])
@@ -382,4 +491,67 @@ test("CLI validates the exact supplied skill root, including nonstandard and mis
     expect(missing.exitCode).not.toBe(0)
     expect(missing.stdout).not.toContain("Routing eval fixture is valid")
   } finally { await rm(root, { recursive: true, force: true }) }
+})
+
+describe("previous source reference validation", () => {
+  const reference = "review-and-simplify-changes/references/delegated-review.md"
+  const candidateRoot = join(import.meta.dir, "../..")
+  const withMissingReference = async (run: (root: string) => Promise<void>, keepSourceLink = false) => {
+    const root = await mkdtemp(join(tmpdir(), "routing-previous-source-"))
+    try {
+      await cp(join(candidateRoot, "skills"), join(root, "skills"), { recursive: true })
+      await cp(join(candidateRoot, "AGENTS.md"), join(root, "AGENTS.md"))
+      await rm(join(root, "skills", reference))
+      if (!keepSourceLink) {
+        const entrypoint = join(root, "skills/review-and-simplify-changes/SKILL.md")
+        const contents = await Bun.file(entrypoint).text()
+        await writeFile(entrypoint, contents.split("\n").filter(line => !line.includes("references/delegated-review.md")).join("\n"))
+      }
+      await run(root)
+    } finally { await rm(root, { recursive: true, force: true }) }
+  }
+  const dryRun = async (sourceRoot: string, previousRoot?: string, caseId = "routine-refactor") => collectSubprocess(Bun.spawn({
+    cmd: ["bun", join(import.meta.dir, "run-routing-evals.ts"), "dry-run", "--case", caseId, "--source-root", sourceRoot,
+      ...(previousRoot ? ["--previous-source-root", previousRoot] : [])],
+    stdout: "pipe", stderr: "pipe",
+  }), "previous source dry-run", 5_000)
+
+  test("paired dry-runs retain expectations when only the previous source lacks a reference", async () => {
+    await withMissingReference(async root => {
+      for (const caseId of ["routine-refactor", "independent-review-tracks"]) {
+        const result = await dryRun(candidateRoot, root, caseId)
+        expect(result.exitCode).toBe(0)
+        const records = result.stdout.trim().split("\n").map(line => JSON.parse(line))
+        expect(records.map(record => record.source)).toEqual(["previous", "candidate"])
+        expect(records[0].contract).toEqual(records[1].contract)
+        expect(records[0].fixture_hash).toBe(records[1].fixture_hash)
+        if (caseId === "independent-review-tracks") expect(records[0].contract.expected_references).toEqual([reference])
+      }
+    })
+  })
+
+  test("the candidate must contain every fixture reference", async () => {
+    await withMissingReference(async root => {
+      const result = await dryRun(root)
+      expect(result.exitCode).not.toBe(0)
+      expect(result.stderr).toContain(`missing skill reference ${reference}`)
+    })
+  })
+
+  test("a previous source's own broken Markdown link remains an error", async () => {
+    await withMissingReference(async root => {
+      const result = await dryRun(candidateRoot, root)
+      expect(result.exitCode).not.toBe(0)
+      expect(result.stderr).toContain("has missing local link target references/delegated-review.md")
+    }, true)
+  })
+
+  test("a previous source reference read error is not treated as an absent file", async () => {
+    await withMissingReference(async root => {
+      await mkdir(join(root, "skills", reference))
+      const result = await dryRun(candidateRoot, root)
+      expect(result.exitCode).not.toBe(0)
+      expect(result.stderr).toContain("EISDIR")
+    })
+  })
 })

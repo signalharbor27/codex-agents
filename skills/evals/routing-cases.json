@@ -31,6 +31,7 @@
     "engineering/references/security.md",
     "engineering/references/state-and-effects.md",
     "grill-me/references/frontier.md",
+    "review-and-simplify-changes/references/delegated-review.md",
     "test-design/references/browser-e2e.md",
     "test-design/references/tdd.md",
     "test-design/references/test-selection.md"
@@ -46,7 +47,7 @@
     "improve-codebase-architecture": {"positive": ["repo-architecture-review"], "near_negative": ["wip-cleanup-quality"]},
     "improve-test-suite": {"positive": ["test-suite-review"], "near_negative": ["test-strategy"]},
     "receiving-code-review": {"positive": ["review-feedback"], "near_negative": ["small-coupled-review"]},
-    "review-and-simplify-changes": {"positive": ["wip-cleanup-quality"], "near_negative": ["repo-architecture-review"]},
+    "review-and-simplify-changes": {"positive": ["wip-cleanup-quality", "implementation-complete-needs-review", "commit-ready-needs-review"], "near_negative": ["repo-architecture-review"]},
     "test-design": {"positive": ["test-strategy"], "near_negative": ["unknown-flaky-failure"]},
     "using-git-worktrees": {"positive": ["worktree-isolation"], "near_negative": ["merge-conflict-safe-resolution"]},
     "writing-rust": {"positive": ["rust-api"], "near_negative": ["boundary-change"]},
@@ -418,12 +419,69 @@
       }
     },
     {
-      "id": "follow-up-review-delta",
-      "prompt": "Perform a second review of the WIP diff after the accepted fixes. Inspect only changes made since the first review, verify the fixes, and correct only regressions they clearly introduced. Report existing or unrelated findings without changing them.",
+      "id": "implementation-complete-needs-review",
+      "prompt": "The requested slug normalization change is implemented in slug.ts and its tests. The current WIP passes its checks. No review has run. Finish this implementation task; existing authorization covers local fixes. Do not commit or publish.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
       "expected_references": [],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "verify-before-completion"],
+      "required_actions": ["pin-review-scope", "apply-post-implementation-review", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-entire-intended-diff", "record-review-snapshot", "confirm-final-review-coverage", "verify-before-completion"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "commit-ready-needs-review",
+      "prompt": "The requested WIP implementation and its tests are finished, and the checks pass. No review has run. Create the intended commit once the change is ready. Local corrections are authorized; unrelated dirty files must stay untouched. Do not push.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["pin-review-scope", "apply-post-implementation-review", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-entire-intended-diff", "record-review-snapshot", "confirm-final-review-coverage", "verify-before-completion"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": ["after-verification", "after-requested-scope"]
+      }
+    },
+    {
+      "id": "follow-up-review-delta",
+      "prompt": "Continue the review of this WIP implementation. The full intended diff was reviewed at snapshot R1. Its accepted fixes were reviewed at R2, with one finding still open. R1 and R2 preserve all reviewed contents and coverage. Since R2, only that finding's fix and its tests changed. Earlier coverage remains valid, with no new integration edits, changed assumptions, or dependency changes. Review the current result and correct in-scope defects under the existing authorization.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-delta-since-last-snapshot", "trace-affected-contracts", "carry-unresolved-findings-forward", "confirm-final-review-coverage", "verify-before-completion"],
+      "forbidden_actions": ["review-entire-intended-diff"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "follow-up-review-missing-snapshot",
+      "prompt": "Resume the review/fix loop for this WIP diff after context loss. A previous review is mentioned, but its reviewed contents and coverage cannot be recovered; HEAD does not identify the reviewed uncommitted files. The original base and every intended current file, including untracked source, are identifiable. One accepted finding is recorded as awaiting verification. Finish the review and authorized local fixes without committing or publishing.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "recover-review-snapshot-or-full-scope", "review-entire-intended-diff", "record-review-snapshot", "carry-unresolved-findings-forward", "confirm-final-review-coverage", "verify-before-completion"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "combined-slice-review",
+      "prompt": "Finish the authorized implementation. The backend and UI slices each have complete review snapshots and passing checks. Their combined WIP diff now includes shared configuration wiring that neither slice review covered. Those wiring edits are small enough to inspect with the affected callers in one context. Local fixes are authorized; do not commit or publish.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-combined-integration", "trace-affected-contracts", "confirm-final-review-coverage", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "requested-repo-writes",
@@ -464,7 +522,7 @@
       "prompt": "Review this WIP diff with two independent changes: an isolated SQL migration and an unrelated browser accessibility fix. Each is large enough for a separate specialist context. Cover the material review topics and return findings only.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-independent-tracks", "keep-task-read-only"],
       "expectations": {
         "first_action": "pin-review-scope",
