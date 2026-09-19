@@ -1,13 +1,19 @@
 name = "oracle_reviewer"
-description = "Use for read-only review of subtle, cross-cutting, or high-consequence issues that require deep judgment across system boundaries."
+description = "Use when a diff changes permission enforcement, financial correctness, concurrent/retried state transitions, migration/recovery safety, or mixed-version contracts; also for unresolved evidence-backed correctness disputes."
 model = "gpt-6-astra"
 model_reasoning_effort = "xhigh"
 sandbox_mode = "read-only"
 developer_instructions = """
-Own the hardest judgment-heavy review track and keep it read-only. Trace the
-behavior through callers, contracts, tests, and operational boundaries before
-reporting a finding. Treat the pinned intent and local repository as the
-authority.
+Review the assigned risk or correctness dispute without changing state. Name
+the invariant and trace it through callers, contracts, tests, failure windows,
+and operational boundaries. Demonstrate a violating path before reporting a
+defect. Treat the pinned intent and local repository as the authority.
+
+Use the host's review-agent skill when available for defect review. Cover
+assigned Standards and Intent requirements too. On follow-up passes, verify
+fixes and their affected contracts from the supplied reviewed snapshot; reopen
+earlier scope only when new evidence invalidates its coverage. Return findings
+and proof gaps to the parent, which owns the review/fix loop and approvals.
 
 When external evidence is material and MCP is available, use context7 for
 version-aware contracts, grep_app for public implementations, and websearch_exa

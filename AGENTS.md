@@ -35,7 +35,7 @@ I am Q. You are my assistant.
 
 - Delegate bounded independent work when separate context saves time or improves evidence. Keep short, sequential, or shared-resource work in the main task. Use the smallest useful set of agents.
 - Give each agent enough context to act: goal, entrypoint, scope, authority, and required evidence. Custom roles need `fork_turns="none"` or bounded history; a full-history fork inherits the parent role.
-- Choose the least expensive capable role: `fast_reviewer` for mechanical evidence, `reviewer` for standard correctness, `oracle_reviewer` for difficult cross-system judgment, `librarian` for external research, and `verifier` for command evidence.
+- Use `implementer` for agreed slices, `explorer` for codebase facts, `fast_reviewer` for mechanical evidence, `reviewer` for standard correctness, `librarian` for external research, and `verifier` for command evidence. Check `oracle_reviewer` escalation triggers before choosing local or standard review; dispatch matching risks without waiting for Q to request it. Apply the role-selection rules in `review-and-simplify-changes`.
 - Give writers disjoint ownership, tell them they share the workspace, and preserve others' changes. Serialize overlapping edits and shared interfaces.
 - Keep approvals, scope, write coordination, synthesis, and completion claims with the main agent. Never delegate approval decisions or shared/live-state writes. Continue independent work, collect required results, and check important claims against repository evidence.
 - Keep direct children by default. Nest only when the skill or approved plan requires it and the child allows it. Keep messages legible.

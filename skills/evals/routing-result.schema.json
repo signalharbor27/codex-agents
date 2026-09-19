@@ -26,9 +26,10 @@
     },
     "references": {
       "type": "array",
+      "description": "Exact existing Markdown paths relative to the supplied skills root, beginning with the owning skill folder. Preserve filename case; omit a leading skills/ or absolute path prefix.",
       "items": {
         "type": "string",
-        "pattern": "^[a-z0-9-]+/references/[a-z0-9-]+\\.md$"
+        "pattern": "^[a-z0-9-]+/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\\.md$"
       }
     },
     "actions": {
@@ -47,6 +48,7 @@
           "confirm-final-review-coverage",
           "create-requested-plan-file",
           "delegate-independent-tracks",
+          "delegate-oracle-review",
           "do-not-change-branch-state",
           "do-not-invent-verification",
           "find-root-cause-before-fix",

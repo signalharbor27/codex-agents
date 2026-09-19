@@ -48,11 +48,11 @@ Own the required review/fix loop after implementation and standalone change revi
 
 Choose reviewer count from the pinned diff's material, separable review work. The eight topics below are a coverage checklist, not an assignment quota.
 
-- Keep a small or tightly coupled diff with the main agent as one integrated reviewer, covering all material topics together so related evidence stays in one context. Use an independent reviewer only when a separate pass would materially improve confidence.
+- Before choosing local or delegated review, read [references/delegated-review.md](references/delegated-review.md) and check its oracle triggers. Keep a small or tightly coupled diff local only when no trigger requires independent review; cover all material topics together.
 - Use the minimum useful bounded set of independent subagents when distinct subsystems, contracts, or risk areas benefit from separate context. A reviewer may cover one or more related topics; split work only where independence improves evidence or reduces context interference.
 - Discover active subagent capacity before dispatch. Start independent reviewers together when slots are available; otherwise run bounded waves. If subagents are unavailable, review locally when the scope remains tractable and disclose the missing independent pass; stop blocked when trustworthy coverage would require it.
 - Give each reviewer the same pinned scope and Standards/Intent digest plus its material focus. Keep reviewers read-only: no edits, staging, commits, pushes, or state mutation.
-- For delegated reviews, read [references/delegated-review.md](references/delegated-review.md) and use the built-in `review-agent` when available for defect review.
+- For delegated defect review, use the built-in `review-agent` when available. Include the selected role and the risk that justified it in the brief.
 - Tell independent Codex reviewers not to invoke this skill or any repo post-code review gate recursively.
 - Require file/symbol, checklist topic, issue, recommended fix, confidence, evidence, and validation needed. A reviewer may report no finding.
 - The main agent owns checklist accounting, synthesis, judgment, edits, validation, and completion claims.
