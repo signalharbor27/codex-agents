@@ -19,6 +19,8 @@ Both runners default to `gpt-6-astra` at `high`. Live calls require permission, 
 
 `--source-root` selects a tree containing `AGENTS.md` and `skills/`. Add `--previous-source-root` to run each selected case against both trees with the same runner, fixtures, model, effort, and catalog variant. The earlier tree does not need the new runner. Source order is previous then candidate; these are paired observations, without randomized order or statistical claims.
 
+Routing comparisons allow fixture references absent from the previous source. Candidate references and each source's own Markdown links remain strict. Both sources keep the same expected references; a previous model result that omits an expected reference fails classification instead of blocking setup.
+
 ```bash
 bun skills/evals/run-routing-evals.ts live --case routine-refactor --allow-live
 bun skills/evals/run-execution-evals.ts live --case authorized-implementation --allow-live
@@ -33,7 +35,18 @@ JSONL output records source, harness, fixture, and prompt hashes; model and effo
 
 ## Routing
 
-Routing live mode classifies tasks in a read-only sandbox. The prompt specifies the classification task and result format; skill instructions supply execution policies. It compares the primary skill, exact modifiers and references, required actions, mutation authority, question boundary, and stop condition against [routing-cases.json](routing-cases.json). [routing-result.schema.json](routing-result.schema.json) defines the output. Classification does not prove execution.
+Routing live mode classifies tasks in a read-only sandbox. The prompt specifies the classification task and result format; skill instructions supply execution policies. It compares the primary skill, exact modifiers and references, required actions, optional forbidden actions, mutation authority, question boundary, and stop condition against [routing-cases.json](routing-cases.json). [routing-result.schema.json](routing-result.schema.json) defines the output. Classification does not prove execution.
+
+`keep-coupled-review-local` satisfies `select-minimum-useful-reviewers`: it selects one local reviewer. Delegation alone does not satisfy that requirement. Other required actions use exact matching.
+
+Progressive review cases cover:
+
+- `implementation-complete-needs-review` and `commit-ready-needs-review`: require the full initial review without the user naming a skill.
+- `follow-up-review-delta`: review edits since the latest reviewed snapshot, affected contracts, and unresolved findings. Prior coverage is explicitly still valid; repeating the full review fails this case.
+- `follow-up-review-missing-snapshot`: recover coverage or review the full identifiable intended diff. The fixture makes recovery unavailable, so an assumed delta is insufficient.
+- `combined-slice-review`: inspect previously unreviewed wiring before relying on completed slice reviews.
+
+`forbidden_actions` applies only where the case excludes an action. New evidence can justify reopening earlier scope; the follow-up case states that no such evidence exists. `independent-review-tracks` loads `review-and-simplify-changes/references/delegated-review.md`; local review cases need no delegation reference. These classifications do not prove review depth, defect detection, or use of a host-provided `review-agent`.
 
 `--catalog-variant` selects:
 

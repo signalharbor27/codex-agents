@@ -12,7 +12,7 @@ Select a primary skill when its invocation conditions match the task; proceed wi
 
 Review, audit, branch, handoff, and skill-authoring tasks use their narrower skill as primary. Rust, Effect, and data-intensive-system skills are modifiers. They add domain constraints without repeating the generic producer workflow.
 
-Do not stack separate planning, implementation, testing, and final-proof skills. A primary skill owns its whole loop. Transition only when the task genuinely changes jobs.
+A primary skill owns its whole loop, including the mandatory `review-and-simplify-changes` gate before implementation handoff or an intended commit. The main agent retains integration and completion ownership. Load other workflow skills only when their distinct task applies.
 
 `grill-me` is the sole model-invoked owner of dependency-aware interactive decisions. It can route from a natural request, an exact `$grill-me` invocation, or work that exposes several consequential, interdependent choices owned by the user. After inspection, `engineering` and the two improve skills may load the shared grilling procedure without giving up primary ownership.
 
@@ -51,7 +51,8 @@ The concise references synthesize established work including Hunt and Thomas, Br
 
 ## Review and improve skills
 
-- `review-and-simplify-changes` selects only material tracks for the pinned diff. It keeps small or tightly coupled reviews with one reviewer and delegates bounded independent tracks when separate context improves coverage; its eight topics are a coverage checklist, not an agent-count invariant.
+- `review-and-simplify-changes` reviews the full intended diff, then loops over fixes and affected contracts until actionable findings are resolved and required checks pass. Follow-up passes use recorded review snapshots; new evidence can reopen earlier scope. Integrated slices need combined coverage. Reviewer count follows the material work; the eight topics are a coverage checklist.
+- Delegated defect reviewers use the built-in `review-agent` skill when available. It stays read-only and returns every actionable defect in its assigned scope. The main agent owns simplification, finding disposition, fixes, and the next review pass. Hosts without that built-in use the same scoped read-only brief through an available reviewer.
 - `improve-codebase-architecture` and `improve-test-suite` produce evidence-backed plans, with phases and decisions only when the findings need them.
 
 ## Other skills

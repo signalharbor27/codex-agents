@@ -30,6 +30,7 @@ export type RoutingCase = {
   expected_modifier_skills: string[]
   expected_references: string[]
   required_actions: string[]
+  forbidden_actions?: string[]
   expectations: Expectations
 }
 
@@ -482,6 +483,7 @@ async function validateLocalMarkdownLinks(root: string): Promise<string[]> {
 async function validateProgressiveReferences(
   skillsRoot: string,
   references: unknown,
+  allowMissingFixtureReferences = false,
 ): Promise<string[]> {
   if (!Array.isArray(references) || !references.every((value) => typeof value === "string")) {
     return ["skill_references must be a string array"]
@@ -499,8 +501,9 @@ async function validateProgressiveReferences(
       if (/\[[^\]]*\]\((?![a-z][a-z0-9+.-]*:|#)[^)]+\.md(?:#[^)]+)?\)/i.test(contents)) {
         errors.push(`${reference} must not link to another Markdown reference`)
       }
-    } catch {
-      errors.push(`missing skill reference ${reference}`)
+    } catch (error) {
+      if (!isRecord(error) || error.code !== "ENOENT") throw error
+      if (!allowMissingFixtureReferences) errors.push(`missing skill reference ${reference}`)
     }
   }
   return errors
@@ -523,8 +526,8 @@ export function validateCase(
   const errors: string[] = []
   const label = `cases[${index}]`
   if (!isRecord(value)) return [`${label} must be an object`]
-  if (!sameMembers(Object.keys(value), [...CASE_KEYS])) {
-    errors.push(`${label} must contain exactly ${CASE_KEYS.join(", ")}`)
+  if (!sameMembers(Object.keys(value).filter(key => key !== "forbidden_actions"), [...CASE_KEYS])) {
+    errors.push(`${label} must contain ${CASE_KEYS.join(", ")} and optional forbidden_actions only`)
   }
   if (typeof value.id !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.id)) {
     errors.push(`${label}.id must be kebab-case`)
@@ -538,10 +541,12 @@ export function validateCase(
   const modifiers = strings(value.expected_modifier_skills)
   const expectedReferences = strings(value.expected_references)
   const actions = strings(value.required_actions)
+  const forbiddenActions = "forbidden_actions" in value ? strings(value.forbidden_actions) : []
   for (const [key, values] of [
     ["expected_modifier_skills", modifiers],
     ["expected_references", expectedReferences],
     ["required_actions", actions],
+    ["forbidden_actions", forbiddenActions],
   ] as const) {
     if (!values) errors.push(`${label}.${key} must be a string array`)
     else if (!isUnique(values)) errors.push(`${label}.${key} must not contain duplicates`)
@@ -563,8 +568,11 @@ export function validateCase(
   if (value.primary_skill === "none" && ((modifiers?.length ?? 0) > 0 || (expectedReferences?.length ?? 0) > 0)) errors.push(`${label} none route must not select modifiers or references`)
   const knownActions = new Set(enumValues(resultSchema, "actions"))
   if ((actions ?? []).length === 0 && value.primary_skill !== "none") errors.push(`${label}.required_actions must not be empty`)
-  for (const action of actions ?? []) {
+  for (const action of [...(actions ?? []), ...(forbiddenActions ?? [])]) {
     if (!knownActions.has(action)) errors.push(`${label} references unknown action ${action}`)
+  }
+  for (const action of forbiddenActions ?? []) {
+    if (actions?.includes(action)) errors.push(`${label} both requires and forbids action ${action}`)
   }
   if (!isRecord(value.expectations)) {
     errors.push(`${label}.expectations must be an object`)
@@ -606,7 +614,10 @@ export function validateCase(
   return errors
 }
 
-export async function validateFixture(skillsRoot: string): Promise<ValidatedSuite> {
+export async function validateFixture(
+  skillsRoot: string,
+  { allowMissingFixtureReferences = false }: { allowMissingFixtureReferences?: boolean } = {},
+): Promise<ValidatedSuite> {
   const [fixture, resultSchema, actualSkills, linkErrors] = await Promise.all([
     readJson(CASES_PATH),
     readJson(RESULT_SCHEMA_PATH),
@@ -619,7 +630,7 @@ export async function validateFixture(skillsRoot: string): Promise<ValidatedSuit
   if (fixture.version !== 6) errors.push("routing fixture version must be 6")
   const skillSurface = await validateSkillEntrypoints(skillsRoot, actualSkills)
   errors.push(...skillSurface.errors)
-  errors.push(...(await validateProgressiveReferences(skillsRoot, fixture.skill_references)))
+  errors.push(...(await validateProgressiveReferences(skillsRoot, fixture.skill_references, allowMissingFixtureReferences)))
 
   const inventory = strings(fixture.engineering_skills)
   if (!inventory) errors.push("engineering_skills must be a string array")
@@ -787,7 +798,11 @@ export function compareResult(routingCase: RoutingCase, result: RoutingResult): 
     )
   }
   for (const action of routingCase.required_actions) {
-    if (!result.actions.includes(action)) failures.push(`missing required action ${action}`)
+    const localReviewerSelected = action === "select-minimum-useful-reviewers" && result.actions.includes("keep-coupled-review-local")
+    if (!result.actions.includes(action) && !localReviewerSelected) failures.push(`missing required action ${action}`)
+  }
+  for (const action of routingCase.forbidden_actions ?? []) {
+    if (result.actions.includes(action)) failures.push(`forbidden action ${action}`)
   }
   for (const key of EXPECTATION_KEYS) {
     const raw = routingCase.expectations[key]
@@ -952,7 +967,11 @@ async function main(): Promise<void> {
     { label: "candidate", root: dirname(options.skillsRoot), skillsRoot: options.skillsRoot },
   ]
   const harness_hash = await harnessHash()
-  const suites = await Promise.all(sources.map(async source => ({ ...source, ...await validateFixture(source.skillsRoot), ...await sourceProvenance(source.root, source.skillsRoot) })))
+  const suites = await Promise.all(sources.map(async source => ({
+    ...source,
+    ...await validateFixture(source.skillsRoot, { allowMissingFixtureReferences: source.label === "previous" }),
+    ...await sourceProvenance(source.root, source.skillsRoot),
+  })))
   if (options.mode === "validate") {
     if (!options.quiet) for (const suite of suites) console.log(`Routing eval fixture is valid (${suite.label}): ${suite.fixture.cases.length} cases, ${suite.fixture.engineering_skills.length} skills; positive and near-negative invocation coverage complete`)
     return

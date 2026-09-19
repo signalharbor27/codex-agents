@@ -50,6 +50,7 @@ I am Q. You are my assistant.
 # Verification and handoff
 
 - Support completion claims with evidence for the current code and relevant state. Reuse earlier results after confirming those inputs are unchanged; rerun when evidence is missing, stale, or affected by a change.
+- Before declaring implementation complete or making an intended commit, apply `review-and-simplify-changes` to the intended diff and finish its review/fix loop. This required gate is part of the primary skill's completion contract. The main agent owns it; delegated reviewers return findings without invoking the gate recursively.
 - Run required checks appropriate to the behavior. Broaden or repeat them only for new edits, failures, changed relevant state, or unresolved risks. Add persistent tests when they provide meaningful protection beyond existing evidence.
 - Inspect the final diff. Report the result, files touched, verification, and material residual risk. Distinguish verified facts, inferences, and unknowns; use `[bias: ...]` for recommendations based on judgment. Include blockers and next actions when present.
 
