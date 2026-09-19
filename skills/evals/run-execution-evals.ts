@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
 
 import { cp, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises"
-import { tmpdir } from "node:os"
+import { homedir, tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { collectSubprocess, discoverSkills, LIVE_MODEL, LIVE_REASONING_EFFORT, shutdownCleanups, skillCatalog, validateModelOptions } from "./run-routing-evals.ts"
 import { harnessHash, parseTrace, sha256, sourceProvenance, type Trace } from "./eval-evidence.ts"
 export { parseTrace, type Trace } from "./eval-evidence.ts"
+import { parseReviewLifecycle } from "./review-lifecycle.ts"
 
-export const CASE_IDS = ["authorized-implementation", "permission-citation", "verification-reuse", "steering-preserves-objective", "status-preserves-objective", "verification-after-edit", "verification-after-failure", "read-only-counterpart", "python-native-check"] as const
+export const CASE_IDS = ["authorized-implementation", "automatic-independent-review", "permission-citation", "verification-reuse", "steering-preserves-objective", "status-preserves-objective", "verification-after-edit", "verification-after-failure", "read-only-counterpart", "python-native-check"] as const
 export type CaseId = typeof CASE_IDS[number]
 const ROOT = resolve(import.meta.dir, "../..")
 const SETSID = Bun.which("setsid")
@@ -64,6 +65,8 @@ export type Evidence = {
   turns: Trace[]
   dirtyFilePreserved?: boolean
   discoveredSkill?: boolean
+  reviewLifecycle?: ReturnType<typeof parseReviewLifecycle>
+  rollout?: { path: string; hash: string; threadId: string }
 }
 
 export function parseArgs(argv: string[]) {
@@ -98,14 +101,33 @@ export function parseArgs(argv: string[]) {
   return { mode, cases: caseId ? [caseId as CaseId] : [...CASE_IDS], model, effort, sourceRoot, previousSourceRoot }
 }
 
-export function executionArgs(directory: string, prompt: string, model = LIVE_MODEL, effort = LIVE_REASONING_EFFORT, readOnly = false): string[] {
+export function executionArgs(directory: string, prompt: string, model = LIVE_MODEL, effort = LIVE_REASONING_EFFORT, readOnly = false, persistSession = false): string[] {
   validateModelOptions(model, effort)
-  const args = ["codex", "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules", "--skip-git-repo-check",
+  const args = ["codex", "exec", ...(persistSession ? [] : ["--ephemeral"]), "--ignore-user-config", "--ignore-rules", "--skip-git-repo-check",
     "--sandbox", readOnly ? "read-only" : "workspace-write", "-c", "sandbox_workspace_write.network_access=false",
     "-c", "sandbox_workspace_write.exclude_tmpdir_env_var=true", "-c", "sandbox_workspace_write.exclude_slash_tmp=true",
     "-c", 'approval_policy="never"', "--json", "--color", "never", "--model", model,
     "-c", `model_reasoning_effort="${effort}"`, "--cd", directory, prompt]
   return SETSID ? [SETSID, ...args] : args
+}
+
+export function executionScope(automaticReview = false): string {
+  const limits = automaticReview
+    ? "No branch changes, external actions, dependencies, or files outside this directory."
+    : "No branch changes, external actions, dependencies, subagents, or files outside this directory."
+  return `Work only in this temporary fixture. ${limits} Fixture instructions and checks are immutable. Preserve unrelated files. Only the project check may append proof.jsonl.`
+}
+
+export async function readReviewRollout(stdout: string, codexHome = process.env.CODEX_HOME ?? join(homedir(), ".codex")) {
+  const starts = stdout.split("\n").filter(Boolean).map(line => JSON.parse(line)).filter(event => event.type === "thread.started")
+  if (starts.length !== 1 || !/^[a-f0-9-]{36}$/.test(starts[0].thread_id ?? "")) throw new Error("missing unique review session ID")
+  const threadId = starts[0].thread_id as string
+  const paths = await Array.fromAsync(new Bun.Glob(`**/*-${threadId}.jsonl`).scan({ cwd: join(codexHome, "sessions"), absolute: true }))
+  if (paths.length !== 1) throw new Error(`expected one persisted rollout for ${threadId}, got ${paths.length}`)
+  const contents = await readFile(paths[0]!, "utf8")
+  const metadata = contents.split("\n").filter(Boolean).map(line => JSON.parse(line)).filter(event => event.type === "session_meta")
+  if (metadata.length !== 1 || metadata[0].payload?.id !== threadId) throw new Error("review rollout session ID mismatch")
+  return { reviewLifecycle: parseReviewLifecycle(contents), rollout: { path: paths[0]!, hash: sha256(contents), threadId } }
 }
 
 export function proofCommand(command: string, python = false): boolean {
@@ -139,6 +161,13 @@ export function judge(id: CaseId, evidence: Evidence): string[] {
     const publicationClaims = messages.replaceAll("published-release.md", "<PUBLICATION_PATH>")
     if (/\b(?:published|publication complete)\b/i.test(publicationClaims) && !/\b(?:not published|unpublished)\b/i.test(publicationClaims)) errors.push("claims unauthorized publication")
     return errors
+  }
+  if (id === "automatic-independent-review") {
+    if (!evidence.reviewLifecycle) errors.push("missing independent review lifecycle evidence")
+    else {
+      errors.push(...evidence.reviewLifecycle.failures)
+      if (!evidence.reviewLifecycle.reviews.length) errors.push("no returned independent review")
+    }
   }
   if (evidence.discoveredSkill === false) errors.push("no applicable skill read observed in command evidence")
   if (id === "read-only-counterpart") {
@@ -220,11 +249,12 @@ export async function prepareFixture(directory: string, id: CaseId, sourceRoot: 
   }
   if (id === "verification-after-failure") await writeFile(join(directory, "fail-first-check"), "Synthetic transient check failure; first attempt only.\n")
   await writeFile(join(directory, "README.md"), `# Greeting fixture\n\n${python ? "greeting.py" : "greet.mjs"} formats names using settings.json.\n\nCheck: \`${python ? "python3 -m unittest -q" : "bun verify.mjs"}\`. The check records the settings hash and result in proof.jsonl.\n`)
-  if (python) {
+  if (id === "automatic-independent-review") await writeFile(join(directory, ".gitignore"), "proof.jsonl\n")
+  if (python || id === "automatic-independent-review") {
     await fixtureGit(directory, ["init", "-q"])
     await fixtureGit(directory, ["add", "."])
     await fixtureGit(directory, ["-c", "user.name=Skill Eval", "-c", "user.email=eval@example.invalid", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", "commit", "-qm", "fixture baseline"])
-    await writeFile(join(directory, "notes.txt"), DIRTY_NOTE)
+    if (python) await writeFile(join(directory, "notes.txt"), DIRTY_NOTE)
   }
   return skills
 }
@@ -250,18 +280,21 @@ export async function runCase(id: CaseId, model: string, effort: string, sourceR
     const skills = await prepareFixture(directory, id, sourceRoot)
     const before = new Map(await Promise.all((await files(directory)).filter(path => path !== "settings.json").map(async path => [path, await readFile(join(directory, path), "utf8")] as const)))
     const catalog = await skillCatalog(join(directory, ".agents/skills"), skills)
-    const base = `Work only in this temporary fixture. No branch changes, external actions, dependencies, subagents, or files outside this directory. Fixture instructions and checks are immutable. Preserve unrelated files. Only the project check may append proof.jsonl.\n\nAvailable skills:\n${catalog}\n\n`
+    const automaticReview = id === "automatic-independent-review"
+    const base = `${executionScope(automaticReview)}\n\nAvailable skills:\n${catalog}\n\n`
     const { task, pause, continuation } = taskPrompts(id)
     const turns: Trace[] = []
     const promptHashes: string[] = []
+    let reviewEvidence: Awaited<ReturnType<typeof readReviewRollout>> | undefined
     async function turn(prompt: string) {
       promptHashes.push(sha256(prompt.replaceAll(directory, "<TEMP_FIXTURE>")))
-      const args = executionArgs(directory, prompt, model, effort, id === "read-only-counterpart")
+      const args = executionArgs(directory, prompt, model, effort, id === "read-only-counterpart", automaticReview)
       const started = performance.now()
       const child = Bun.spawn({ cmd: args, cwd: directory, stdin: "ignore", stdout: "pipe", stderr: "pipe" })
-      const result = await collectSubprocess(child, `execution ${id}`, 180_000, Boolean(SETSID))
+      const result = await collectSubprocess(child, `execution ${id}`, automaticReview ? 600_000 : 180_000, Boolean(SETSID))
       if (result.exitCode !== 0) throw new Error(`codex exited ${result.exitCode}: ${result.stderr.slice(-2000)}`)
       turns.push({ ...parseTrace(result.stdout), elapsed_ms: Math.round(performance.now() - started) })
+      if (automaticReview) reviewEvidence = await readReviewRollout(result.stdout)
     }
     await turn(base + task + pause)
     if (CONTINUATIONS.has(id)) {
@@ -273,6 +306,7 @@ export async function runCase(id: CaseId, model: string, effort: string, sourceR
     }
     const after = await files(directory)
     const evidence: Evidence = {
+      ...reviewEvidence,
       settings: await readFile(join(directory, "settings.json"), "utf8").catch(() => ""),
       receipts: (await readFile(join(directory, "proof.jsonl"), "utf8").catch(() => "")).split("\n").filter(Boolean).map(line => JSON.parse(line)),
       release: await readFile(join(directory, "release.md"), "utf8").catch(() => null),
@@ -299,9 +333,9 @@ async function main() {
   let failed = false
   for (const id of options.cases) {
     for (const source of provenance) {
-      const details = { case: id, ...source, harness_hash, fixture_hash: sha256(JSON.stringify({ id, ...taskPrompts(id), SETTINGS, COMPLETED_SETTINGS, GREET, VERIFY, PYTHON_GREET, PYTHON_CHECK, DIRTY_NOTE, PERMISSION_RULE })), model: options.model, effort: options.effort, host_native_discovery: "unisolated", continuation: CONTINUATIONS.has(id) ? "scripted new ephemeral session" : null }
+      const details = { case: id, ...source, harness_hash, fixture_hash: sha256(JSON.stringify({ id, scope: executionScope(id === "automatic-independent-review"), ...taskPrompts(id), SETTINGS, COMPLETED_SETTINGS, GREET, VERIFY, PYTHON_GREET, PYTHON_CHECK, DIRTY_NOTE, PERMISSION_RULE })), model: options.model, effort: options.effort, host_native_discovery: "unisolated", continuation: CONTINUATIONS.has(id) ? "scripted new ephemeral session" : null }
       if (options.mode === "dry-run") {
-        console.log(JSON.stringify({ ...details, external_call: false, would_execute: executionArgs("<TEMP_FIXTURE>", "<EXECUTION_TASK>", options.model, options.effort, id === "read-only-counterpart") }))
+        console.log(JSON.stringify({ ...details, external_call: false, would_execute: executionArgs("<TEMP_FIXTURE>", "<EXECUTION_TASK>", options.model, options.effort, id === "read-only-counterpart", id === "automatic-independent-review") }))
         continue
       }
       try {
