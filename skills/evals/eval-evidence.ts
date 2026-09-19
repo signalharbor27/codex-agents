@@ -8,7 +8,8 @@ export function sha256(contents: string): string {
 
 async function digestTree(root: string, prefix = ""): Promise<[string, string][]> {
   const result: [string, string][] = []
-  for (const entry of (await readdir(join(root, prefix), { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
+  const entries = await readdir(join(root, prefix), { withFileTypes: true })
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     if (entry.name === "evals" || entry.name === ".git") continue
     const path = prefix ? `${prefix}/${entry.name}` : entry.name
     if (entry.isDirectory()) result.push(...await digestTree(root, path))
@@ -17,12 +18,29 @@ async function digestTree(root: string, prefix = ""): Promise<[string, string][]
   return result
 }
 
+export async function readAgentProfileFiles(sourceRoot: string) {
+  const agentsRoot = join(sourceRoot, "agents")
+  let filenames: string[]
+  try {
+    filenames = await readdir(agentsRoot)
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return []
+    throw error
+  }
+  return Promise.all(filenames.filter(name => name.endsWith(".toml") && name !== "registry.toml").sort().map(async filename => {
+    const path = join(agentsRoot, filename)
+    return { filename, path, contents: await readFile(path, "utf8") }
+  }))
+}
+
 export async function sourceProvenance(sourceRoot: string, skillsRoot = join(sourceRoot, "skills")) {
-  const [skills, agents] = await Promise.all([
+  const [skills, agents, profileFiles] = await Promise.all([
     digestTree(skillsRoot),
     readFile(join(sourceRoot, "AGENTS.md"), "utf8"),
+    readAgentProfileFiles(sourceRoot),
   ])
-  return { source_root: sourceRoot, skills_root: skillsRoot, source_hash: sha256(JSON.stringify({ skills, agents })), agents_hash: sha256(agents) }
+  const profiles = profileFiles.map(({ filename, contents }) => [filename, sha256(contents)])
+  return { source_root: sourceRoot, skills_root: skillsRoot, source_hash: sha256(JSON.stringify({ skills, agents, profiles })), agents_hash: sha256(agents) }
 }
 
 export type Trace = {

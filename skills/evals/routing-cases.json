@@ -21,6 +21,8 @@
   "skill_references": [
     "debugging/references/async-and-flakes.md",
     "debugging/references/root-cause-tracing.md",
+    "designing-data-intensive-systems/FOUNDATIONS.md",
+    "designing-data-intensive-systems/TRANSACTIONS.md",
     "engineering/references/boundary-design.md",
     "engineering/references/compatibility-and-delivery.md",
     "engineering/references/durable-plan.md",
@@ -395,7 +397,7 @@
       "prompt": "Review and clean up the current WIP diff. Deduplicate code, remove code proven to be unused, strengthen weak types, untangle new cycles, and remove legacy fallbacks or AI slop only when evidence justifies it.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -409,7 +411,7 @@
       "prompt": "Review these WIP changes against repository standards and the diff's intended outcome. Simplify only issues supported by strong evidence.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-standards-and-intent-separate", "trace-each-material-intent-requirement", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -423,7 +425,7 @@
       "prompt": "The requested slug normalization change is implemented in slug.ts and its tests. The current WIP passes its checks. No review has run. Finish this implementation task; existing authorization covers local fixes. Do not commit or publish.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "apply-post-implementation-review", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-entire-intended-diff", "record-review-snapshot", "confirm-final-review-coverage", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -437,7 +439,7 @@
       "prompt": "The requested WIP implementation and its tests are finished, and the checks pass. No review has run. Create the intended commit once the change is ready. Local corrections are authorized; unrelated dirty files must stay untouched. Do not push.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "apply-post-implementation-review", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-entire-intended-diff", "record-review-snapshot", "confirm-final-review-coverage", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -451,7 +453,7 @@
       "prompt": "Continue the review of this WIP implementation. The full intended diff was reviewed at snapshot R1. Its accepted fixes were reviewed at R2, with one finding still open. R1 and R2 preserve all reviewed contents and coverage. Since R2, only that finding's fix and its tests changed. Earlier coverage remains valid, with no new integration edits, changed assumptions, or dependency changes. Review the current result and correct in-scope defects under the existing authorization.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-delta-since-last-snapshot", "trace-affected-contracts", "carry-unresolved-findings-forward", "confirm-final-review-coverage", "verify-before-completion"],
       "forbidden_actions": ["review-entire-intended-diff"],
       "expectations": {
@@ -466,7 +468,7 @@
       "prompt": "Resume the review/fix loop for this WIP diff after context loss. A previous review is mentioned, but its reviewed contents and coverage cannot be recovered; HEAD does not identify the reviewed uncommitted files. The original base and every intended current file, including untracked source, are identifiable. One accepted finding is recorded as awaiting verification. Finish the review and authorized local fixes without committing or publishing.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "recover-review-snapshot-or-full-scope", "review-entire-intended-diff", "record-review-snapshot", "carry-unresolved-findings-forward", "confirm-final-review-coverage", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -480,7 +482,7 @@
       "prompt": "Finish the authorized implementation. The backend and UI slices each have complete review snapshots and passing checks. Their combined WIP diff now includes shared configuration wiring that neither slice review covered. Those wiring edits are small enough to inspect with the affected callers in one context. Local fixes are authorized; do not commit or publish.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-combined-integration", "trace-affected-contracts", "confirm-final-review-coverage", "verify-before-completion"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -494,7 +496,7 @@
       "prompt": "Review the current WIP diff across all eight review tracks and return findings only. Leave files unchanged.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-task-read-only"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -508,8 +510,81 @@
       "prompt": "Review this small WIP diff: one pure function and its sole caller changed together. All evidence fits in one context. Cover the material review topics and return findings only.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-coupled-review-local", "keep-task-read-only"],
+      "forbidden_actions": ["delegate-oracle-review"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
+      "id": "oracle-tenant-boundary-review",
+      "prompt": "Review this two-line WIP diff and return findings only. A request resolver now chooses the tenant used for record access from a request field instead of the authenticated session. The existing permission check uses that chosen tenant. Leave files unchanged.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md", "engineering/references/security.md"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-oracle-review", "trace-affected-contracts", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
+      "id": "oracle-charge-retry-review",
+      "prompt": "Review the WIP change to charge processing and return findings only. It moves the durable payment marker after the provider call and changes the idempotency key used when concurrent workers retry a timed-out charge. Leave files unchanged.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md", "engineering/references/state-and-effects.md"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-oracle-review", "trace-affected-contracts", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
+      "id": "oracle-mixed-version-migration-review",
+      "prompt": "Review this WIP data migration and return findings only. It backfills a replacement column and switches writers while old and new application versions coexist. Rollback can restore the old application while migrated rows remain. Leave files unchanged.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": ["designing-data-intensive-systems"],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md", "engineering/references/compatibility-and-delivery.md", "engineering/references/state-and-effects.md", "designing-data-intensive-systems/FOUNDATIONS.md", "designing-data-intensive-systems/TRANSACTIONS.md"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-oracle-review", "trace-affected-contracts", "keep-task-read-only"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
+      "id": "oracle-unresolved-review-dispute",
+      "prompt": "Continue the review of this WIP diff and return findings only. The only edits since reproducible reviewed snapshot R2 are an identifier-normalization fix and its tests. Two reviewers still disagree whether the fix merges distinct valid identifiers after checking the repository contract, callers, and their conflicting reproducer evidence. The disagreement affects correctness and remains unresolved. Coverage outside this fix is still valid; no other assumptions or dependencies changed. Leave files unchanged.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-oracle-review", "review-delta-since-last-snapshot", "trace-affected-contracts", "carry-unresolved-findings-forward", "keep-task-read-only"],
+      "forbidden_actions": ["review-entire-intended-diff"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
+      "id": "billing-copy-review-no-oracle",
+      "prompt": "Review this WIP diff and return findings only. It replaces the billing-page heading 'Payment options' with 'Ways to pay' and updates the expected text in its rendering test. The diff changes no runtime behavior. Leave files unchanged.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-coupled-review-local", "keep-task-read-only"],
+      "forbidden_actions": ["delegate-oracle-review"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "none",
@@ -536,7 +611,7 @@
       "prompt": "Review only weak typing in the current WIP diff. Return findings without edits, and keep the review to one read-only track.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "honor-single-track-scope", "keep-task-read-only"],
       "expectations": {
         "first_action": "pin-review-scope",

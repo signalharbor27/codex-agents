@@ -7,7 +7,7 @@ description: "Use when implementing, refactoring, planning, or researching an un
 
 ## Overview
 
-Build the smallest production-complete change that delivers the requested outcome. The main agent owns the plan, shared contracts, integration, and completion claim. It can delegate implementation and independent verification within this loop; implementation workers use this skill with the relevant domain guidance.
+Build the smallest production-complete change that delivers the requested outcome. The main agent owns the plan, shared contracts, integration, and completion claim. Delegated implementers use this skill with relevant domain guidance and return their slice and focused proof to the parent for independent review and integration.
 
 ## When to Use
 
@@ -34,7 +34,7 @@ Build the smallest production-complete change that delivers the requested outcom
 8. Implement the smallest complete slice. Do not add a hook, defensive branch, fallback, compatibility path, or duplicate representation unless a current caller, applicable failure mode, threat, rollout constraint, or stored-data contract requires it; avoid unrelated cleanup.
 9. Choose the cheapest trustworthy proof through an observable seam. Cover the changed behavior and required surrounding checks. Add persistent tests only when they provide meaningful protection beyond existing evidence. After checks pass, broaden or repeat them only for new edits, failures, changed relevant state, or unresolved risks.
 10. Close only affected contracts and operational artifacts: callers, types, migrations, generated outputs, config, docs, observability, or rollback notes.
-11. Before implementation handoff or an intended commit, apply `review-and-simplify-changes` and finish its review/fix loop on the combined intended diff. Retain ownership of integration and completion. Finish when evidence supports the entire requested outcome and every changed boundary is accounted for. Reuse earlier proof after confirming the tested code and relevant state are unchanged; rerun affected checks otherwise.
+11. Before the main agent's implementation handoff or an intended commit, apply `review-and-simplify-changes` and finish its review/fix loop on the combined intended diff. The parent owns this gate for delegated slices. Finish when evidence supports the entire requested outcome and every changed boundary is accounted for. Reuse earlier proof after confirming the tested code and relevant state are unchanged; rerun affected checks otherwise.
 
 ## Reference Routing
 

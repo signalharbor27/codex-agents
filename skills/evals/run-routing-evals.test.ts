@@ -22,11 +22,13 @@ import {
   validateInvocationCoverage,
   validateSkillEntrypoints,
   buildLivePrompt,
+  agentCatalog,
   skillCatalog,
   type RoutingCase,
   type RoutingFixture,
   type RoutingResult,
 } from "./run-routing-evals.ts"
+import { sourceProvenance } from "./eval-evidence.ts"
 
 const fixture = (await Bun.file(`${import.meta.dir}/routing-cases.json`).json()) as RoutingFixture
 const resultSchema: unknown = await Bun.file(`${import.meta.dir}/routing-result.schema.json`).json()
@@ -406,6 +408,126 @@ describe("progressive review contract", () => {
   })
 })
 
+describe("oracle review selection", () => {
+  const resultFor = (entry: RoutingCase): RoutingResult => ({
+    primary_skill: entry.primary_skill, modifier_skills: entry.expected_modifier_skills, references: entry.expected_references,
+    actions: entry.required_actions, first_action: "pin-review-scope", mutation: "none", question: "only-if-blocked", stop: "findings",
+  })
+
+  test("each concrete risk requires oracle selection and preserves read-only review", () => {
+    for (const id of ["oracle-tenant-boundary-review", "oracle-charge-retry-review", "oracle-mixed-version-migration-review", "oracle-unresolved-review-dispute"]) {
+      const entry = fixture.cases.find(candidate => candidate.id === id)!
+      const result = resultFor(entry)
+      expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
+      expect(compareResult(entry, result)).toEqual([])
+      expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== "delegate-oracle-review") })).toEqual([
+        "missing required action delegate-oracle-review",
+      ])
+      expect(compareResult(entry, { ...result, mutation: "requested-repo-writes" })).toEqual(["mutation: expected none, got requested-repo-writes"])
+    }
+  })
+
+  test("billing copy and a routine local helper reject unnecessary oracle review", () => {
+    for (const id of ["billing-copy-review-no-oracle", "small-coupled-review"]) {
+      const entry = fixture.cases.find(candidate => candidate.id === id)!
+      const result = resultFor(entry)
+      expect(compareResult(entry, result)).toEqual([])
+      expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
+    }
+  })
+
+  test("migration review retains its data modifier and actual root references", () => {
+    const entry = fixture.cases.find(candidate => candidate.id === "oracle-mixed-version-migration-review")!
+    const result = resultFor(entry)
+    expect(compareResult(entry, { ...result, modifier_skills: [] })).toEqual([
+      "modifier_skills: expected designing-data-intensive-systems, got ",
+    ])
+    expect(result.references).toContain("designing-data-intensive-systems/FOUNDATIONS.md")
+    expect(result.references).toContain("designing-data-intensive-systems/TRANSACTIONS.md")
+    expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
+  })
+
+  test("oracle follow-up retains the delta and prior coverage", () => {
+    const entry = fixture.cases.find(candidate => candidate.id === "oracle-unresolved-review-dispute")!
+    const result = resultFor(entry)
+    expect(compareResult(entry, { ...result, actions: [...result.actions, "review-entire-intended-diff"] })).toEqual(["forbidden action review-entire-intended-diff"])
+    expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== "review-delta-since-last-snapshot") })).toEqual([
+      "missing required action review-delta-since-last-snapshot",
+    ])
+    const conflicting = { ...entry, required_actions: [...entry.required_actions, "keep-coupled-review-local"] }
+    expect(validateCase(conflicting, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)).toContain(
+      "cases[0] coupled review cannot require independent delegation",
+    )
+  })
+})
+
+describe("source agent catalog", () => {
+  test("consumed symlinked profile changes alter provenance without traversing directory links", async () => {
+    const root = await mkdtemp(join(tmpdir(), "routing-symlink-profile-"))
+    try {
+      await mkdir(join(root, "skills"))
+      await mkdir(join(root, "agents"))
+      await writeFile(join(root, "AGENTS.md"), "# Source instructions\n")
+      const target = join(root, "profile.toml")
+      await writeFile(target, 'name = "oracle_reviewer"\ndescription = "Original review trigger."\n')
+      await symlink(target, join(root, "agents/oracle_reviewer.toml"))
+      await symlink(join(root, "agents"), join(root, "agents/loop"))
+      const before = await sourceProvenance(root)
+      expect(await agentCatalog(root)).toContain("Original review trigger.")
+      await writeFile(target, 'name = "oracle_reviewer"\ndescription = "Changed review trigger."\n')
+      expect(await agentCatalog(root)).toContain("Changed review trigger.")
+      expect((await sourceProvenance(root)).source_hash).not.toBe(before.source_hash)
+    } finally { await rm(root, { recursive: true, force: true }) }
+  })
+
+  test("paired prompts read their own descriptions and profile edits change source evidence", async () => {
+    const root = await mkdtemp(join(tmpdir(), "routing-agent-catalog-"))
+    try {
+      const roots = [join(root, "previous"), join(root, "candidate")]
+      for (const source of roots) {
+        await mkdir(join(source, "agents"), { recursive: true })
+        await symlink(join(import.meta.dir, ".."), join(source, "skills"))
+        await writeFile(join(source, "AGENTS.md"), "# Source instructions\n")
+        await writeFile(join(source, "agents/registry.toml"), "[agents]\nmax_depth = 2\n")
+        await writeFile(join(source, "agents/oracle_reviewer.toml"), 'name = "oracle_reviewer"\ndescription = "Previous review trigger."\n')
+      }
+      expect((await sourceProvenance(roots[0]!)).source_hash).toBe((await sourceProvenance(roots[1]!)).source_hash)
+      await writeFile(join(roots[1]!, "agents/oracle_reviewer.toml"), 'name = "oracle_reviewer"\ndescription = "Candidate concrete risk trigger."\n')
+      const previous = await buildLivePrompt(fixture.cases[0]!, fixture, join(roots[0]!, "skills"))
+      const candidate = await buildLivePrompt(fixture.cases[0]!, fixture, join(roots[1]!, "skills"))
+      expect(previous).toContain("oracle_reviewer: Previous review trigger.")
+      expect(previous).not.toContain("Candidate concrete risk trigger.")
+      expect(candidate).toContain("oracle_reviewer: Candidate concrete risk trigger.")
+      expect(candidate).not.toContain("Previous review trigger.")
+      expect(candidate).not.toContain("max_depth")
+      expect((await sourceProvenance(roots[0]!)).source_hash).not.toBe((await sourceProvenance(roots[1]!)).source_hash)
+    } finally { await rm(root, { recursive: true, force: true }) }
+  })
+
+  test("malformed profiles fail instead of silently dropping a role", async () => {
+    const root = await mkdtemp(join(tmpdir(), "routing-agent-profile-"))
+    try {
+      expect(await agentCatalog(root)).toBe("No source agent profiles.")
+      await mkdir(join(root, "agents"))
+      const path = join(root, "agents/oracle_reviewer.toml")
+      await writeFile(path, 'name = "wrong_role"\ndescription = "Review trigger."\n')
+      await expect(agentCatalog(root)).rejects.toThrow("filename-matching name")
+      await writeFile(path, 'name = "oracle_reviewer"\ndescription = ""\n')
+      await expect(agentCatalog(root)).rejects.toThrow("non-empty description")
+      await writeFile(path, 'name = "oracle_reviewer"\ndescription = [\n')
+      await expect(agentCatalog(root)).rejects.toThrow()
+    } finally { await rm(root, { recursive: true, force: true }) }
+  })
+
+  test("a profile directory access error is not an absent catalog", async () => {
+    const root = await mkdtemp(join(tmpdir(), "routing-agent-error-"))
+    try {
+      await writeFile(join(root, "agents"), "not a directory")
+      await expect(agentCatalog(root)).rejects.toThrow()
+    } finally { await rm(root, { recursive: true, force: true }) }
+  })
+})
+
 describe("invocation coverage and catalog stress", () => {
   test("all descriptions have positive and near-negative cases; none is a valid route", () => {
     expect(validateInvocationCoverage(fixture)).toEqual([])
@@ -463,8 +585,19 @@ describe("invocation coverage and catalog stress", () => {
   })
   test("reference schema accepts actual local reference paths", () => {
     const pattern = (resultSchema as any).properties.references.items.pattern
-    expect(new RegExp(pattern).test("engineering/references/boundary-design.md")).toBe(true)
-    expect(new RegExp(pattern).test("engineering/references/boundary-designXmd")).toBe(false)
+    for (const reference of ["engineering/references/boundary-design.md", "designing-data-intensive-systems/FOUNDATIONS.md", "designing-data-intensive-systems/TRANSACTIONS.md", "effect-ts/references/BEST_PRACTICES/schema-patterns.md"]) {
+      expect(new RegExp(pattern).test(reference)).toBe(true)
+    }
+    for (const reference of ["engineering/references/boundary-designXmd", "../SKILL.md", "engineering/../SKILL.md", "/tmp/reference.md"]) {
+      expect(new RegExp(pattern).test(reference)).toBe(false)
+    }
+  })
+  test("reference serialization keeps the owning skill and rejects invented paths", async () => {
+    const prompt = await buildLivePrompt(fixture.cases[0]!, fixture, join(import.meta.dir, ".."))
+    expect(prompt).toContain("Reference paths are relative to the supplied skills root, beginning with the owning skill folder.")
+    for (const reference of ["skills/references/delegated-review.md", "designing-data-intensive-systems/references/placeholder.md", "designing-data-intensive-systems/MISSING.md"]) {
+      expect(() => parseLiveResult(JSON.stringify({ ...validResult, references: [reference] }), fixture, resultSchema)).toThrow("unknown reference")
+    }
   })
 })
 

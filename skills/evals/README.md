@@ -1,6 +1,6 @@
 # Skill evals
 
-The validator checks inventory, invocation metadata, frontmatter, description and line limits, local links, one-level references, and fixture/schema contracts. Prose and headings may change without breaking static checks. The 45 original routing cases remain; a no-applicable-skill case adds `primary_skill: "none"`. Each of the 15 descriptions has positive and near-negative coverage mapped to cases in `invocation_coverage`.
+The validator checks inventory, invocation metadata, frontmatter, description and line limits, local links, one-level references, agent profile names/descriptions, and fixture/schema contracts. Prose and headings may change without breaking static checks. The 45 original routing cases remain; a no-applicable-skill case adds `primary_skill: "none"`. Each of the 15 skill descriptions has positive and near-negative coverage mapped to cases in `invocation_coverage`.
 
 ```bash
 bash skills/evals/check-skill-surface.sh
@@ -21,6 +21,8 @@ Both runners default to `gpt-6-astra` at `high`. Live calls require permission, 
 
 Routing comparisons allow fixture references absent from the previous source. Candidate references and each source's own Markdown links remain strict. Both sources keep the same expected references; a previous model result that omits an expected reference fails classification instead of blocking setup.
 
+Routing prompts include names, descriptions, and paths from each source's `agents/*.toml`, excluding `registry.toml`. Profiles are parsed with `Bun.TOML.parse`; the same file reader supplies their source hashes, including symlinked profile contents. It does not traverse profile subdirectories. Sources without an `agents/` directory get an explicit empty catalog; malformed profiles and other read errors fail setup. Synthetic skill-catalog variants leave the agent descriptions intact.
+
 ```bash
 bun skills/evals/run-routing-evals.ts live --case routine-refactor --allow-live
 bun skills/evals/run-execution-evals.ts live --case authorized-implementation --allow-live
@@ -37,6 +39,8 @@ JSONL output records source, harness, fixture, and prompt hashes; model and effo
 
 Routing live mode classifies tasks in a read-only sandbox. The prompt specifies the classification task and result format; skill instructions supply execution policies. It compares the primary skill, exact modifiers and references, required actions, optional forbidden actions, mutation authority, question boundary, and stop condition against [routing-cases.json](routing-cases.json). [routing-result.schema.json](routing-result.schema.json) defines the output. Classification does not prove execution.
 
+Reference output uses exact paths relative to the supplied skills root, beginning with the owning skill folder. Root Markdown files, `references/` paths, and nested reference folders preserve their filename case. The validated fixture allowlist still rejects unknown or invented references.
+
 `keep-coupled-review-local` satisfies `select-minimum-useful-reviewers`: it selects one local reviewer. Delegation alone does not satisfy that requirement. Other required actions use exact matching.
 
 Progressive review cases cover:
@@ -46,7 +50,9 @@ Progressive review cases cover:
 - `follow-up-review-missing-snapshot`: recover coverage or review the full identifiable intended diff. The fixture makes recovery unavailable, so an assumed delta is insufficient.
 - `combined-slice-review`: inspect previously unreviewed wiring before relying on completed slice reviews.
 
-`forbidden_actions` applies only where the case excludes an action. New evidence can justify reopening earlier scope; the follow-up case states that no such evidence exists. `independent-review-tracks` loads `review-and-simplify-changes/references/delegated-review.md`; local review cases need no delegation reference. These classifications do not prove review depth, defect detection, or use of a host-provided `review-agent`.
+`forbidden_actions` applies only where the case excludes an action. New evidence can justify reopening earlier scope; the follow-up case states that no such evidence exists. Review cases load `review-and-simplify-changes/references/delegated-review.md` before choosing local or delegated review. These classifications do not prove review depth, defect detection, or use of a host-provided `review-agent`.
+
+Oracle selection cases require `delegate-oracle-review` for changed tenant access, charge retry correctness, mixed-version migration safety, and a material review dispute unresolved after checking evidence. The migration case requires the data-systems modifier and its foundations/transactions references because backfill, overlapping writers, and rollback affect durable data. `oracle-unresolved-review-dispute` also requires a delta pass and forbids an unnecessary full repeat. `billing-copy-review-no-oracle` and `small-coupled-review` forbid oracle selection for display wording and routine local review. The cases test intended role selection from source guidance; they do not execute delegated agents or prove their model and effort settings.
 
 `--catalog-variant` selects:
 

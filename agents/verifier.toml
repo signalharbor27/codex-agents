@@ -1,5 +1,5 @@
 name = "verifier"
-description = "Use when an implementation needs command-backed verification. Excludes source-only review and repair work."
+description = "Use when completed implementation needs command-backed acceptance evidence. Excludes source-only review, test design, and repairs."
 model = "gpt-5.6-terra"
 model_reasoning_effort = "medium"
 sandbox_mode = "workspace-write"

@@ -88,46 +88,63 @@ boundaries. Responses stay concise without dropping required evidence.
 ## Custom agents
 
 Installable profiles live in [agents](agents). Current Codex releases discover
-these standalone files automatically. [agents/registry.toml](agents/registry.toml)
+these standalone files automatically. [agent-settings.toml](agent-settings.toml)
 therefore contains shared agent settings only.
 
-- `fast_reviewer`: `gpt-5.6-luna` / `xhigh`, mechanical evidence
-- `reviewer`: `gpt-6-astra` / `medium`, standard correctness and contracts
-- `oracle_reviewer`: `gpt-6-astra` / `xhigh`, difficult cross-system judgment
-- `librarian`: `gpt-5.6-luna` / `xhigh`, external documentation and research
+- `implementer`: `gpt-6-astra` / `medium`, agreed implementation slices
+- `explorer`: `gpt-5.6-luna` / `medium`, codebase facts and tracing
+- `fast_reviewer`: `gpt-5.6-luna` / `medium`, mechanical evidence
+- `reviewer`: `gpt-6-astra` / `high`, standard correctness and contracts
+- `oracle_reviewer`: `gpt-6-astra` / `xhigh`, permission, financial, concurrency, recovery, rollout, or disputed correctness risks
+- `librarian`: `gpt-5.6-luna` / `medium`, external documentation and research
 - `verifier`: `gpt-5.6-terra` / `medium`, command verification
 
 The main agent retains scope, approvals, write coordination, synthesis, and the completion claim. Each subagent receives a bounded brief and returns evidence for the main agent to judge.
 
-Symlink approved profiles from this checkout into the global Codex agent directory.
+The main chat default is Astra / `high`; routine tasks may select `medium`.
+Profiles pin both model and effort, so changing the chat setting does not change
+their assignments. The custom `explorer` replaces the built-in role of that name.
+Use `implementer` for ordinary slices. For harder implementation, the main agent
+can take over or explicitly select the unpinned `worker` at higher effort.
+
+Oracle review is selected from changed behavior and concrete invariants before
+choosing local or standard review. The review skill owns the escalation rules
+and keeps follow-up passes scoped to fixes and affected contracts.
+
+Link the global agent directory to this checkout's `agents` directory.
+Codex 0.154.0 discovers individual file symlinks but refuses to load them when
+spawning an agent. A directory symlink leaves each profile as a regular file.
 Repository edits then apply when a new task loads the profiles. Explicit profile
 settings override the parent model and effort.
 
-From the repository root, preserve existing profiles before creating the links:
+From the repository root, check for unrelated profiles and preserve the old directory:
 
 ```bash
 codex_repo_root="$(pwd -P)"
 codex_profile_root="${CODEX_HOME:-$HOME/.codex}"
-install -d "$codex_profile_root/agents" || exit 1
-codex_profile_backup="$(mktemp -d "$codex_profile_root/agent-backup.XXXXXX")" || exit 1
-for agent in fast_reviewer librarian oracle_reviewer reviewer verifier; do
-  test -f "$codex_repo_root/agents/$agent.toml" || exit 1
-  profile="$codex_profile_root/agents/$agent.toml"
+install -d "$codex_profile_root" || exit 1
+for profile in "$codex_profile_root/agents/"* "$codex_profile_root/agents/".[!.]* "$codex_profile_root/agents/"..?*; do
   if [ -e "$profile" ] || [ -L "$profile" ]; then
-    mv "$profile" "$codex_profile_backup/" || exit 1
+    cmp -s "$profile" "$codex_repo_root/agents/${profile##*/}" || {
+      echo "Existing profiles differ; preserve them and use regular copies for the selected roles."
+      exit 1
+    }
   fi
-  ln -s "$codex_repo_root/agents/$agent.toml" "$profile" || exit 1
-  test "$(readlink "$profile")" = "$codex_repo_root/agents/$agent.toml" || exit 1
-  cmp "agents/$agent.toml" "$profile" || exit 1
 done
+codex_profile_backup="$(mktemp -d "$codex_profile_root/agent-backup.XXXXXX")" || exit 1
+if [ -e "$codex_profile_root/agents" ] || [ -L "$codex_profile_root/agents" ]; then
+  mv "$codex_profile_root/agents" "$codex_profile_backup/agents" || exit 1
+fi
+ln -s "$codex_repo_root/agents" "$codex_profile_root/agents" || exit 1
+test "$(readlink "$codex_profile_root/agents")" = "$codex_repo_root/agents" || exit 1
 ```
 
 Start a new Codex task after installation and verify the exposed role settings.
 
-Merge only the shared settings from [agents/registry.toml](agents/registry.toml)
+Merge only the shared settings from [agent-settings.toml](agent-settings.toml)
 into the existing `$CODEX_HOME/config.toml`; do not append a second `[agents]`
 table. Do not add redundant `[agents.<role>]` registrations for profiles already
-installed under `$CODEX_HOME/agents/`. Keep `registry.toml` outside that directory;
+installed under `$CODEX_HOME/agents/`. Keep `agent-settings.toml` outside that directory;
 it is a shared-settings fragment, not an agent profile.
 
 ## Skill installation
