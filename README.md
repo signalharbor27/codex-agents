@@ -98,21 +98,26 @@ therefore contains shared agent settings only.
 
 The main agent retains scope, approvals, write coordination, synthesis, and the completion claim. Each subagent receives a bounded brief and returns evidence for the main agent to judge.
 
-Install approved profiles and verify each copy. Explicit profile settings override
-the parent model and effort; changing the main model does not update these roles.
+Symlink approved profiles from this checkout into the global Codex agent directory.
+Repository edits then apply when a new task loads the profiles. Explicit profile
+settings override the parent model and effort.
+
+From the repository root, preserve existing profiles before creating the links:
 
 ```bash
+codex_repo_root="$(pwd -P)"
 codex_profile_root="${CODEX_HOME:-$HOME/.codex}"
-install -d "$codex_profile_root/agents"
-install -m 0644 \
-  agents/fast_reviewer.toml \
-  agents/librarian.toml \
-  agents/oracle_reviewer.toml \
-  agents/reviewer.toml \
-  agents/verifier.toml \
-  "$codex_profile_root/agents/"
+install -d "$codex_profile_root/agents" || exit 1
+codex_profile_backup="$(mktemp -d "$codex_profile_root/agent-backup.XXXXXX")" || exit 1
 for agent in fast_reviewer librarian oracle_reviewer reviewer verifier; do
-  cmp "agents/$agent.toml" "$codex_profile_root/agents/$agent.toml" || exit 1
+  test -f "$codex_repo_root/agents/$agent.toml" || exit 1
+  profile="$codex_profile_root/agents/$agent.toml"
+  if [ -e "$profile" ] || [ -L "$profile" ]; then
+    mv "$profile" "$codex_profile_backup/" || exit 1
+  fi
+  ln -s "$codex_repo_root/agents/$agent.toml" "$profile" || exit 1
+  test "$(readlink "$profile")" = "$codex_repo_root/agents/$agent.toml" || exit 1
+  cmp "agents/$agent.toml" "$profile" || exit 1
 done
 ```
 
@@ -121,7 +126,8 @@ Start a new Codex task after installation and verify the exposed role settings.
 Merge only the shared settings from [agents/registry.toml](agents/registry.toml)
 into the existing `$CODEX_HOME/config.toml`; do not append a second `[agents]`
 table. Do not add redundant `[agents.<role>]` registrations for profiles already
-installed under `$CODEX_HOME/agents/`.
+installed under `$CODEX_HOME/agents/`. Keep `registry.toml` outside that directory;
+it is a shared-settings fragment, not an agent profile.
 
 ## Skill installation
 
