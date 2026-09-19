@@ -1,6 +1,6 @@
 ---
 name: improve-codebase-architecture
-description: "Audit codebase or subsystem architecture for shallow modules, weak seams, agent navigability, domain drift, and test-shape pain. Use when you want a phased plan to deepen interfaces, simplify structure, and improve verification."
+description: "Use when auditing repository or subsystem architecture for weak boundaries, domain drift, or navigation and verification friction; not for routine implementation or review of a bounded diff."
 ---
 
 # Improve codebase architecture
@@ -27,31 +27,30 @@ Diagnose structural problems in a codebase or subsystem, then turn the evidence 
 
 ## Minimal Workflow
 
-1. Pin the review boundary, then inspect its runtime entrypoints, owners, seams, build and test shape, and named problems. For a post-code gate, limit findings to the original diff and its direct effects; list broader or pre-existing issues separately.
-2. Map the business and domain terms in the code, conflicts among them, and existing documentation or decisions.
-3. Find the architecture and testing problems with the highest cost. Do not inventory every possible cleanup.
-4. Preserve existing guarantees and constraints unless there is evidence they are part of the problem.
-5. Compare the current shape against simpler, deeper modules with clearer interfaces; use module/interface/seam/depth/leverage/locality vocabulary and the deletion test.
-6. Treat a one-adapter seam as hypothetical unless it hides real external complexity, policy variation, or a second adapter such as tests.
-7. Judge agent-friendliness by local reasoning and bounded evidence handoff. Trace real entrypoints through domain ownership, deep module interfaces, explicit side effects, and trustworthy proof seams. Treat the engineering references below as authoritative for these design concepts rather than repeating them here.
-8. Classify findings as pre-existing debt, regression from the current change, preventable by `engineering`, preventable by `debugging`, preventable by `test-design`, or repo-doc candidate.
-9. For large repos or monorepos, split evidence gathering by subsystem and use subagents for bounded independent review tracks such as frontend, backend, shared packages, or build and CI.
-10. Write a dependency-ordered plan. Each phase must name its scope, expected payoff, prerequisites, preserved behavior, and verification.
-11. Keep the review and plan in chat unless the user explicitly requests or has already authorized a durable target-repository plan file.
-12. Offer to record terms in `CONTEXT.md` or tradeoffs in ADRs only when they will guide future work.
-13. Pressure-test the draft before finalizing it. Handle a single unresolved approval inline; do not ask again for settled decisions. Load the dependency-frontier grilling reference only when the user asks for an interactive interview or several consequential, user-owned decisions depend on each other.
-14. State what must remain unchanged, what should wait, and at least one rejected alternative when the tradeoff is non-trivial.
+1. Pin the review boundary and read-only authority. Inspect runtime entrypoints, owners, seams, build and test shape, domain terms, existing decisions, and named problems. For a post-code review, limit findings to the original diff and its direct effects; list broader or pre-existing issues separately.
+2. Keep small or tightly coupled scope local. Delegate material independent questions to the minimum useful set of read-only subagents, each with the pinned scope. The main agent owns synthesis and decisions.
+3. Find the highest-cost structural problems using the judgment rules below. Support each finding with a trace from a real entrypoint through ownership, interfaces, effects, and proof where relevant. Do not inventory every possible cleanup.
+4. Classify supported findings as pre-existing debt, current regression, preventable by `engineering`, `debugging`, or `test-design`, or a repo-doc candidate. Write a dependency-ordered plan sized to them. Use phases only when dependencies or rollout need them. If no finding is supported, report no actionable findings and any coverage limits.
+5. Pressure-test material choices. Handle one unresolved approval inline; do not reopen settled decisions. Load the grilling reference only for an interactive interview or several interdependent consequential user-owned choices. Keep the plan in chat unless a durable target-repository file is already or explicitly authorized.
+
+## Judgment rules
+
+- Preserve existing guarantees and constraints unless evidence shows they are part of the problem.
+- Compare simpler, deeper modules with clearer interfaces. Use module/interface/seam/depth/leverage/locality vocabulary and the deletion test from the engineering references below.
+- Treat a one-adapter seam as hypothetical unless it hides real external complexity, policy variation, or a second adapter such as tests.
+- Judge agent-friendliness by local reasoning and bounded evidence handoff, with domain ownership, explicit effects, and trustworthy proof seams.
+- Recommend terms in `CONTEXT.md` or tradeoffs in ADRs only when they will guide future work; write them only within existing or explicit authority.
 
 ## Output contract
 
 - Prioritized findings with file or subsystem evidence, impact, and confidence. When applicable, agent-friendly findings trace a real entrypoint through its owner, boundary, effects, and proof seam.
-- A phased plan that gives each phase's scope, payoff, dependencies, and verification.
-- Explicit lists of preserved behavior, deferred work, rejected alternatives, and open decisions.
+- For supported changes, an actionable plan with scope, payoff, dependencies, preserved behavior, and verification; phases only when needed.
+- Material deferred work, alternatives, or open decisions. Explain real tradeoffs; omit empty sections.
 - Completion requires evidence for every recommendation and no hidden consequential choice in the plan.
 
 ## Reference Routing
 
-- Read [AGENT_FRIENDLY_REVIEW.md](AGENT_FRIENDLY_REVIEW.md) for the review rubric and planning heuristics.
+- Read [AGENT_FRIENDLY_REVIEW.md](AGENT_FRIENDLY_REVIEW.md) when navigation, local reasoning, delegation, or proof friction needs a structured review.
 - Read [../engineering/references/boundary-design.md](../engineering/references/boundary-design.md) when judging domain ownership, caller knowledge, or interface depth.
 - Read [../engineering/references/state-and-effects.md](../engineering/references/state-and-effects.md) when important side effects, retries, recovery, or partial failure are present.
 - Read [../engineering/references/proof.md](../engineering/references/proof.md) when the trustworthy proof seam is unclear or a recommendation changes verification shape.
@@ -63,5 +62,5 @@ Diagnose structural problems in a codebase or subsystem, then turn the evidence 
 - Turning a constrained review into a greenfield redesign
 - Recommending broad pattern churn without a clear payoff
 - Overlooking existing tests, invariants, or operational constraints
-- Returning a vague wish list instead of a phased plan
+- Returning a vague wish list or forcing phases onto a small recommendation
 - Favoring internal cleverness over navigability, seams, and verifiability

@@ -228,6 +228,8 @@ const upperName = Option.map(maybeName, (n) => n.toUpperCase())
 
 ## Choose the service abstraction by repo convention
 
+Keep established `Context.Tag` composition, low-level capabilities, and boundaries that intentionally avoid generated accessors. For a new business service, prefer `Effect.Service` when its generated layer and accessors reduce wiring, as described in [service patterns](service-patterns.md).
+
 ```typescript
 export class UserService extends Context.Tag("UserService")<
     UserService,
@@ -237,9 +239,9 @@ export class UserService extends Context.Tag("UserService")<
 }
 ```
 
-**Why:** Requires manual layer creation, no built-in accessors, more boilerplate.
+`Context.Tag` requires explicit layer creation and accessors. That work is justified when the boundary needs those choices.
 
-**Correct:**
+For a new service that benefits from generated wiring:
 ```typescript
 export class UserService extends Effect.Service<UserService>()("UserService", {
     accessors: true,

@@ -100,44 +100,49 @@ This does not guarantee that the forked fibers have reached the code you intend 
 - your “concurrent” test can become **effectively sequential**
 - assertions like “underlying effect executed once” can fail intermittently even though the implementation is correct
 
-### Deterministic pattern: started latch and gate
+### Deterministic sharing: one cache, two suspended callers
 
-If you need to ensure real overlap, add a second `Deferred` that the underlying effect completes as soon as it begins:
+A started latch observes only one execution. To test sharing, allocate one shared operation and observe both callers before releasing it. Forking a raw effect twice runs it twice.
+
+This runnable test uses `Effect.cached`, whose lifetime includes the cached result. `TestClock.adjust(0)` waits for supervised fibers to settle; the status assertions verify that both callers are suspended while the underlying operation is blocked.
 
 ```ts
-import { Deferred, Effect, Fiber } from "effect";
+import { it } from "@effect/vitest";
+import { Deferred, Effect, Fiber, FiberStatus, TestClock } from "effect";
+import { expect } from "vitest";
 
-Effect.gen(function* () {
-  let executions = 0;
-
-  const started = yield* Deferred.make<void>();
-  const gate = yield* Deferred.make<void>();
-
-  const underlying = Effect.gen(function* () {
-    executions++;
-    // Signal we actually started executing (at least one fiber is “in” now)
-    yield* Deferred.succeed(started, undefined);
-    // Block here to force overlap
-    yield* Deferred.await(gate);
-    return "ok";
-  });
-
-  const f1 = yield* Effect.fork(underlying);
-  const f2 = yield* Effect.fork(underlying);
-
-  // Don't open the gate until at least one fiber definitely started
-  yield* Deferred.await(started);
-  yield* Deferred.succeed(gate, undefined);
-
-  yield* Fiber.join(f1);
-  yield* Fiber.join(f2);
-
-  // Now it's safe to assert expectations about overlap / dedup / sharing
-  // expect(executions).toBe(1)
-});
+it.scoped("shares one in-flight execution between two callers", () =>
+  Effect.gen(function* () {
+    let executions = 0;
+    const started = yield* Deferred.make<void>();
+    const gate = yield* Deferred.make<void>();
+    const underlying = Effect.gen(function* () {
+      executions++;
+      yield* Deferred.succeed(started, undefined);
+      yield* Deferred.await(gate);
+      return "ok";
+    });
+    // Allocate the cache once; both callers use this same value.
+    const shared = yield* Effect.cached(underlying);
+    const f1 = yield* Effect.forkScoped(shared);
+    const f2 = yield* Effect.forkScoped(shared);
+    yield* Deferred.await(started);
+    // Wait for supervised fibers to settle before inspecting both callers.
+    yield* TestClock.adjust(0);
+    expect(FiberStatus.isSuspended(yield* Fiber.status(f1))).toBe(true);
+    expect(FiberStatus.isSuspended(yield* Fiber.status(f2))).toBe(true);
+    expect(executions).toBe(1);
+    yield* Deferred.succeed(gate, undefined);
+    expect(yield* Fiber.join(f1)).toBe("ok");
+    expect(yield* Fiber.join(f2)).toBe("ok");
+    expect(executions).toBe(1);
+  })
+);
 ```
 
-The started latch proves that a fiber reached the coordinated section before the gate opens, so the concurrency assertion cannot pass through accidental sequencing.
+The assertions prove two pending callers share one execution and receive its result. They do not prove eviction, cancellation, or sharing across separately allocated caches. For an application cache, replace `Effect.cached(underlying)` with that cache's public operation and retain the coordination and assertions.
+
+Validated with `effect@3.22.2`, `@effect/vitest@0.30.0`, and `vitest@3.2.4`. Check the installed versions before adapting it. API references: [Effect.cached](https://effect-ts.github.io/effect/effect/Effect.ts.html#cached), [TestClock.adjust](https://effect-ts.github.io/effect/effect/TestClock.ts.html#adjust), and [Fiber.status](https://effect-ts.github.io/effect/effect/Fiber.ts.html#status).
 
 ## Use it.scoped for scoped resources
 

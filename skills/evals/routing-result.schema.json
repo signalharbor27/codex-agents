@@ -96,7 +96,8 @@
         "map-workload",
         "pin-review-scope",
         "read-final-diff",
-        "verify-branch-state"
+        "verify-branch-state",
+        "answer-directly"
       ]
     },
     "mutation": {

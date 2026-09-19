@@ -26,7 +26,7 @@ Prefer existing repository tests and commands. Test through public or stable int
 
 ## Completion
 
-Run focused proof and the smallest required surrounding checks. Read the output and inspect the final diff. Reuse current-turn evidence while the tested code and relevant state remain unchanged. Repeat or broaden checks only for new edits, failures, changed state, or unresolved risks. Report what passed and any material proof gaps.
+Run focused proof and the smallest required surrounding checks. Read the output and inspect the final diff. Reuse earlier evidence after confirming the tested code, inputs, dependencies, and relevant runtime state are unchanged. A new turn alone does not invalidate proof. Repeat or broaden checks for affected edits, failures, changed state, missing evidence, or unresolved risks. Report what passed and any material proof gaps.
 
 An existing reproduction, replay, or runtime observation may supply the regression signal. Add a persistent test when it adds durable protection; avoid checks that merely repeat implementation details.
 

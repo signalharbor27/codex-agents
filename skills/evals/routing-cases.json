@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "engineering_skills": [
     "debugging",
     "describe-pr",
@@ -35,6 +35,23 @@
     "test-design/references/tdd.md",
     "test-design/references/test-selection.md"
   ],
+  "invocation_coverage": {
+    "debugging": {"positive": ["unknown-flaky-failure"], "near_negative": ["understood-bug-fix"]},
+    "describe-pr": {"positive": ["describe-pr"], "near_negative": ["broad-read-only-review"]},
+    "designing-data-intensive-systems": {"positive": ["data-workload"], "near_negative": ["hot-path-query"]},
+    "effect-ts": {"positive": ["effect-wrapper"], "near_negative": ["sdk-schema-migration"]},
+    "engineering": {"positive": ["routine-refactor"], "near_negative": ["unknown-flaky-failure"]},
+    "finishing-a-development-branch": {"positive": ["finish-branch"], "near_negative": ["merge-conflict-safe-resolution"]},
+    "grill-me": {"positive": ["implicit-grilling-frontier"], "near_negative": ["pressure-test-findings-only"]},
+    "improve-codebase-architecture": {"positive": ["repo-architecture-review"], "near_negative": ["wip-cleanup-quality"]},
+    "improve-test-suite": {"positive": ["test-suite-review"], "near_negative": ["test-strategy"]},
+    "receiving-code-review": {"positive": ["review-feedback"], "near_negative": ["small-coupled-review"]},
+    "review-and-simplify-changes": {"positive": ["wip-cleanup-quality"], "near_negative": ["repo-architecture-review"]},
+    "test-design": {"positive": ["test-strategy"], "near_negative": ["unknown-flaky-failure"]},
+    "using-git-worktrees": {"positive": ["worktree-isolation"], "near_negative": ["merge-conflict-safe-resolution"]},
+    "writing-rust": {"positive": ["rust-api"], "near_negative": ["boundary-change"]},
+    "writing-skills": {"positive": ["skill-authoring"], "near_negative": ["describe-pr"]}
+  },
   "cases": [
     {
       "id": "explicit-grill-me",
@@ -664,6 +681,20 @@
         "mutation": "requested-repo-writes",
         "question": "only-if-blocked",
         "stop": "after-verification"
+      }
+    },
+    {
+      "id": "no-applicable-skill",
+      "prompt": "Suggest three names for a pet rabbit.",
+      "primary_skill": "none",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": [],
+      "expectations": {
+        "first_action": "answer-directly",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": ["after-artifact", "after-requested-scope"]
       }
     }
   ]

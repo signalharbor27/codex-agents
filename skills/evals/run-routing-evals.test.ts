@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { chmod, mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -19,6 +19,10 @@ import {
   validateExplicitOnlyInventory,
   validateExplicitOnlySelections,
   validateResultSchema,
+  validateInvocationCoverage,
+  validateSkillEntrypoints,
+  buildLivePrompt,
+  skillCatalog,
   type RoutingCase,
   type RoutingFixture,
   type RoutingResult,
@@ -213,7 +217,7 @@ test("JSON loading distinguishes a missing file from invalid content", async () 
 
 test("fixture validation rejects unknown top-level fields", () => {
   expect(validateFixtureTopLevel({ ...fixture, unexpected: true })).toEqual([
-    "routing fixture must contain exactly version, engineering_skills, explicit_only_skills, skill_references, cases",
+    "routing fixture must contain exactly version, engineering_skills, explicit_only_skills, skill_references, invocation_coverage, cases",
   ])
 })
 
@@ -246,7 +250,7 @@ test("the surface check reports rg execution failures", async () => {
     const result = await collectSubprocess(child, "surface check", 5_000)
     expect(result.exitCode).toBe(2)
     expect(result.stdout).not.toContain("skill surface checks passed")
-    expect(result.stderr).toContain("rg failed while checking")
+    expect(result.stderr).toContain("rg could not scan for outdated guidance")
   } finally {
     await rm(directory, { recursive: true, force: true })
   }
@@ -291,4 +295,91 @@ describe("adaptive review contract", () => {
     entry.required_actions.push("launch-exactly-eight-distinct-read-only-subagents")
     expect(validate(entry)).toContain("cases[0] references unknown action launch-exactly-eight-distinct-read-only-subagents")
   })
+})
+
+describe("invocation coverage and catalog stress", () => {
+  test("all descriptions have positive and near-negative cases; none is a valid route", () => {
+    expect(validateInvocationCoverage(fixture)).toEqual([])
+    const entry = fixture.cases.find(entry => entry.primary_skill === "none")!
+    expect(parseLiveResult(JSON.stringify({ ...validResult, primary_skill: "none" }), fixture, resultSchema).primary_skill).toBe("none")
+    expect(validateCase(entry, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)).toEqual([])
+    expect(compareResult(entry, validResult)).toContain("primary_skill: expected none, got engineering")
+    expect(() => parseLiveResult(JSON.stringify({ ...validResult, primary_skill: "none", modifier_skills: ["test-design"] }), fixture, resultSchema)).toThrow("none route must not select")
+  })
+  test("missing, unknown, or positive-selected near negatives fail coverage", () => {
+    const changed = structuredClone(fixture)
+    delete changed.invocation_coverage.debugging
+    expect(validateInvocationCoverage(changed)).toContain("invocation coverage must name every installed skill exactly once")
+    changed.invocation_coverage = structuredClone(fixture.invocation_coverage)
+    changed.invocation_coverage.debugging!.near_negative = ["unknown-flaky-failure"]
+    expect(validateInvocationCoverage(changed)).toContain("debugging near_negative case unknown-flaky-failure has contradictory selection")
+    changed.invocation_coverage.debugging!.near_negative = ["missing"]
+    expect(validateInvocationCoverage(changed)).toContain("debugging coverage names unknown case missing")
+  })
+  test("catalog variants are deterministic and explicitly synthetic", async () => {
+    const root = join(import.meta.dir, "..")
+    const full = await skillCatalog(root, fixture.engineering_skills)
+    const truncated = await skillCatalog(root, fixture.engineering_skills, "synthetic-truncated")
+    const crowded = await skillCatalog(root, fixture.engineering_skills, "synthetic-crowded")
+    expect(truncated.length).toBeLessThan(full.length)
+    expect(crowded).toContain("synthetic-catalog-59")
+    expect(crowded).toContain("synthetic distractor; no file")
+    expect(await skillCatalog(root, fixture.engineering_skills, "synthetic-crowded")).toBe(crowded)
+    const prompt = await buildLivePrompt(fixture.cases[0]!, fixture, root, "synthetic-truncated")
+    expect(prompt).toContain('primary_skill "none"')
+    expect(prompt).toContain("stress tests, not measurements of host catalog rendering")
+    expect(prompt).not.toContain("Classification rules:")
+    expect(prompt).not.toContain("Permission to implement does not grant")
+    expect(prompt).not.toContain("An explicit review-scope pin comes first")
+  })
+  test("comparison roots preserve case, model, effort, and variant selection", () => {
+    const args = parseArgs(["dry-run", "--case", "routine-refactor", "--source-root", "/tmp/candidate", "--previous-source-root", "/tmp/previous", "--catalog-variant", "synthetic-crowded"])
+    expect(args.skillsRoot).toBe("/tmp/candidate/skills")
+    expect(args.previousSourceRoot).toBe("/tmp/previous")
+    expect(args.catalogVariant).toBe("synthetic-crowded")
+    expect(() => parseArgs(["dry-run", "--catalog-variant", "native-truncated"])).toThrow("invalid catalog")
+  })
+  test("surface validation permits prose restructuring while preserving metadata limits", async () => {
+    const root = await mkdtemp(join(tmpdir(), "skill-surface-"))
+    try {
+      await mkdir(join(root, "example"))
+      const path = join(root, "example/SKILL.md")
+      await writeFile(path, '---\nname: example\ndescription: "Use when evaluating the example."\n---\n\n# Example\n\nA short instruction, without fixed headings.\n')
+      expect((await validateSkillEntrypoints(root, ["example"])).errors).toEqual([])
+      await writeFile(path, '---\nname: wrong\ndescription: "A workflow summary."\n---\n')
+      const errors = (await validateSkillEntrypoints(root, ["example"])).errors
+      expect(errors.some(error => error.includes("name must match"))).toBe(true)
+      expect(errors.some(error => error.includes("Use when"))).toBe(true)
+    } finally { await rm(root, { recursive: true, force: true }) }
+  })
+  test("reference schema accepts actual local reference paths", () => {
+    const pattern = (resultSchema as any).properties.references.items.pattern
+    expect(new RegExp(pattern).test("engineering/references/boundary-design.md")).toBe(true)
+    expect(new RegExp(pattern).test("engineering/references/boundary-designXmd")).toBe(false)
+  })
+})
+
+test("none route allows no extra actions and either direct-answer stop", () => {
+  const entry = fixture.cases.find(entry => entry.primary_skill === "none")!
+  for (const stop of ["after-artifact", "after-requested-scope"]) {
+    expect(compareResult(entry, { primary_skill: "none", modifier_skills: [], references: [], actions: [], first_action: "answer-directly", mutation: "none", question: "only-if-blocked", stop })).toEqual([])
+  }
+  const emptyActions = { ...fixture.cases.find(entry => entry.primary_skill === "engineering")!, required_actions: [] }
+  expect(validateCase(emptyActions, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)).toContain("cases[0].required_actions must not be empty")
+})
+
+test("CLI validates the exact supplied skill root, including nonstandard and missing paths", async () => {
+  const root = await mkdtemp(join(tmpdir(), "skill-root-selection-"))
+  try {
+    await symlink(join(import.meta.dir, ".."), join(root, "custom-skills"))
+    await writeFile(join(root, "AGENTS.md"), "# Fixture instructions\n")
+    const run = async (path: string) => collectSubprocess(Bun.spawn({
+      cmd: ["bun", join(import.meta.dir, "run-routing-evals.ts"), "validate", "--skills-root", path],
+      stdout: "pipe", stderr: "pipe",
+    }), "exact skill root", 5_000)
+    expect((await run(join(root, "custom-skills"))).exitCode).toBe(0)
+    const missing = await run(join(import.meta.dir, "../..", "does-not-exist-for-validation"))
+    expect(missing.exitCode).not.toBe(0)
+    expect(missing.stdout).not.toContain("Routing eval fixture is valid")
+  } finally { await rm(root, { recursive: true, force: true }) }
 })

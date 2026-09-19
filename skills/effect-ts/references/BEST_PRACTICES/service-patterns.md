@@ -136,7 +136,7 @@ yield* Effect.annotateCurrentSpan("step", "completing")
 
 ## When Context.Tag is acceptable
 
-`Context.Tag` is appropriate **only** for infrastructure that's injected at runtime:
+Use `Context.Tag` for runtime-injected infrastructure, compatibility with established service composition, or boundaries that intentionally avoid generated accessors. For new business services, prefer `Effect.Service` when its generated layer and accessors reduce wiring. The examples below cover infrastructure.
 
 ### Cloudflare Worker bindings
 

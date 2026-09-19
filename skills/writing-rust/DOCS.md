@@ -190,8 +190,8 @@ Document non-obvious derive choices:
 ```rust
 /// A user account.
 ///
-/// Implements [`Clone`] for cheap copies (wraps `Arc` internally).
-/// Does not implement [`Copy`] as cloning has semantic meaning.
+/// Implements [`Clone`] by cloning each field, including the owned name.
+/// Does not implement [`Copy`] because it owns a [`String`].
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct User {
     /// Unique identifier for this user.
