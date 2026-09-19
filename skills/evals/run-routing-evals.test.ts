@@ -341,7 +341,7 @@ describe("progressive review contract", () => {
     expect(compareResult(routingCase, { ...result, actions: [...result.actions, "review-entire-intended-diff"] })).toEqual([
       "forbidden action review-entire-intended-diff",
     ])
-    for (const action of ["review-delta-since-last-snapshot", "trace-affected-contracts", "carry-unresolved-findings-forward", "confirm-final-review-coverage"]) {
+    for (const action of ["review-delta-since-last-snapshot", "trace-affected-contracts", "carry-unresolved-findings-forward", "retain-main-review-ownership", "confirm-final-review-coverage"]) {
       expect(compareResult(routingCase, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([
         `missing required action ${action}`,
       ])
@@ -414,6 +414,97 @@ describe("oracle review selection", () => {
     actions: entry.required_actions, first_action: "pin-review-scope", mutation: "none", question: "only-if-blocked", stop: "findings",
   })
 
+  test("delegated substantive review needs Oracle, the available defect skill, and outer ownership", () => {
+    const entry = fixture.cases.find(candidate => candidate.id === "delegated-substantive-defect-review")!
+    const result = resultFor(entry)
+    expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
+    expect(compareResult(entry, result)).toEqual([])
+    for (const action of ["delegate-oracle-review", "use-built-in-review-agent", "retain-main-review-ownership"]) {
+      expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
+    }
+  })
+
+  test("mechanical evidence and command verification require their own roles", () => {
+    for (const [id, role] of [["delegated-mechanical-review-evidence", "delegate-fast-review"], ["delegated-review-command-evidence", "delegate-command-verification"]]) {
+      const entry = fixture.cases.find(candidate => candidate.id === id)!
+      const result = resultFor(entry)
+      expect(compareResult(entry, result)).toEqual([])
+      expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== role) })).toEqual([`missing required action ${role}`])
+      expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
+      expect(compareResult(entry, { ...result, actions: [...result.actions, "consult-oracle"] })).toEqual(["forbidden action consult-oracle"])
+      expect(compareResult(entry, { ...result, actions: [...result.actions, "use-built-in-review-agent"] })).toEqual(["forbidden action use-built-in-review-agent"])
+      const otherRole = role === "delegate-fast-review" ? "delegate-command-verification" : "delegate-fast-review"
+      expect(compareResult(entry, { ...result, actions: [...result.actions, otherRole] })).toEqual([`forbidden action ${otherRole}`])
+      expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== "keep-task-read-only") })).toEqual(["missing required action keep-task-read-only"])
+      expect(compareResult(entry, { ...result, mutation: "requested-repo-writes" })).toEqual(["mutation: expected none, got requested-repo-writes"])
+      if (role === "delegate-command-verification") {
+        for (const action of ["do-not-invent-verification", "retain-main-review-ownership"]) {
+          expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
+        }
+      }
+    }
+  })
+
+  test("evidence-only completion accepts the requested boundary without redundant scope labels", () => {
+    for (const id of ["delegated-mechanical-review-evidence", "delegated-review-command-evidence"]) {
+      const entry = fixture.cases.find(candidate => candidate.id === id)!
+      const result = resultFor(entry)
+      expect(result.actions).not.toContain("pin-review-scope")
+      expect(result.actions).not.toContain("honor-single-track-scope")
+      const stops = id === "delegated-review-command-evidence"
+        ? ["findings", "after-verification", "after-requested-scope"]
+        : ["findings", "after-requested-scope"]
+      for (const stop of stops) {
+        const scoped = { ...result, stop }
+        expect(parseLiveResult(JSON.stringify(scoped), fixture, resultSchema)).toEqual(scoped)
+        expect(compareResult(entry, scoped)).toEqual([])
+      }
+      expect(compareResult(entry, { ...result, stop: "plan" }).some(failure => failure.startsWith("stop:"))).toBe(true)
+      expect(compareResult(entry, { ...result, first_action: "inspect-current-state" })).toEqual(["first_action: expected pin-review-scope, got inspect-current-state"])
+    }
+    const command = fixture.cases.find(candidate => candidate.id === "delegated-review-command-evidence")!
+    expect(compareResult(command, {
+      ...resultFor(command), stop: "after-verification",
+      actions: ["delegate-command-verification", "retain-main-review-ownership", "keep-task-read-only", "select-minimum-useful-reviewers", "do-not-invent-verification", "verify-before-completion", "confirm-final-review-coverage"],
+    })).toEqual([])
+  })
+
+  test("evidence-only scope rejects broader delegation and reopened source review", () => {
+    for (const id of ["delegated-mechanical-review-evidence", "delegated-review-command-evidence"]) {
+      const entry = fixture.cases.find(candidate => candidate.id === id)!
+      const result = resultFor(entry)
+      for (const action of ["delegate-independent-tracks", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration"]) {
+        expect(compareResult(entry, { ...result, actions: [...result.actions, action] })).toEqual([`forbidden action ${action}`])
+      }
+    }
+  })
+
+  test("evidence-only fixture validation requires explicit role and scope exclusions", () => {
+    const validate = (entry: RoutingCase) => validateCase(entry, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)
+    for (const id of ["delegated-mechanical-review-evidence", "delegated-review-command-evidence"]) {
+      const entry = fixture.cases.find(candidate => candidate.id === id)!
+      expect(validate(entry)).toEqual([])
+      for (const action of entry.forbidden_actions!) {
+        expect(validate({ ...entry, forbidden_actions: entry.forbidden_actions!.filter(value => value !== action) })).toContain("cases[0] review must select adaptive coverage or explicit single-track")
+      }
+      expect(validate({ ...entry, expectations: { ...entry.expectations, first_action: "inspect-current-state" } })).toContain("cases[0] review must pin scope")
+      expect(validate({ ...entry, required_actions: entry.required_actions.filter(action => action !== "keep-task-read-only") })).toContain("cases[0] single-track review must remain read-only")
+    }
+  })
+
+  test("Oracle design and debugging advice do not become defect reviews", () => {
+    for (const id of ["oracle-design-advice", "oracle-stalled-debugging-advice"]) {
+      const entry = fixture.cases.find(candidate => candidate.id === id)!
+      const result = { ...resultFor(entry), first_action: "inspect-current-state", stop: "recommendation" }
+      expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
+      expect(compareResult(entry, result)).toEqual([])
+      expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== "consult-oracle") })).toEqual(["missing required action consult-oracle"])
+      for (const action of ["delegate-oracle-review", "use-built-in-review-agent"]) {
+        expect(compareResult(entry, { ...result, actions: [...result.actions, action] })).toEqual([`forbidden action ${action}`])
+      }
+    }
+  })
+
   test("each concrete risk requires oracle selection and preserves read-only review", () => {
     for (const id of ["oracle-tenant-boundary-review", "oracle-charge-retry-review", "oracle-mixed-version-migration-review", "oracle-unresolved-review-dispute"]) {
       const entry = fixture.cases.find(candidate => candidate.id === id)!
@@ -469,12 +560,12 @@ describe("source agent catalog", () => {
       await mkdir(join(root, "agents"))
       await writeFile(join(root, "AGENTS.md"), "# Source instructions\n")
       const target = join(root, "profile.toml")
-      await writeFile(target, 'name = "oracle_reviewer"\ndescription = "Original review trigger."\n')
-      await symlink(target, join(root, "agents/oracle_reviewer.toml"))
+      await writeFile(target, 'name = "oracle"\ndescription = "Original review trigger."\n')
+      await symlink(target, join(root, "agents/oracle.toml"))
       await symlink(join(root, "agents"), join(root, "agents/loop"))
       const before = await sourceProvenance(root)
       expect(await agentCatalog(root)).toContain("Original review trigger.")
-      await writeFile(target, 'name = "oracle_reviewer"\ndescription = "Changed review trigger."\n')
+      await writeFile(target, 'name = "oracle"\ndescription = "Changed review trigger."\n')
       expect(await agentCatalog(root)).toContain("Changed review trigger.")
       expect((await sourceProvenance(root)).source_hash).not.toBe(before.source_hash)
     } finally { await rm(root, { recursive: true, force: true }) }
@@ -492,12 +583,14 @@ describe("source agent catalog", () => {
         await writeFile(join(source, "agents/oracle_reviewer.toml"), 'name = "oracle_reviewer"\ndescription = "Previous review trigger."\n')
       }
       expect((await sourceProvenance(roots[0]!)).source_hash).toBe((await sourceProvenance(roots[1]!)).source_hash)
-      await writeFile(join(roots[1]!, "agents/oracle_reviewer.toml"), 'name = "oracle_reviewer"\ndescription = "Candidate concrete risk trigger."\n')
+      await rm(join(roots[1]!, "agents/oracle_reviewer.toml"))
+      await writeFile(join(roots[1]!, "agents/oracle.toml"), 'name = "oracle"\ndescription = "Candidate concrete risk trigger."\n')
       const previous = await buildLivePrompt(fixture.cases[0]!, fixture, join(roots[0]!, "skills"))
       const candidate = await buildLivePrompt(fixture.cases[0]!, fixture, join(roots[1]!, "skills"))
       expect(previous).toContain("oracle_reviewer: Previous review trigger.")
       expect(previous).not.toContain("Candidate concrete risk trigger.")
-      expect(candidate).toContain("oracle_reviewer: Candidate concrete risk trigger.")
+      expect(candidate).toContain("oracle: Candidate concrete risk trigger.")
+      expect(candidate).not.toContain("oracle_reviewer")
       expect(candidate).not.toContain("Previous review trigger.")
       expect(candidate).not.toContain("max_depth")
       expect((await sourceProvenance(roots[0]!)).source_hash).not.toBe((await sourceProvenance(roots[1]!)).source_hash)
@@ -509,12 +602,12 @@ describe("source agent catalog", () => {
     try {
       expect(await agentCatalog(root)).toBe("No source agent profiles.")
       await mkdir(join(root, "agents"))
-      const path = join(root, "agents/oracle_reviewer.toml")
+      const path = join(root, "agents/oracle.toml")
       await writeFile(path, 'name = "wrong_role"\ndescription = "Review trigger."\n')
       await expect(agentCatalog(root)).rejects.toThrow("filename-matching name")
-      await writeFile(path, 'name = "oracle_reviewer"\ndescription = ""\n')
+      await writeFile(path, 'name = "oracle"\ndescription = ""\n')
       await expect(agentCatalog(root)).rejects.toThrow("non-empty description")
-      await writeFile(path, 'name = "oracle_reviewer"\ndescription = [\n')
+      await writeFile(path, 'name = "oracle"\ndescription = [\n')
       await expect(agentCatalog(root)).rejects.toThrow()
     } finally { await rm(root, { recursive: true, force: true }) }
   })

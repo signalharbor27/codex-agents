@@ -34,6 +34,7 @@
     },
     "actions": {
       "type": "array",
+      "description": "Role actions select source profiles: delegate-oracle-review and consult-oracle select oracle; delegate-fast-review selects fast_reviewer; delegate-command-verification selects verifier. use-built-in-review-agent applies the host-provided defect-review skill. retain-main-review-ownership keeps Standards, Intent, simplification, and review/fix completion with the main agent.",
       "items": {
         "type": "string",
         "enum": [
@@ -46,7 +47,10 @@
           "carry-unresolved-findings-forward",
           "cite-authoritative-sources",
           "confirm-final-review-coverage",
+          "consult-oracle",
           "create-requested-plan-file",
+          "delegate-command-verification",
+          "delegate-fast-review",
           "delegate-independent-tracks",
           "delegate-oracle-review",
           "do-not-change-branch-state",
@@ -75,6 +79,7 @@
           "recap-decisions-before-transition",
           "require-explicit-branch-integration-choice",
           "resolve-facts-before-asking",
+          "retain-main-review-ownership",
           "review-combined-integration",
           "review-delta-since-last-snapshot",
           "review-entire-intended-diff",
@@ -88,6 +93,7 @@
           "stop-before-implementation",
           "trace-each-material-intent-requirement",
           "trace-affected-contracts",
+          "use-built-in-review-agent",
           "use-independent-test-oracle",
           "validate-skill-surface",
           "verify-before-completion",

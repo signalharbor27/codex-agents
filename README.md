@@ -52,7 +52,7 @@ The concise references synthesize established work including Hunt and Thomas, Br
 ## Review and improve skills
 
 - `review-and-simplify-changes` reviews the full intended diff, then loops over fixes and affected contracts until actionable findings are resolved and required checks pass. Follow-up passes use recorded review snapshots; new evidence can reopen earlier scope. Integrated slices need combined coverage. Reviewer count follows the material work; the eight topics are a coverage checklist.
-- Delegated defect reviewers use the built-in `review-agent` skill when available. It stays read-only and returns every actionable defect in its assigned scope. The main agent owns simplification, finding disposition, fixes, and the next review pass. Hosts without that built-in use the same scoped read-only brief through an available reviewer.
+- The main agent delegates substantive review to `oracle` and gives it the built-in `review-agent` skill for defect review when available. That skill returns actionable introduced defects; the main agent also accounts for Standards, Intent, simplification, and integration coverage. `fast_reviewer` supplies bounded mechanical evidence; `verifier` runs checks. Hosts without the built-in skill use an equivalent scoped read-only brief.
 - `improve-codebase-architecture` and `improve-test-suite` produce evidence-backed plans, with phases and decisions only when the findings need them.
 
 ## Other skills
@@ -94,8 +94,7 @@ therefore contains shared agent settings only.
 - `implementer`: `gpt-6-astra` / `medium`, agreed implementation slices
 - `explorer`: `gpt-5.6-luna` / `medium`, codebase facts and tracing
 - `fast_reviewer`: `gpt-5.6-luna` / `medium`, mechanical evidence
-- `reviewer`: `gpt-6-astra` / `high`, standard correctness and contracts
-- `oracle_reviewer`: `gpt-6-astra` / `xhigh`, permission, financial, concurrency, recovery, rollout, or disputed correctness risks
+- `oracle`: `gpt-6-astra` / `xhigh`, independent review, consequential design advice, stalled debugging, or unresolved correctness disputes
 - `librarian`: `gpt-5.6-luna` / `medium`, external documentation and research
 - `verifier`: `gpt-5.6-terra` / `medium`, command verification
 
@@ -107,9 +106,11 @@ their assignments. The custom `explorer` replaces the built-in role of that name
 Use `implementer` for ordinary slices. For harder implementation, the main agent
 can take over or explicitly select the unpinned `worker` at higher effort.
 
-Oracle review is selected from changed behavior and concrete invariants before
-choosing local or standard review. The review skill owns the escalation rules
-and keeps follow-up passes scoped to fixes and affected contracts.
+The review skill requires independent Oracle review for substantial delegated
+slices and changes to permission, financial, concurrency, recovery, or rollout
+invariants. Small coupled changes can stay local when those triggers are absent.
+Follow-up passes cover fixes and affected contracts. Oracle can also advise on
+design or debugging; those assignments do not load the defect-review skill.
 
 Link the global agent directory to this checkout's `agents` directory.
 Codex 0.154.0 discovers individual file symlinks but refuses to load them when
