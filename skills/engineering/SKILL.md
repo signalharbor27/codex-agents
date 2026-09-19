@@ -1,6 +1,6 @@
 ---
 name: engineering
-description: "Use when implementing, refactoring, planning, or researching an understood software change. Owns inspection through fresh verification. Not for unknown-cause failures, test design as the main task, or review/audit work."
+description: "Use when implementing, refactoring, planning, or researching an understood software change. Excludes unknown-cause failures, test design as the main task, and review or audit work."
 ---
 
 # Engineering
@@ -27,14 +27,14 @@ Build the smallest production-complete change that delivers the requested outcom
 1. Inspect the real entrypoint, current owner, callers, contracts, and existing proof before proposing a shape.
 2. Frame the outcome in observable terms: success evidence, behavior that must remain unchanged, permitted side effects, and the condition that ends the task.
 3. Ask only for unresolved consequential decisions or missing authority. Handle one decision inline; load the grilling reference when several dependent decisions block a safe slice. Retain engineering ownership and resume once decisions are settled and the next action is authorized. Do not reconfirm authority already given.
-4. Choose one production-complete vertical slice that reaches a real observable result. A small local change may be the whole slice; do not manufacture phases.
+4. Start substantial work with a production-shaped tracer bullet: one retained path through the required boundaries to observable behavior and proof. Continue with vertical slices until the requested outcome is complete. A small change may need only one slice.
 5. Name only pressures present in the task. Load only the matching reference below before editing; routine changes need no reference.
-6. Set a change budget: expected files or boundaries and why each must move. Rejustify the plan before widening it.
+6. Keep an internal scope estimate of the boundaries likely to change. Revise it as inspection reveals necessary work; report material scope changes. Routine file choices need no advance approval or narrated file list.
 7. Prefer the existing owner and direct code. Add a boundary only when it hides real complexity, protects a stable contract, or has more than one real implementation; otherwise keep it inline.
 8. Implement the smallest complete slice. Do not add a hook, defensive branch, fallback, compatibility path, or duplicate representation unless a current caller, applicable failure mode, threat, rollout constraint, or stored-data contract requires it; avoid unrelated cleanup.
 9. Choose the cheapest trustworthy proof through an observable seam. Cover the changed behavior and required surrounding checks. Add persistent tests only when they provide meaningful protection beyond existing evidence. After checks pass, broaden or repeat them only for new edits, failures, changed relevant state, or unresolved risks.
 10. Close only affected contracts and operational artifacts: callers, types, migrations, generated outputs, config, docs, observability, or rollback notes.
-11. Inspect the final diff for scope growth, shallow wrappers, redundant tests, and silent behavior changes. Finish only after fresh verification supports the requested outcome and every changed boundary is accounted for.
+11. Inspect the final diff for scope growth, shallow wrappers, redundant tests, and silent behavior changes. Finish when evidence supports the entire requested outcome and every changed boundary is accounted for. Reuse earlier proof after confirming the tested code and relevant state are unchanged; rerun affected checks otherwise.
 
 ## Reference Routing
 
@@ -54,6 +54,6 @@ Build the smallest production-complete change that delivers the requested outcom
 - Horizontal scaffolding before one real path works
 - Broad architecture preflights for pressures that are absent
 - New layers, factories, adapters, or fallback paths justified only by possible future use
-- Expanding the diff without revisiting the change budget
+- Expanding the diff without a reason tied to the requested outcome
 - Unit-green but contract-, persistence-, migration-, or runtime-incomplete work
-- Completion claims based on stale, delegated, or partial evidence
+- Completion claims based on stale, unexamined, or partial evidence

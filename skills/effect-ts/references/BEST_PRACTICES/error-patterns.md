@@ -183,16 +183,27 @@ Prefer `catchTag` or `catchTags` when handling known tagged subsets; they preser
 
 ### catchTag for single error types
 
+Assume `repo.findById` returns `Effect<Option<User>, DatabaseError | ConnectionError>`. A connection failure stays operational; a successful lookup returning `None` establishes absence. Other database failures propagate unchanged.
+
 ```typescript
+import { Effect, Option } from "effect"
+
 const findUser = Effect.fn("UserService.findUser")(function* (id: UserId) {
-    return yield* repo.findById(id).pipe(
-        Effect.catchTag("DatabaseError", (err) =>
-            Effect.fail(new UserNotFoundError({
-                userId: id,
-                message: `Database lookup failed: ${err.message}`,
+    const user = yield* repo.findById(id).pipe(
+        Effect.catchTag("ConnectionError", (err) =>
+            Effect.fail(new ServiceUnavailableError({
+                message: "Database connection unavailable",
+                cause: err.message,
             }))
         ),
     )
+    return yield* Option.match(user, {
+        onNone: () => Effect.fail(new UserNotFoundError({
+            userId: id,
+            message: "User not found",
+        })),
+        onSome: Effect.succeed,
+    })
 })
 ```
 
@@ -241,23 +252,15 @@ yield* effect.pipe(
 
 ## Error remapping pattern
 
-Create reusable functions for common error transformations:
+Translate only errors whose meaning is known at this boundary. This helper accepts a repository error channel of `DatabaseError | ConnectionError`, preserves `DatabaseError`, and maps connection failures to service unavailability. Extend its input contract when the repository can return other errors. Keep absence handling at the successful lookup result.
 
 ```typescript
 import { Effect } from "effect"
 
-export const withRemapDbErrors = <A, E, R>(
-    effect: Effect.Effect<A, E | DatabaseError | ConnectionError, R>,
-    context: { entityType: string; entityId: string }
-): Effect.Effect<A, E | EntityNotFoundError | ServiceUnavailableError, R> =>
+export const withRemapDbErrors = <A, R>(
+    effect: Effect.Effect<A, DatabaseError | ConnectionError, R>
+): Effect.Effect<A, DatabaseError | ServiceUnavailableError, R> =>
     effect.pipe(
-        Effect.catchTag("DatabaseError", (err) =>
-            Effect.fail(new EntityNotFoundError({
-                entityType: context.entityType,
-                entityId: context.entityId,
-                message: `${context.entityType} not found`,
-            }))
-        ),
         Effect.catchTag("ConnectionError", (err) =>
             Effect.fail(new ServiceUnavailableError({
                 message: "Database connection unavailable",
@@ -267,9 +270,9 @@ export const withRemapDbErrors = <A, E, R>(
     )
 
 // Usage
-const findUser = Effect.fn("UserService.findUser")(function* (id: UserId) {
+const findUserOption = Effect.fn("UserService.findUserOption")(function* (id: UserId) {
     return yield* repo.findById(id).pipe(
-        withRemapDbErrors({ entityType: "User", entityId: id })
+        withRemapDbErrors
     )
 })
 ```

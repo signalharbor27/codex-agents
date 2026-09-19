@@ -72,11 +72,23 @@ struct User { name: String }
 
 ```rust
 // Borrowed slice: for read-only iteration
-fn sum(values: &[i32]) -> i32 { values.iter().sum() }
+fn sum(values: &[i32]) -> i32 {
+    let mut total = 0;
+    for &value in values {
+        total += value;
+    }
+    total
+}
 
 // Owned vec: when building or storing
 fn collect_even(values: &[i32]) -> Vec<i32> {
-    values.iter().copied().filter(|x| x % 2 == 0).collect()
+    let mut even = Vec::new();
+    for &value in values {
+        if value % 2 == 0 {
+            even.push(value);
+        }
+    }
+    even
 }
 ```
 

@@ -2,9 +2,9 @@ Read this reference when routing clarity is the main problem.
 
 Description rules:
 - put the main use case and trigger words first because Codex may shorten descriptions in a large skill catalog
-- say what the skill is for and when it should fire
+- state only the conditions under which the model should invoke the skill
 - use explicit `Use when ...` trigger phrasing
-- describe trigger conditions, not workflow
+- keep capability summaries, workflow steps, and output contracts in the body
 - use one trigger per distinct branch; collapse synonyms that describe the same branch
 - use the shortest description that preserves every real trigger and overlap boundary
 - add only routing context the model is unlikely to infer reliably from the skill name

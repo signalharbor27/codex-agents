@@ -1,6 +1,6 @@
 ---
 name: writing-rust
-description: "Use when Rust ownership, borrowing, traits, errors, async, or unsafe boundaries materially shape an engineering or review task. Acts as a domain modifier; not for generic structure or test strategy."
+description: "Use when Rust ownership, borrowing, traits, error types, async, public API docs, or unsafe boundaries constrain the design."
 ---
 
 # Writing Rust

@@ -1,6 +1,6 @@
 ---
 name: describe-pr
-description: "Write reviewer-oriented pull request summaries after implementation. Use when creating or updating a PR body from the final diff and verification state; not while code still needs design or implementation."
+description: "Use when drafting or updating a pull request description after implementation; not while the code still needs design or implementation."
 ---
 
 # Describe PR
@@ -9,14 +9,14 @@ description: "Write reviewer-oriented pull request summaries after implementatio
 
 Use this skill after the work is complete, when the main task is explaining it clearly to reviewers.
 Focus on what changed, why it changed, what users will notice, and how someone can verify it quickly.
-The first task action is reading the final diff; do not draft from a plan or file list alone.
+Ground the description in the final diff and verification evidence.
 
 ## When to Use
 
 - Drafting a PR description after implementation
 - Updating a PR body after follow-up changes
 - Explaining deviations between the final code and the original plan
-- Summarizing verification steps for reviewers or release notes
+- Summarizing verification for PR reviewers
 
 ## When Not to Use
 
@@ -26,17 +26,17 @@ The first task action is reading the final diff; do not draft from a plan or fil
 
 ## Minimal Workflow
 
-1. Read the final diff, the relevant context, and any plan or ticket that explains intent.
-2. If staged planning artifacts exist, read the durable decisions and phase intent before summarizing the implementation.
-3. State the problem being solved before listing the code changes.
-4. Separate user-facing impact from internal implementation detail.
-5. Call out meaningful deviations from the original plan or durable decisions when they matter to review.
-6. End with the concrete verification someone else can run or observe.
+1. Read and apply `humanizer` and `show-me` before writing or updating the description. Use the repository's PR template when present.
+2. Read the final diff, relevant context, and any plan or ticket that explains intent. If staged planning artifacts exist, read their durable decisions and phase intent. Do not draft from a plan or file list alone.
+3. Lead with the concrete problem and resulting behavior. Explain what changed, why it was needed, and how it works. Name the affected abstractions and primitives, their responsibilities, and how they interact; scale detail to the change.
+4. Include the smallest useful visual from `show-me`: GitHub-rendered Mermaid for a diagram or a fenced `diff` block for before/after behavior. Show the relevant trigger, boundaries, and observable result so reviewers can assess the design without reading every line.
+5. Describe the final implementation for a reviewer who has not seen the conversation. Include deviations from durable decisions only when they explain a material tradeoff. Omit conversational history, abandoned approaches, and empty sections.
+6. State verification actually performed and any material risk or limit. Reuse recorded evidence when the tested code and relevant state are unchanged; distinguish observed results from commands a reviewer could run.
+7. Check the complete draft against the final diff and both writing skills. Return a reviewable description; publish or update the external PR only with existing or explicit authority.
 
 ## Reference Routing
 
-- Use the repo PR template when one exists.
-- Return to the relevant producer and run fresh claim-matched proof if verification state is unclear.
+- Return to the relevant producer for missing or stale proof when verification state is unclear. This skill does not replace verification.
 
 ## Failure modes
 
@@ -44,3 +44,4 @@ The first task action is reading the final diff; do not draft from a plan or fil
 - Mixing reviewer guidance with speculative future work
 - Claiming verification that was not actually run
 - Hiding plan changes that materially affect review
+- Omitting the required visual or filling a small PR with unnecessary sections

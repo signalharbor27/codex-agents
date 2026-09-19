@@ -1,14 +1,13 @@
 ---
 name: grill-me
-description: "Stress-test consequential choices through a read-only interview. Use when the work contains several interdependent user-owned decisions or the user asks to be grilled; not for routine or settled work."
+description: "Use when the user asks to be grilled or interviewed, or several interdependent consequential user-owned decisions block progress; not for routine, factual, or settled choices."
 ---
 
 # Grill me
 
 ## Overview
 
-This model-invoked Codex skill is the sole owner of grilling behavior.
-Its interview procedure is a local reference. An existing primary skill can use the same behavior after inspection without adding another installable router.
+This skill owns the interview procedure in a local reference. An existing primary skill can load it when inspection reveals the trigger and retain ownership of the task.
 
 ## When to Use
 
@@ -24,7 +23,7 @@ Its interview procedure is a local reference. An existing primary skill can use 
 ## Minimal Workflow
 
 1. Read [the dependency-frontier grilling procedure](references/frontier.md) before asking a question or taking any other task action.
-2. Follow the procedure within the user's authority. End a standalone interview with settled decisions. If another primary skill loaded it during authorized work, resume that work when decisions are settled; ask for confirmation only when unresolved assumptions or authority require it.
+2. Follow the procedure within the user's authority. End a standalone interview with settled decisions. If another primary skill loaded it during authorized work, resume that work when decisions are settled. Ask only about unresolved consequential choices or missing authority; routine inferences do not require confirmation.
 
 ## Reference Routing
 

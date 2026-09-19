@@ -1,12 +1,12 @@
 # Codex skills
 
-Q's global Codex instructions, engineering skills, and custom agents. Main model and evaluation default: GPT-6 Astra at `high`. Custom agents set their own models and reasoning efforts.
+Q's global Codex instructions, engineering skills, and custom agents. Evaluation default: GPT-6 Astra at `high`, also the recommended main setting for substantial engineering. Routine tasks can use `medium`. The main setting is configured per installation or task; custom agents set their own models and reasoning efforts.
 
-Route each job to one primary skill. Add a domain modifier or reference only when evidence from the task requires it.
+Select a primary skill when its invocation conditions match the task; proceed without one when none applies. Descriptions state when to invoke a skill. Bodies contain workflow and output requirements. Add domain guidance or references only when the task needs them.
 
 ## Engineering flow
 
-- `engineering` owns understood features, bug fixes, refactors, plans, and research from inspection through fresh verification.
+- `engineering` owns understood features, bug fixes, refactors, plans, and research from inspection through verified completion.
 - `debugging` owns unexplained failures: reproduce the failure, prove its root cause, then make the smallest authorized fix and verify it.
 - `test-design` owns work where tests are the main task, including explicit TDD, proof-layer selection, doubles, assertions, and focused coverage.
 
@@ -52,7 +52,7 @@ The concise references synthesize established work including Hunt and Thomas, Br
 ## Review and improve skills
 
 - `review-and-simplify-changes` selects only material tracks for the pinned diff. It keeps small or tightly coupled reviews with one reviewer and delegates bounded independent tracks when separate context improves coverage; its eight topics are a coverage checklist, not an agent-count invariant.
-- `improve-codebase-architecture` and `improve-test-suite` retain their audit and phased-plan behavior.
+- `improve-codebase-architecture` and `improve-test-suite` produce evidence-backed plans, with phases and decisions only when the findings need them.
 
 ## Other skills
 
@@ -68,7 +68,7 @@ The concise references synthesize established work including Hunt and Thomas, Br
 
 ## Global operating contract
 
-[AGENTS.md](AGENTS.md) defines the global contract rather than repository-specific workflow. Skills own workflows; `AGENTS.md` owns safety, permissions, honesty, scope, delegation, verification, and Git boundaries.
+[AGENTS.md](AGENTS.md) defines permissions, scope, delegation, verification, and Git boundaries across projects. Skills own their task workflows; project guidance supplies local commands and conventions.
 
 Codex discovers global instructions from `$CODEX_HOME/AGENTS.md`, normally
 `~/.codex/AGENTS.md`. Q's `~/.codex/AGENTS.md` links to `~/.agents/AGENTS.md`,
@@ -76,8 +76,13 @@ which links to this repository's `AGENTS.md`. Edits here therefore update the
 global source immediately. Verify the links before editing; on another machine,
 sync the approved file and compare bytes. Start a new Codex task to load updates.
 
-Global defaults use short, telegram-style output. They preserve required evidence,
-existing authorization, and explicit boundaries for Git and shared state.
+Global defaults allow routine local choices, necessary files and dependencies,
+and safe workspace isolation within authorized work. Initial inspection can
+precede skill selection. Substantial engineering starts with a production-shaped
+tracer bullet and continues through the remaining slices. Earlier proof remains
+usable after confirming its inputs are unchanged. Destructive operations,
+publication, deployment, and shared-state changes retain explicit authorization
+boundaries. Responses stay concise without dropping required evidence.
 
 ## Custom agents
 
@@ -120,7 +125,20 @@ installed under `$CODEX_HOME/agents/`.
 
 ## Skill installation
 
-Install top-level folders from [skills](skills) into `~/.agents/skills/`. Sync the intended directories individually; replacing the global skill root could delete unrelated installed skills.
+Install from this Git repository with the `skills` CLI. Its installation command
+is `add`; select the intended skill folders and preserve unrelated installed skills.
+
+```bash
+npx skills add https://github.com/signalharbor27/codex-agents.git \
+  --global --agent codex --skill engineering debugging test-design \
+  review-and-simplify-changes receiving-code-review improve-codebase-architecture \
+  improve-test-suite using-git-worktrees finishing-a-development-branch \
+  describe-pr grill-me effect-ts writing-rust designing-data-intensive-systems \
+  writing-skills --copy --yes
+```
+
+Compare installed files with the published source and check bundled and
+sibling-skill references. The repository's eval harness stays in the repository.
 
 Install `grill-me` as a single skill. For post-inspection grilling, also sync the consumer skill directories that link to `grill-me/references/frontier.md`. They reuse the procedure directly, so they do not need nested invocation or another grilling router.
 
@@ -132,14 +150,14 @@ The local suite checks the skill inventory and behavior contract:
 
 - exact top-level skill inventory
 - quoted, trigger-focused descriptions no longer than 240 characters
-- required entrypoint sections and a 120-line `SKILL.md` budget
+- bounded entrypoints, valid metadata, and resolvable references
 - valid local links and one-level pressure references
 - invocation metadata plus implicit and exact `$skill` routing
-- one primary skill, exact modifiers, and exact disclosed references
+- an applicable primary skill or no skill, expected modifiers, and relevant references
 - representative routine, pressure, debugging, testing, review, improve, domain, and handoff routes
 - the adaptive review delegation contract
 - guarded live routing classification, defaulting to GPT-6 Astra / `high`
-- isolated execution cases for authorization, skill citations, proof reuse, and continuation
+- isolated execution cases for authorization, complete approval drafts, read-only limits, proof reuse and rechecks, project-native commands, unrelated changes, and continuation
 
 Run:
 
@@ -149,7 +167,14 @@ bun test skills/evals
 bun skills/evals/run-routing-evals.ts dry-run
 ```
 
-Live evaluation requires `--allow-live` and an explicit case or `--all`. Model and effort overrides support labeled comparisons. Routing classification proves selection; execution cases inspect actual artifacts and tool activity. Scripted continuation does not prove mid-turn steering. See [the eval README](skills/evals/README.md) for commands and limits.
+Live evaluation requires `--allow-live` and an explicit case or `--all`. Compare
+baseline and candidate instructions through the same runner and fixtures. Model,
+effort, hashes, timings, and available usage/tool evidence identify each run.
+Full source-catalog routing and synthetic crowded or truncated catalogs measure different
+conditions. Routing classification checks selection; execution cases inspect
+artifacts and tool activity. Scripted continuation does not prove mid-turn
+steering. Static checks do not establish model improvement. See [the eval README](skills/evals/README.md)
+for commands and limits.
 
 ## Prompt design basis
 
@@ -162,6 +187,7 @@ Live evaluation requires `--allow-live` and an explicit case or `--all`. Model a
 Current agent-behavior authority:
 
 - [OpenAI GPT-6 Astra guidance](https://developers.openai.com/api/docs/guides/latest-model)
+- [Rethinking skills and prompts for GPT-6 Astra](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra)
 - [OpenAI Multi-agent deployment guidance](https://developers.openai.com/api/docs/guides/deployment-checklist#use-multi-agent-for-parallel-work)
 - [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
 - [Codex `AGENTS.md`](https://learn.chatgpt.com/docs/agent-configuration/agents-md)

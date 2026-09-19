@@ -1,6 +1,6 @@
 ---
 name: review-and-simplify-changes
-description: "Use when reviewing or simplifying a commit, PR, branch, or WIP diff after implementation. Adapts reviewer count to material independent tracks; not for unscoped codebase redesign."
+description: "Use when reviewing or simplifying a commit, PR, branch, or WIP diff after implementation; not for unscoped codebase redesign or responding to review comments."
 ---
 
 # Review and simplify changes
@@ -35,7 +35,7 @@ Use this skill after a commit, PR, branch, or WIP diff to improve code quality w
 4. State the scope, permitted side effects, validation target, and reviewer shape. Use one integrated reviewer for a small or tightly coupled diff. Use bounded independent reviewers when separate context improves the evidence.
 5. Before cleanup tracks, judge two axes separately: **Standards** (repo rules, skill guidance, local conventions) and **Intent** (what the change was trying to accomplish). Account for each material Intent requirement as implemented, partial, missing, contradicted, incorrect, or unrequested scope; give tracks a concise digest or source pointers rather than making each rediscover a large spec. Keep those findings separate from cleanup taste.
 6. Select material topics from the Eight-Topic Coverage Checklist, then apply Adaptive Reviewer Selection below. Account for every topic as covered or not material to the pinned scope; do not turn the checklist into a required agent count.
-7. Implement only findings within the original task scope with clear evidence and low behavior risk when the user asked for fixes. Report pre-existing or out-of-scope findings without changing them. Do not stage, commit, push, or add new dependencies unless explicitly asked.
+7. Apply fixes supported by clear evidence within the user's existing authorization. A standalone review is read-only; a branch or PR scope does not cancel an authorized fix request. Keep cleanup behavior-preserving; verify intentional behavior changes against the requested outcome. Report pre-existing or out-of-scope findings without changing them. Routine dependencies may be added within the authorized outcome; ask about material scope, architecture, cost, or external effects. Do not stage, commit, or push unless authorized.
 8. Finish only after accounting for every material topic, deduplicating findings, judging them against Standards and Intent, validating requested fixes, and stating skipped validation or residual risk.
 
 ## Adaptive Reviewer Selection
@@ -50,13 +50,14 @@ Choose reviewer count from the pinned diff's material, separable review work. Th
 - Require file/symbol, checklist topic, issue, recommended fix, confidence, evidence, and validation needed. A reviewer may report no finding.
 - The main agent owns checklist accounting, synthesis, judgment, edits, validation, and completion claims.
 
-## Read-only branch reviews
+## Scope and read-only reviews
 
-When the requested scope is a branch, PR, or findings-only review, make the read-only contract and any user-narrowed lane concrete before delegating reviewers:
+For branch and PR reviews, pin the comparison before delegation. Determine mutation authority from the user's request and prior authorization, including any explicit read-only restriction.
+
 - Pin base, head, dirty state, relevant untracked source, and ignored generated/artifact dirs with `git status --short`, `git log <base>..HEAD --oneline`, and the relevant diff/stat commands.
 - Pass each reviewer the same pinned scope and require it to trace changed symbols through callers, tests, config, and public contracts before reporting a finding.
 - Compare base vs HEAD before claiming a new dead-code path, fallback removal, cycle, contract drift, or other regression.
-- Do not run validators that write caches, incremental build state, snapshots, or generated artifacts during a read-only review unless the repo provides a no-write mode; after allowed checks, rerun `git status --short`, then disclose skipped validators, evidence used, and any unexpected worktree changes.
+- During a read-only review, use validators with a no-write mode; skip those that write caches, incremental state, snapshots, or generated artifacts. After allowed checks, rerun `git status --short` and disclose skipped validators, evidence used, and unexpected worktree changes.
 
 ## Eight-topic coverage checklist
 
@@ -73,31 +74,25 @@ Use these topics to select and account for material coverage. Each reviewer insp
 
 Keep Standards and Intent findings on separate axes in synthesis. If Intent is unavailable, say that instead of inventing requirements from the diff.
 
-## Reference Routing
+## Reference routing
 
-During aggregation, check whether the right skills were used:
+Load only references needed by evidence in the pinned scope. Reuse guidance already loaded:
 
-- `engineering/references/boundary-design.md` for deep modules, change amplification, information hiding, caller-first interfaces, misuse risk, and deletion-test pressure
-- `engineering/references/feature-shape.md` for tracer bullets and production-complete vertical slices
-- `engineering/references/legacy-change.md` for characterization seams and dependency-breaking
-- `improve-codebase-architecture/AGENT_FRIENDLY_REVIEW.md` for seam quality, agent navigability, domain fit, and verification pain
+- `engineering/references/boundary-design.md` when judging interface depth, information hiding, caller knowledge, misuse risk, or deletion of an abstraction
+- `engineering/references/feature-shape.md` when a change's tracer bullet or vertical slices leave production behavior incomplete
+- `engineering/references/legacy-change.md` when a proposed refactor needs characterization seams or dependency-breaking
+- `improve-codebase-architecture/AGENT_FRIENDLY_REVIEW.md` when navigation, domain ownership, or verification friction needs a broader trace
 - `engineering/references/compatibility-and-delivery.md`, `security.md`, or `state-and-effects.md` when those risks appear
-- `engineering/references/proof.md` for proof shape, especially behavior-preserving refactors
+- `engineering/references/proof.md` when the proof boundary is unclear, especially for behavior-preserving refactors; `test-design` guidance when judging test behavior and public interfaces
 - [URL-ATTRIBUTION-REVIEW.md](URL-ATTRIBUTION-REVIEW.md) only for URL, link, campaign attribution, analytics, or CTA-helper changes
 
-If a needed skill was missing, call that out in the final summary. If the skill guidance itself caused misrouting, ambiguity, or unsafe behavior, propose the smallest update to that skill.
+If missing guidance or a skill defect materially affected the change, name it and propose the smallest correction.
 
 ## Architecture alignment
 
-Each review must judge changes against the active SWE principles, not generic cleanup taste:
+Architecture and cleanup findings need evidence that the proposed move improves a relevant principle from the references above. Do not recommend DRY, type consolidation, or patterns on taste alone.
 
-- Deep modules / information hiding: `engineering/references/boundary-design.md`
-- Caller-first interfaces / deletion test / module-interface-depth-seam-adapter vocabulary: `engineering/references/boundary-design.md`
-- Safe brownfield seams: `engineering/references/legacy-change.md`
-- Navigability, domain language, seam quality, verification pain: `improve-codebase-architecture`
-- Behavior-focused public-interface tests: `test-design`
-
-Flag a finding only when it improves one of those principles with evidence. Do not recommend DRY, type consolidation, patterns, or cleanup unless the linked skill would support the move.
+Correctness, contract, Standards, and Intent findings stand on their own evidence. Report a bug or missing requirement even when no architectural improvement is involved.
 
 ## Upstream prevention
 
@@ -108,6 +103,8 @@ Do not auto-edit repo docs or skills unless the user asked for that mutation.
 ## Validation
 
 Run the smallest trustworthy validation for touched scope: focused tests, typecheck/compile, lint/format, and dead-code or cycle tool reruns when those tracks changed code.
+
+Reuse recorded evidence across turns when the tested code and relevant state are unchanged. Rerun affected checks after fixes or changed requirements.
 
 If validation is too broad, unavailable, or skipped by instruction, say exactly why.
 

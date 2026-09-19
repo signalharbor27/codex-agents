@@ -52,7 +52,7 @@ A sound architecture plan leaves future agents with better names, clearer entryp
 
 ## Delegation fit
 
-For larger repos, delegate bounded evidence gathering by subsystem.
+Delegate bounded, read-only evidence gathering when independent subsystems benefit from separate context. Keep small or tightly coupled reviews local.
 
 In monorepos, split the review along real ownership and seam boundaries rather than package count alone.
 Typical tracks are frontend, backend, shared contracts or packages, and build or CI workflow.
@@ -66,13 +66,13 @@ Useful subagent tracks include:
 - duplication and boundary mapping
 
 Require each track to return a bounded evidence packet: real entrypoint, domain owner, interface crossed, consequential effects, proof seam, and residual unknowns where applicable.
-Keep main-thread ownership of synthesis, prioritization, and the final phased plan.
+Keep main-thread ownership of synthesis, prioritization, and the final plan.
 
 ## Monorepo synthesis
 
-Return one phased plan rather than disconnected mini-plans. Make cross-boundary dependencies explicit.
+Combine findings into one plan with explicit cross-boundary dependencies. Use phases only when those dependencies or rollout require them.
 
-Call out:
+Where material, call out:
 
 - which problems are local versus systemic
 - which frontend and backend seams depend on shared contracts

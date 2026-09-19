@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: "Create an isolated git worktree. Use when the user requests branch/workspace isolation or current-workspace interference makes it necessary. Not merely because implementation has parallel subagents."
+description: "Use when the user requests branch or workspace isolation, or current-workspace interference requires it; not merely because implementation has parallel subagents."
 ---
 
 # Using Git worktrees
@@ -23,13 +23,13 @@ Create a worktree only when isolation materially reduces interference or branch 
 
 ## Minimal Workflow
 
-1. Confirm that isolation solves a current workspace or branch-state problem. Otherwise, stay in the existing workspace.
+1. Inspect the current branch, worktrees, dirty state, and untracked work. Use isolation when it solves a current interference or branch-state problem; otherwise stay in the existing workspace.
 2. Prefer a repo-provided worktree or bootstrap script when one exists.
 3. Prefer an existing `.worktrees/` or `worktrees/` directory when present.
-4. Verify project-local worktree directories are ignored before using them.
-5. Infer routine branch, path, and setup choices from repo conventions; ask only when missing, destructive, shared-state, or scope-changing.
-6. Create the worktree, run its required setup, and report the branch and location.
-7. Verify the baseline before handing off. If it fails, report the exact failing check and whether the failure also exists in the source workspace.
+4. Verify project-local worktree directories are ignored before using them. Prefer an external directory if this would otherwise require unrelated repository changes.
+5. Infer routine branch, path, and setup choices from repo conventions. An authorized task permits needed, reversible creation of a new isolated branch and worktree. Preserve existing branches, worktrees, dirty files, and untracked work; do not switch, reset, clean, or overwrite them without authority. Ask only for material scope, architecture, cost, or external effects, or destructive changes without prior authorization.
+6. Create the worktree, run setup within the task's authority, and report the branch and location. Do not commit or publish setup changes without authorization.
+7. Verify the relevant baseline before handing off. If it fails, report the exact check and any evidence of a pre-existing failure. Do not claim the source workspace also fails unless verified.
 
 ## Reference Routing
 
@@ -40,5 +40,5 @@ Create a worktree only when isolation materially reduces interference or branch 
 
 - Treating worktrees as mandatory for trivial work
 - Ignoring a repo bootstrap script and recreating setup by hand
-- Editing ignore files or committing setup changes without consent
+- Overwriting existing work or committing setup changes without authority
 - Using broken path expansion or stale runtime-specific paths

@@ -2,6 +2,8 @@
 
 `@prb/effect-next` provides typed helpers that integrate Effect with the Next.js 15+ App Router, including route handlers, server actions, middleware, and React hooks.
 
+Use this reference when that package is installed or explicitly selected for the task. Check its installed API before adapting the examples; generic React or Effect UI work does not require this dependency.
+
 ## Core API
 
 ### Route handlers

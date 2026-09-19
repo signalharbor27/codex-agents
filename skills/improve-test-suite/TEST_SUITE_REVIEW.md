@@ -54,7 +54,7 @@ Remove, demote, or rewrite tests that:
 
 ## Delegation fit
 
-For larger repos, delegate bounded review tracks by subsystem or test layer.
+Delegate bounded, read-only review tracks when independent subsystems or test layers benefit from separate context. Keep small or tightly coupled reviews local.
 
 Useful subagent tracks include:
 
@@ -64,7 +64,7 @@ Useful subagent tracks include:
 - mock and fixture inventory
 - incident-regression audit
 
-Keep main-thread ownership of synthesis, prioritization, and the final phased plan.
+Keep main-thread ownership of synthesis, prioritization, and the final plan. Use phases only when dependencies or rollout require them.
 
 ## Avoid these outcomes
 

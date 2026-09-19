@@ -2,7 +2,7 @@
 
 ## Dependencies in Effect.Service
 
-Declare an `Effect.Service` dependency in its `dependencies` array. This keeps composition explicit and prevents the dependency from leaking into every usage site. The infrastructure-layer exception below applies to services provided once at the application root.
+Declare stable dependencies owned by an `Effect.Service` in its `dependencies` array. Compose them externally when implementations vary by request, environment, or test, or when the repository keeps construction external. This follows the ownership rules in [service patterns](service-patterns.md).
 
 ### Correct pattern
 
@@ -35,10 +35,10 @@ const AppLive = Layer.mergeAll(
 )
 ```
 
-### Wrong pattern: leaked dependencies
+### Risk: repeated wiring of stable dependencies
 
 ```typescript
-// WRONG - Dependencies not declared
+// Stable dependencies omitted without a shared composition boundary
 export class OrderService extends Effect.Service<OrderService>()("OrderService", {
     accessors: true,
     effect: Effect.gen(function* () {
@@ -53,7 +53,7 @@ const program = OrderService.create(input).pipe(
         OrderService.Default.pipe(
             Layer.provide(UserService.Default),
             Layer.provide(ProductService.Default),
-            // Easy to forget one, causes runtime errors
+            // Missing requirements remain in the layer's type
         )
     ),
 )
@@ -61,11 +61,7 @@ const program = OrderService.create(input).pipe(
 
 ## Infrastructure layers
 
-Infrastructure layers such as Database, Redis, and HTTP clients may remain leaked dependencies because:
-
-1. They're provided once at the application root
-2. They don't change between test/production (different implementations, same interface)
-3. They're true infrastructure, not business logic
+Database, Redis, and HTTP client layers often belong at the application root. Their interfaces can stay stable while implementations vary between environments. Business services can also use external composition under the dependency-ownership rules above.
 
 ```typescript
 // Infrastructure can be provided at app root

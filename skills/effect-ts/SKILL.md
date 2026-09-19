@@ -1,6 +1,6 @@
 ---
 name: effect-ts
-description: "Use when Effect materially shapes services, errors, layers, runtimes, wrappers, streams, caching, or UI integration. Acts as a domain modifier for engineering or review; not for generic TypeScript."
+description: "Use when Effect services, typed errors, layers, runtimes, wrappers, streams, caching, or UI integration constrain the design."
 ---
 
 # Effect TS
@@ -35,7 +35,7 @@ Apply this modifier when Effect changes the design or review constraints. Name t
 ## Reference Routing
 
 - Read [references/CRITICAL_RULES.md](references/CRITICAL_RULES.md) for core anti-patterns and boundary rules.
-- Read [references/NEXT_JS.md](references/NEXT_JS.md) for UI integration.
+- Read [references/NEXT_JS.md](references/NEXT_JS.md) for Next.js App Router integration when `@prb/effect-next` is already present or explicitly selected. This reference does not authorize adding the package.
 - Read [references/STREAMS.md](references/STREAMS.md) for queues, hubs, channels, and streams.
 - Read [references/TESTING.md](references/TESTING.md) for deterministic Effect testing.
 - Read [references/OPTION_NULL.md](references/OPTION_NULL.md) for `Option` and `null` interop.

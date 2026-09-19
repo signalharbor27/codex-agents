@@ -1,6 +1,6 @@
 ---
 name: receiving-code-review
-description: "Evaluate review feedback technically before acting on it. Use when handling review comments, especially when scope, correctness, or context is unclear. Not for requesting a review or for blind feedback application."
+description: "Use when handling review comments from people or tools, especially disputed or unclear feedback; not for initiating a review of a diff."
 ---
 
 # Receiving code review
@@ -21,11 +21,11 @@ Test review feedback against this codebase before accepting or rejecting it. The
 
 ## Minimal Workflow
 
-1. Restate the reviewer's technical claim and infer routine intent. Ask only when acceptance criteria are missing or the request would change scope, destructive state, live state, or shared state.
+1. Identify the reviewer's technical claim and the user's existing authorization. During authorized implementation, terse follow-ups such as "PR review comments" request investigation, valid fixes, and verification. Preserve explicit review-only restrictions. Ask only about missing acceptance criteria or material scope, product, architecture, cost, destructive, or external effects.
 2. Trace the relevant code, callers, tests, and contracts until the claim is confirmed or contradicted.
 3. Classify the feedback as valid, invalid, or unresolved. Give the evidence and the smallest appropriate response.
-4. When valid feedback requires implementation, transition to `engineering` as the primary skill before editing.
-5. Close the loop only after fresh proof covers the accepted change, or after an evidence-backed explanation resolves rejected feedback.
+4. Apply valid fixes within existing authority, transitioning to `engineering` as primary when implementation becomes the main task. Do not ask again for authorized work. Explain invalid feedback with evidence; isolate any unresolved decision while continuing independent authorized fixes.
+5. Close the loop after proof covers accepted changes and evidence explains rejected feedback. Reuse recorded proof across turns when the tested code and relevant state are unchanged; rerun checks affected by a fix.
 
 ## Reference Routing
 

@@ -1,6 +1,6 @@
 ---
 name: test-design
-description: "Use when tests are primary: explicit TDD, proof-layer selection, coverage, assertions, doubles, or characterization, contract, property, state-machine, and browser tests. Not for unknown causes or routine implementation proof."
+description: "Use when tests are the main deliverable or uncertainty, including explicit TDD, proof-layer selection, coverage, assertions, and doubles. Excludes unknown-cause failures and routine implementation proof."
 ---
 
 # Test design
@@ -31,8 +31,8 @@ Keep routine implementation proof in `engineering`. Use this skill when the test
 4. Derive expected results from an independent oracle: specification example, literal worked result, invariant, trusted fixture, property, or independent implementation.
 5. Keep the boundary under test real. Fake slow or uncontrollable collaborators; mock only an understood external protocol, never the behavior being trusted.
 6. Select only relevant cases: happy path, boundary partitions, invalid input, state transition, duplicate/retry, partial failure, permission denial, concurrency, or recovery.
-7. For TDD, complete one vertical red-green-refactor slice at a time and observe the expected failure before production edits.
-8. Run the focused tests and relevant surrounding gate. Finish only when the target claim can fail for the right reason, redundant coverage is removed, and the remaining proof gap is stated.
+7. For TDD, complete one vertical red-green-refactor slice at a time and observe the expected failure before production edits. Continue through the requested behavior; the first green slice does not end a larger task.
+8. Run the focused tests and relevant surrounding gate. Finish when the target claim can fail for the right reason, coverage added or replaced by this task has no needless duplication, and material proof gaps are stated. Reuse earlier results only after confirming the tested code and relevant state are unchanged.
 
 ## Reference Routing
 

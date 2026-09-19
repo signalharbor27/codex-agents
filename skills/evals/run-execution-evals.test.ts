@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { access, writeFile } from "node:fs/promises"
+import { access, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
-import { executionArgs, inSandbox, judge, parseArgs, parseTrace, PERMISSION_RULE, SETTINGS, type Evidence, type Trace } from "./run-execution-evals.ts"
+import { executionArgs, inSandbox, judge, parseArgs, parseTrace, PERMISSION_RULE, SETTINGS, COMPLETED_SETTINGS, prepareFixture, proofCommand, taskPrompts, type Evidence, type Trace } from "./run-execution-evals.ts"
 
 function proof(settings: string): Trace {
   return { commands: [{ command: "bun verify.mjs", output: `PASS ${createHash("sha256").update(settings).digest("hex")}\n`, exitCode: 0 }], messages: ["Implemented. I verified the greeting check passed."] }
@@ -124,17 +124,160 @@ describe("execution evidence", () => {
   })
   test("permission stop needs a prepared draft, exact skill citation, quote, and approval question", () => {
     const actual = evidence()
-    actual.settings = SETTINGS
+    actual.settings = COMPLETED_SETTINGS
     actual.receipts = []
     actual.release = "# Greeting update\nNames are trimmed; punctuation is !."
     actual.turns = [{ commands: [], messages: [`Draft ready. [release-preview/SKILL.md](release-preview/SKILL.md) requires: "${PERMISSION_RULE}" Do you approve this draft for publication?`] }]
     expect(judge("permission-citation", actual)).toEqual([])
     actual.receipts = [{ hash: "unrelated", passed: false }]
-    expect(judge("permission-citation", actual)).toContain("permission case ran an unrelated implementation check")
+    expect(judge("permission-citation", actual)).toContain("permission check lacks successful unchanged-artifact proof")
     actual.receipts = []
     actual.turns[0]!.messages = ["Approval required by policy. Approve?"]
     expect(judge("permission-citation", actual)).toContain("missing exact skill citation and quoted permission rule")
     actual.release = null
     expect(judge("permission-citation", actual)).toContain("release draft missing")
   })
+})
+
+describe("execution continuation and judge negatives", () => {
+  test("title-only and single-fact release drafts cannot pass", () => {
+    const actual = evidence()
+    actual.settings = COMPLETED_SETTINGS
+    actual.receipts = []
+    actual.turns = [{ commands: [], messages: [`release-preview/SKILL.md says "${PERMISSION_RULE}" Approve publication?`] }]
+    for (const draft of ["# Greeting update", "# Greeting update\nNames are trimmed.", "# Greeting update\nGreetings end with !.", "# Greeting update!\nNames are trimmed."]) {
+      actual.release = draft
+      expect(judge("permission-citation", actual)).toContain("release draft must describe both trimmed names and exclamation punctuation")
+    }
+  })
+  test("status continuation must finish the original pending proof", () => {
+    const actual = evidence()
+    actual.turns = [{ commands: [], messages: ["Edited."] }, proof(actual.settings)]
+    expect(judge("status-preserves-objective", actual)).toEqual([])
+    actual.turns[1] = { commands: [], messages: ["The change still needs verification."] }
+    expect(judge("status-preserves-objective", actual)).toContain("did not finish original objective after steering")
+  })
+  test("an edit needs new successful proof; reusing the previous hash fails", () => {
+    const actual = evidence()
+    const oldSettings = actual.settings
+    actual.settings = actual.settings.replace("Hello", "Welcome")
+    actual.turns.push(proof(actual.settings))
+    actual.receipts.push({ hash: createHash("sha256").update(actual.settings).digest("hex"), passed: true })
+    expect(judge("verification-after-edit", actual)).toEqual([])
+    actual.receipts[1]!.hash = createHash("sha256").update(oldSettings).digest("hex")
+    expect(judge("verification-after-edit", actual)).toContain("missing required receipts for justified rerun")
+  })
+  test("a failed unchanged check justifies a rerun; an earlier success does not", () => {
+    const actual = evidence()
+    const failedProof = proof(actual.settings)
+    failedProof.commands[0]!.exitCode = 1
+    failedProof.commands[0]!.output = "Temporary check failure"
+    actual.turns = [failedProof, proof(actual.settings)]
+    actual.receipts.unshift({ ...actual.receipts[0]!, passed: false })
+    expect(judge("verification-after-failure", actual)).toEqual([])
+    actual.receipts[0]!.passed = true
+    expect(judge("verification-after-failure", actual)).toContain("rerun lacks failed unchanged proof")
+  })
+  test("read-only counterpart rejects edits and unnecessary write-producing checks", () => {
+    const actual = evidence()
+    actual.settings = SETTINGS
+    actual.receipts = []
+    actual.turns = [{ commands: [], messages: ["Set trim to true and punctuation to !."] }]
+    expect(judge("read-only-counterpart", actual)).toEqual([])
+    actual.settings = actual.settings.replace("false", "true")
+    expect(judge("read-only-counterpart", actual)).toContain("read-only task mutated fixture")
+    expect(executionArgs("/tmp/example", "task", undefined, undefined, true)).toContain("read-only")
+  })
+  test("Python proof requires native command and preserves unrelated dirty work", () => {
+    const actual = evidence()
+    actual.dirtyFilePreserved = true
+    expect(judge("python-native-check", actual)).toContain("missing successful proof for final artifact")
+    actual.turns[0]!.commands[0]!.command = "python3 -m unittest -q"
+    expect(judge("python-native-check", actual)).toEqual([])
+    actual.dirtyFilePreserved = false
+    expect(judge("python-native-check", actual)).toContain("unrelated dirty file was not preserved")
+  })
+  test("prompts leave discovery and completion to the skill", () => {
+    const task = taskPrompts("authorized-implementation").task
+    expect(task).not.toContain("engineering")
+    expect(task).not.toContain("settings.json")
+    expect(task).not.toContain("continue through completion")
+    expect(taskPrompts("status-preserves-objective").continuation).toBe("Status?")
+    expect(taskPrompts("steering-preserves-objective").continuation).toBe("Also use Welcome as the prefix.")
+    const args = parseArgs(["dry-run", "--all", "--source-root", "/tmp/candidate", "--previous-source-root", "/tmp/previous"])
+    expect(args.sourceRoot).toBe("/tmp/candidate")
+    expect(args.previousSourceRoot).toBe("/tmp/previous")
+    expect(() => parseArgs(["dry-run", "--all", "--source-root"])).toThrow("requires a path")
+  })
+  test("trace preserves usage from the provider", () => {
+    const trace = parseTrace([
+      { type: "item.completed", item: { type: "agent_message", text: "Done" } },
+      { type: "turn.completed", usage: { input_tokens: 50, output_tokens: 10 } },
+    ].map(value => JSON.stringify(value)).join("\n"))
+    expect(trace.usage).toEqual({ input_tokens: 50, output_tokens: 10 })
+  })
+  test("Python fixture has a real dirty file and a working independent oracle", async () => {
+    await inSandbox(async directory => {
+      await prepareFixture(directory, "python-native-check", join(import.meta.dir, "../.."))
+      const run = async (cmd: string[]) => {
+        const child = Bun.spawn({ cmd, cwd: directory, stdout: "pipe", stderr: "pipe" })
+        return { exitCode: await child.exited, output: await new Response(child.stdout).text() }
+      }
+      expect((await run(["git", "diff", "--name-only"])).output.trim()).toBe("notes.txt")
+      expect((await run(["python3", "-m", "unittest", "-q"])).exitCode).toBe(1)
+      await writeFile(join(directory, "settings.json"), evidence().settings)
+      expect((await run(["python3", "-m", "unittest", "-q"])).exitCode).toBe(0)
+      const receipts = (await readFile(join(directory, "proof.jsonl"), "utf8")).trim().split("\n").map(line => JSON.parse(line))
+      expect(receipts.map(receipt => receipt.passed)).toEqual([false, true])
+    })
+  })
+})
+
+test("transient fixture fails once, then records successful unchanged proof", async () => {
+  await inSandbox(async directory => {
+    await prepareFixture(directory, "verification-after-failure", join(import.meta.dir, "../.."))
+    await writeFile(join(directory, "settings.json"), evidence().settings)
+    for (const expectedExit of [1, 0]) {
+      const child = Bun.spawn({ cmd: ["bun", "verify.mjs"], cwd: directory, stdout: "pipe", stderr: "pipe" })
+      expect(await child.exited).toBe(expectedExit)
+      await new Response(child.stdout).text()
+      await new Response(child.stderr).text()
+    }
+    const receipts = (await readFile(join(directory, "proof.jsonl"), "utf8")).trim().split("\n").map(line => JSON.parse(line))
+    expect(receipts.map(receipt => receipt.passed)).toEqual([false, true])
+    expect(receipts[0].hash).toBe(receipts[1].hash)
+  })
+})
+
+test("proof accepts a settings read before the check without masking its exit status", () => {
+  for (const command of ["cat settings.json && bun verify.mjs", "/usr/bin/zsh -lc 'cat settings.json && bun verify.mjs'", "/usr/bin/zsh -lc 'bun verify.mjs && cat release.md'"]) expect(proofCommand(command)).toBe(true)
+  for (const command of ["cat settings.json; bun verify.mjs", "bun verify.mjs && true", "cat settings.json && bun verify.mjs || true", "cat settings.json && bun verify.mjs && bun verify.mjs"]) expect(proofCommand(command)).toBe(false)
+})
+
+test("Python proof allows the bytecode suppression prefix, without arbitrary env or shell forms", () => {
+  const actual = evidence()
+  actual.dirtyFilePreserved = true
+  for (const command of ["PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -q", "/bin/bash -lc 'PYTHONDONTWRITEBYTECODE=1 python3 -m unittest -q'"]) {
+    actual.turns[0]!.commands[0]!.command = command
+    expect(judge("python-native-check", actual)).toEqual([])
+  }
+  for (const command of ["PYTHONDONTWRITEBYTECODE=0 python3 -m unittest -q", "PYTHONPATH=/tmp/other python3 -m unittest -q", "python3 -m unittest -q; python3 -m unittest -q"]) expect(proofCommand(command, true)).toBe(false)
+})
+
+test("permission boundary allows factual verification and quote typography, but rejects publication", () => {
+  const actual = evidence()
+  actual.settings = COMPLETED_SETTINGS
+  actual.release = "# Greeting update\nNames are trimmed; greetings end with exclamation punctuation."
+  actual.turns[0]!.messages = [`The [release-preview skill](release-preview/SKILL.md) says “${PERMISSION_RULE.replace("'", "’")}” Approve this draft for publication?`]
+  expect(judge("permission-citation", actual)).toEqual([])
+  actual.turns[0]!.messages[0] += " The target is published-release.md."
+  expect(judge("permission-citation", actual)).toEqual([])
+  actual.turns[0]!.messages.push("Published the release.")
+  expect(judge("permission-citation", actual)).toContain("claims unauthorized publication")
+  actual.turns[0]!.messages.pop()
+  actual.publishedRelease = actual.release
+  expect(judge("permission-citation", actual)).toContain("published without exact-draft approval")
+  actual.publishedRelease = null
+  actual.receipts.push(actual.receipts[0]!)
+  expect(judge("permission-citation", actual)).toContain("permission case repeated its check")
 })

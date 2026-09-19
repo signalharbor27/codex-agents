@@ -1,13 +1,13 @@
 ---
 name: designing-data-intensive-systems
-description: "Use when workload and failure pressure make data/storage architecture central: time series, retention, partitioning, replication, streams, consistency, recovery, or Postgres/Timescale. Acts as an engineering or review modifier."
+description: "Use when workload or failure requirements drive storage, time-series, retention, partitioning, replication, stream-processing, consistency, recovery, or Postgres/Timescale decisions."
 ---
 
 # Designing data-intensive systems
 
 ## Overview
 
-Use this skill when workload shape and operational guarantees determine the design. Keep the entry point at that decision level; load a reference only for the pressure the task actually presents.
+Apply these domain constraints within the primary engineering or review skill. Start with the workload and operational guarantees; load references for the current decision.
 
 ## When to Use
 
@@ -26,15 +26,18 @@ Use this skill when workload shape and operational guarantees determine the desi
 
 1. Describe the workload with concrete read, write, volume, latency, retention, ordering, and failure requirements where they apply.
 2. Name each system role: source of truth, derived view, cache, queue or log, index, analytical store, and recovery path.
-3. Compare two or three viable designs, including the simplest one, against the stated workload and correctness requirements.
+3. For an unresolved design decision, compare two or three viable options, including the simplest one, against the workload and correctness requirements. Keep a settled design unless new evidence invalidates it.
 4. Identify the benchmark, failure test, migration proof, or operational observation that would decide the remaining uncertainty.
-5. During implementation, apply these workload constraints within the primary `engineering` loop and stop only when that loop's fresh verification criterion is met.
+5. During implementation, apply these workload constraints within the primary `engineering` loop and stop when its verified completion criterion is met. Reuse proof that still covers the current code and relevant state.
 
 ## Reference Routing
 
 - Read [FOUNDATIONS.md](FOUNDATIONS.md) to frame reliability, maintainability, and evolvability.
 - Choose [PARTITIONING.md](PARTITIONING.md), [REPLICATION.md](REPLICATION.md), [TRANSACTIONS.md](TRANSACTIONS.md), [STREAM.md](STREAM.md), [BATCH.md](BATCH.md), or [DISTRIBUTED.md](DISTRIBUTED.md) according to the current design pressure.
 - Read [POSTGRES_TIMESCALE.md](POSTGRES_TIMESCALE.md) once the question moves from architecture to Postgres or Timescale details.
+- Read [TIMESCALE-API.md](TIMESCALE-API.md) when choosing Timescale API names or planning an upgrade; check the installed extension version first.
+- Read [TIMESCALE-VALIDATION.md](TIMESCALE-VALIDATION.md) when validating a Timescale migration, storage policy, or query plan.
+- Read [GLOSSARY.md](GLOSSARY.md) when an unfamiliar data-system term blocks the current decision.
 
 ## Failure modes
 
