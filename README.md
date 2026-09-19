@@ -52,7 +52,7 @@ The concise references synthesize established work including Hunt and Thomas, Br
 ## Review and improve skills
 
 - `review-and-simplify-changes` reviews the full intended diff, then loops over fixes and affected contracts until actionable findings are resolved and required checks pass. Follow-up passes use recorded review snapshots; new evidence can reopen earlier scope. Integrated slices need combined coverage. Reviewer count follows the material work; the eight topics are a coverage checklist.
-- The main agent delegates substantive review to `oracle` and gives it the built-in `review-agent` skill for defect review when available. That skill returns actionable introduced defects; the main agent also accounts for Standards, Intent, simplification, and integration coverage. `fast_reviewer` supplies bounded mechanical evidence; `verifier` runs checks. Hosts without the built-in skill use an equivalent scoped read-only brief.
+- Every review pass uses independent subagents, including small changes and follow-up fixes. The main agent maps material checks to review tracks and dispatches independent tracks in parallel: `oracle` instances inspect correctness, Standards, Intent, simplification, and integration; `fast_reviewer` supplies bounded mechanical evidence; `verifier` runs checks. Defect reviewers use the host's `review-agent` skill when available, or an equivalent scoped read-only brief. The main agent collects results, judges findings, and coordinates fixes; its own inspection cannot replace delegated coverage.
 - `improve-codebase-architecture` and `improve-test-suite` produce evidence-backed plans, with phases and decisions only when the findings need them.
 
 ## Other skills
@@ -106,11 +106,12 @@ their assignments. The custom `explorer` replaces the built-in role of that name
 Use `implementer` for ordinary slices. For harder implementation, the main agent
 can take over or explicitly select the unpinned `worker` at higher effort.
 
-The review skill requires independent Oracle review for substantial delegated
-slices and changes to permission, financial, concurrency, recovery, or rollout
-invariants. Small coupled changes can stay local when those triggers are absent.
-Follow-up passes cover fixes and affected contracts. Oracle can also advise on
-design or debugging; those assignments do not load the defect-review skill.
+The review skill assigns every material check to an independent reviewer.
+Small coupled changes can share one Oracle; separable checks use parallel
+tracks. Follow-up passes delegate fixes and affected contracts while preserving
+valid earlier coverage. Unavailable subagents leave review blocked. Oracle can
+also advise on design or debugging; those assignments do not load the
+defect-review skill.
 
 Link the global agent directory to this checkout's `agents` directory.
 Codex 0.154.0 discovers individual file symlinks but refuses to load them when

@@ -34,7 +34,7 @@
     },
     "actions": {
       "type": "array",
-      "description": "Role actions select source profiles: delegate-oracle-review and consult-oracle select oracle; delegate-fast-review selects fast_reviewer; delegate-command-verification selects verifier. use-built-in-review-agent applies the host-provided defect-review skill. retain-main-review-ownership keeps Standards, Intent, simplification, and review/fix completion with the main agent.",
+      "description": "Role actions select source profiles: delegate-oracle-review and consult-oracle select oracle; delegate-fast-review selects fast_reviewer; delegate-command-verification selects verifier. delegate-oracle-review assigns substantive review to an independent non-author. delegate-standards-intent-simplification assigns those checks to independent reviewers within the requested scope. delegate-one-coupled-review groups coupled topics with one independent reviewer. delegate-independent-tracks assigns bounded material review tracks; dispatch-independent-tracks-in-parallel starts separable tracks together when capacity is available. use-built-in-review-agent applies the host-provided defect-review skill. keep-reviewers-nonrecursive prevents children from spawning agents or invoking the outer review gate. retain-main-review-ownership keeps orchestration, finding judgment, fixes, verification, and completion with the main agent, whose own inspection cannot supply review coverage. report-blocked-review-coverage reports unavailable independent coverage without claiming completion. keep-coupled-review-local means review performed by the main agent without independent reviewer coverage.",
       "items": {
         "type": "string",
         "enum": [
@@ -52,7 +52,10 @@
           "delegate-command-verification",
           "delegate-fast-review",
           "delegate-independent-tracks",
+          "delegate-one-coupled-review",
           "delegate-oracle-review",
+          "delegate-standards-intent-simplification",
+          "dispatch-independent-tracks-in-parallel",
           "do-not-change-branch-state",
           "do-not-invent-verification",
           "find-root-cause-before-fix",
@@ -64,6 +67,7 @@
           "inspect-worktree-conventions",
           "keep-coupled-review-local",
           "keep-domain-artifacts-proposed",
+          "keep-reviewers-nonrecursive",
           "keep-standards-and-intent-separate",
           "keep-task-read-only",
           "select-minimum-useful-reviewers",
@@ -76,6 +80,7 @@
           "record-review-snapshot",
           "recover-review-snapshot-or-full-scope",
           "report-worktree-location",
+          "report-blocked-review-coverage",
           "recap-decisions-before-transition",
           "require-explicit-branch-integration-choice",
           "resolve-facts-before-asking",
@@ -132,6 +137,7 @@
       "type": "string",
       "enum": [
         "dependency-frontier",
+        "none",
         "one-at-a-time",
         "only-if-blocked",
         "required-before-unapproved-action"
@@ -145,6 +151,7 @@
         "after-root-cause",
         "after-verification",
         "after-worktree-ready",
+        "blocked",
         "findings",
         "plan",
         "present-options",
