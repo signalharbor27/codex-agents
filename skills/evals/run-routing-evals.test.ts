@@ -280,7 +280,7 @@ describe("eval model selection", () => {
 
 describe("adaptive review contract", () => {
   const validate = (entry: RoutingCase) => validateCase(entry, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(fixture.explicit_only_skills), resultSchema)
-  test("allows local coupled review and independent tracks without an agent quota", () => {
+  test("allows one independent coupled reviewer and separate tracks without an agent quota", () => {
     for (const id of ["small-coupled-review", "independent-review-tracks", "single-track-read-only-review"]) {
       expect(validate(fixture.cases.find(entry => entry.id === id)!)).toEqual([])
     }
@@ -290,7 +290,7 @@ describe("adaptive review contract", () => {
     entry.required_actions = entry.required_actions.filter(action => action !== "account-for-all-review-topics")
     expect(validate(entry)).toContain("cases[0] adaptive review must account for all review topics")
     entry.required_actions.push("delegate-independent-tracks")
-    expect(validate(entry)).toContain("cases[0] coupled review cannot require independent delegation")
+    expect(validate(entry)).toContain("cases[0] one coupled reviewer cannot require separate review tracks")
   })
   test("rejects obsolete fixed reviewer quotas", () => {
     const entry = structuredClone(fixture.cases.find(entry => entry.id === "small-coupled-review")!)
@@ -348,12 +348,15 @@ describe("progressive review contract", () => {
     }
   })
 
-  test("one explicit local reviewer satisfies minimum reviewer selection", () => {
+  test("main-agent review cannot satisfy independent reviewer selection", () => {
     const routingCase = entry("follow-up-review-delta")
     const result = resultFor(routingCase)
     result.actions = result.actions.filter(action => action !== "select-minimum-useful-reviewers")
     result.actions.push("keep-coupled-review-local")
-    expect(compareResult(routingCase, result)).toEqual([])
+    expect(compareResult(routingCase, result)).toEqual([
+      "missing required action select-minimum-useful-reviewers",
+      "forbidden action keep-coupled-review-local",
+    ])
   })
 
   test("missing reviewer selection and arbitrary delegation still fail", () => {
@@ -414,14 +417,63 @@ describe("oracle review selection", () => {
     actions: entry.required_actions, first_action: "pin-review-scope", mutation: "none", question: "only-if-blocked", stop: "findings",
   })
 
-  test("delegated substantive review needs Oracle, the available defect skill, and outer ownership", () => {
+  test("delegated substantive review needs Oracle, all assigned coverage, and nonrecursive children", () => {
     const entry = fixture.cases.find(candidate => candidate.id === "delegated-substantive-defect-review")!
     const result = resultFor(entry)
     expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
     expect(compareResult(entry, result)).toEqual([])
-    for (const action of ["delegate-oracle-review", "use-built-in-review-agent", "retain-main-review-ownership"]) {
+    for (const action of ["delegate-oracle-review", "delegate-standards-intent-simplification", "use-built-in-review-agent", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]) {
       expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
     }
+  })
+
+  test("every substantive pass requires independent review including initial, fix, and integration passes", () => {
+    const excluded = new Set(["delegated-mechanical-review-evidence", "delegated-review-command-evidence", "review-no-independent-capacity"])
+    const cases = fixture.cases.filter(entry => entry.primary_skill === "review-and-simplify-changes" && !excluded.has(entry.id))
+    for (const entry of cases) {
+      const result = {
+        ...resultFor(entry),
+        ...Object.fromEntries(Object.entries(entry.expectations).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
+      } as RoutingResult
+      expect(compareResult(entry, result)).toEqual([])
+      for (const action of ["delegate-oracle-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]) {
+        expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
+        const incomplete = { ...entry, required_actions: entry.required_actions.filter(value => value !== action) }
+        expect(validateCase(incomplete, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)).toContain(`cases[0] substantive review must require ${action}`)
+      }
+      expect(compareResult(entry, { ...result, actions: [...result.actions, "keep-coupled-review-local"] })).toEqual(["forbidden action keep-coupled-review-local"])
+    }
+  })
+
+  test("separable material tracks are assigned and dispatched in parallel when capacity exists", () => {
+    const entry = fixture.cases.find(candidate => candidate.id === "independent-review-tracks")!
+    const result = resultFor(entry)
+    expect(compareResult(entry, result)).toEqual([])
+    for (const action of ["delegate-independent-tracks", "dispatch-independent-tracks-in-parallel", "account-for-all-review-topics"]) {
+      expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
+    }
+    expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-one-coupled-review"] })).toEqual(["forbidden action delegate-one-coupled-review"])
+    const unassigned = { ...entry, required_actions: entry.required_actions.filter(action => action !== "delegate-independent-tracks") }
+    expect(validateCase(unassigned, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)).toContain("cases[0] parallel review must assign independent tracks")
+  })
+
+  test("unavailable independent capacity blocks review without main-agent fallback or unnecessary questions", () => {
+    const entry = fixture.cases.find(candidate => candidate.id === "review-no-independent-capacity")!
+    expect(entry.required_actions).not.toContain("select-minimum-useful-reviewers")
+    expect(entry.required_actions).not.toContain("account-for-all-review-topics")
+    expect(validateCase(entry, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)).toEqual([])
+    const result = { ...resultFor(entry), question: "none", stop: "blocked" }
+    expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
+    expect(compareResult(entry, result)).toEqual([])
+    expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== "report-blocked-review-coverage") })).toEqual(["missing required action report-blocked-review-coverage"])
+    for (const action of ["keep-coupled-review-local", "delegate-oracle-review", "confirm-final-review-coverage"]) {
+      expect(compareResult(entry, { ...result, actions: [...result.actions, action] })).toEqual([`forbidden action ${action}`])
+    }
+    expect(compareResult(entry, { ...result, question: "only-if-blocked" })).toEqual(["question: expected none, got only-if-blocked"])
+    for (const stop of ["findings", "after-verification"]) {
+      expect(compareResult(entry, { ...result, stop })).toEqual([`stop: expected blocked, got ${stop}`])
+    }
+    expect(compareResult(entry, { ...result, mutation: "requested-repo-writes" })).toEqual(["mutation: expected none, got requested-repo-writes"])
   })
 
   test("mechanical evidence and command verification require their own roles", () => {
@@ -473,7 +525,7 @@ describe("oracle review selection", () => {
     for (const id of ["delegated-mechanical-review-evidence", "delegated-review-command-evidence"]) {
       const entry = fixture.cases.find(candidate => candidate.id === id)!
       const result = resultFor(entry)
-      for (const action of ["delegate-independent-tracks", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration"]) {
+      for (const action of ["delegate-independent-tracks", "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration"]) {
         expect(compareResult(entry, { ...result, actions: [...result.actions, action] })).toEqual([`forbidden action ${action}`])
       }
     }
@@ -518,12 +570,17 @@ describe("oracle review selection", () => {
     }
   })
 
-  test("billing copy and a routine local helper reject unnecessary oracle review", () => {
-    for (const id of ["billing-copy-review-no-oracle", "small-coupled-review"]) {
+  test("billing copy and a small coupled helper still require one independent reviewer", () => {
+    for (const id of ["billing-copy-independent-review", "small-coupled-review"]) {
       const entry = fixture.cases.find(candidate => candidate.id === id)!
       const result = resultFor(entry)
       expect(compareResult(entry, result)).toEqual([])
-      expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
+      for (const action of ["delegate-oracle-review", "delegate-one-coupled-review"]) {
+        expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
+      }
+      for (const action of ["keep-coupled-review-local", "delegate-independent-tracks", "dispatch-independent-tracks-in-parallel"]) {
+        expect(compareResult(entry, { ...result, actions: [...result.actions, action] })).toEqual([`forbidden action ${action}`])
+      }
     }
   })
 
@@ -547,7 +604,7 @@ describe("oracle review selection", () => {
     ])
     const conflicting = { ...entry, required_actions: [...entry.required_actions, "keep-coupled-review-local"] }
     expect(validateCase(conflicting, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)).toContain(
-      "cases[0] coupled review cannot require independent delegation",
+      "cases[0] review cannot require main-agent coverage",
     )
   })
 })

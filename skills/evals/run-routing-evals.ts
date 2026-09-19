@@ -603,15 +603,30 @@ export function validateCase(
     const evidenceOnly = evidenceRole !== undefined && [
       ...evidenceRoles.filter(action => action !== evidenceRole),
       "delegate-oracle-review", "consult-oracle", "use-built-in-review-agent", "delegate-independent-tracks",
+      "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local",
       "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration",
     ].every(action => forbiddenActions?.includes(action))
     const single = caseActions.includes("honor-single-track-scope") || evidenceOnly
-    if (broad === single) errors.push(`${label} review must select adaptive coverage or explicit single-track`)
+    const blocked = caseActions.includes("report-blocked-review-coverage")
+    if (!blocked && broad === single) errors.push(`${label} review must select adaptive coverage or explicit single-track`)
     if (broad && !caseActions.includes("account-for-all-review-topics")) {
       errors.push(`${label} adaptive review must account for all review topics`)
     }
-    if (caseActions.includes("keep-coupled-review-local") && caseActions.some(action => ["delegate-independent-tracks", "delegate-oracle-review"].includes(action))) {
-      errors.push(`${label} coupled review cannot require independent delegation`)
+    if (caseActions.includes("keep-coupled-review-local")) errors.push(`${label} review cannot require main-agent coverage`)
+    if (!forbiddenActions?.includes("keep-coupled-review-local")) errors.push(`${label} review must forbid main-agent coverage`)
+    if (!evidenceOnly && !blocked) {
+      for (const action of ["delegate-oracle-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]) {
+        if (!caseActions.includes(action)) errors.push(`${label} substantive review must require ${action}`)
+      }
+    }
+    if (blocked && (!isRecord(value.expectations) || value.expectations.stop !== "blocked")) {
+      errors.push(`${label} unavailable independent coverage must stop blocked`)
+    }
+    if (caseActions.includes("delegate-one-coupled-review") && caseActions.includes("delegate-independent-tracks")) {
+      errors.push(`${label} one coupled reviewer cannot require separate review tracks`)
+    }
+    if (caseActions.includes("dispatch-independent-tracks-in-parallel") && !caseActions.includes("delegate-independent-tracks")) {
+      errors.push(`${label} parallel review must assign independent tracks`)
     }
     const pinsFirst = isRecord(value.expectations) && value.expectations.first_action === "pin-review-scope"
     if (!caseActions.includes("pin-review-scope") && !pinsFirst) errors.push(`${label} review must pin scope`)
@@ -827,8 +842,7 @@ export function compareResult(routingCase: RoutingCase, result: RoutingResult): 
     )
   }
   for (const action of routingCase.required_actions) {
-    const localReviewerSelected = action === "select-minimum-useful-reviewers" && result.actions.includes("keep-coupled-review-local")
-    if (!result.actions.includes(action) && !localReviewerSelected) failures.push(`missing required action ${action}`)
+    if (!result.actions.includes(action)) failures.push(`missing required action ${action}`)
   }
   for (const action of routingCase.forbidden_actions ?? []) {
     if (result.actions.includes(action)) failures.push(`forbidden action ${action}`)

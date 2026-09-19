@@ -5,7 +5,7 @@ description: "Use when implementation is ready for handoff or commit, or when re
 
 # Review and simplify changes
 
-Own the required review/fix loop after implementation and standalone change reviews. The main agent retains integration and completion ownership.
+Run the required review/fix loop through independent subagents after implementation and for standalone change reviews. Delegate correctness, simplification, and Standards/Intent inspection on every pass, including small changes and follow-up fixes. The main agent coordinates coverage, judges findings, applies authorized fixes, and owns integration and completion; its own inspection cannot satisfy review coverage.
 
 ## When to Use
 
@@ -22,7 +22,7 @@ Own the required review/fix loop after implementation and standalone change revi
 
 ## Minimal Workflow
 
-1. Own review and simplification within the implementation loop or as the primary skill for a standalone review. Load domain guidance and the pressure references below only when the diff supplies evidence for them.
+1. Coordinate independent review and simplification within the implementation loop or as the primary skill for a standalone review. Load domain guidance and the pressure references below only when the diff supplies evidence for them.
 2. Pin the review to a commit, PR, branch, fixed point, or WIP diff.
    - For WIP, inspect `git status --short` before choosing the diff.
    - For a branch comparison, resolve the comparison ref and its upstream, use the upstream when it is ahead, and pin the merge base. Compare that base with the intended head or WIP state. For one commit or explicit snapshots, use those exact endpoints.
@@ -30,31 +30,31 @@ Own the required review/fix loop after implementation and standalone change revi
    - If the requested comparison cannot be produced locally and no exact remote base and head are available, stop without a review rather than substituting unrelated branches, PRs, or GitHub comparisons.
    - If a fixed-point diff is empty but unstaged changes exist, report the mismatch and include the unstaged diff only when user intent clearly points at WIP; otherwise ask one narrow scope question.
 3. Read repo-local `AGENTS.md`, docs, package scripts, conventions, and change Intent sources: prompt, explicit spec, plan, task notes, issue, or commit message. Use the diff as evidence of touched behavior, not as proof of intent.
-4. State the scope, permitted side effects, validation target, and reviewer shape. Use one integrated reviewer for a small or tightly coupled diff. Use bounded independent reviewers when separate context improves the evidence.
-5. Inspect every changed path and its affected callers, tests, config, and contracts for correctness, security, performance, and maintainability. Return every actionable finding; continue after the first defect. Judge **Standards** (repo rules and conventions) and **Intent** (requested behavior) separately. Account for each material requirement as implemented, partial, missing, contradicted, incorrect, or unrequested scope. Keep these findings separate from cleanup taste.
-6. Select material topics from the Eight-Topic Coverage Checklist, then apply Adaptive Reviewer Selection below. Account for every topic as covered or not material to the pinned scope; do not turn the checklist into a required agent count.
+4. State the scope, permitted side effects, and validation target. Map correctness, Standards/Intent, and material Eight-Topic Coverage Checklist checks to bounded review tracks, then apply Adaptive Reviewer Selection below. Use one independent subagent for a small or tightly coupled diff; dispatch separable tracks in parallel.
+5. Require assigned subagents to inspect every changed path and its affected callers, tests, config, and contracts for correctness, security, performance, and maintainability. Require every actionable finding, continuing after the first defect. Have them judge **Standards** (repo rules and conventions) and **Intent** (requested behavior) separately and account for each material requirement as implemented, partial, missing, contradicted, incorrect, or unrequested scope. Keep these findings separate from cleanup taste.
+6. Collect the assigned reviewers' results and account for each requirement and checklist topic as covered or not material. Delegate any uncovered material topic before completing review; a quick main-agent check cannot close it.
 7. Apply fixes supported by clear evidence within the user's existing authorization. A standalone review is read-only; a branch or PR scope does not cancel an authorized fix request. Keep cleanup behavior-preserving; verify intentional behavior changes against the requested outcome. Report pre-existing or out-of-scope findings without changing them. Routine dependencies may be added within the authorized outcome; ask about material scope, architecture, cost, or external effects. Do not stage, commit, or push unless authorized.
 8. Follow the progressive review loop. A standalone read-only review ends with findings, coverage, and proof gaps; an implementation handoff must satisfy the loop's completion condition.
 
 ## Progressive review loop
 
-1. First pass: review the entire intended diff, including relevant staged, unstaged, and untracked source. Record the base and reviewed head or reproducible WIP snapshot, covered paths/topics, findings, and validation. A WIP checkpoint must preserve the reviewed contents or diff, including untracked files; `HEAD` alone cannot identify it. Keep this record in task context unless a durable artifact is already authorized.
+1. First pass: have independent subagents review the entire intended diff, including relevant staged, unstaged, and untracked source. Record the base and reviewed head or reproducible WIP snapshot, reviewer assignments/results, covered paths/topics, findings, and validation. A WIP checkpoint must preserve the reviewed contents or diff, including untracked files; `HEAD` alone cannot identify it. Keep this record in task context unless a durable artifact is already authorized.
 2. Judge every finding against repository evidence. Track each as open, fixed awaiting review, verified fixed, rejected with evidence, or deferred by explicit user decision. Explain rejected findings. Fix accepted in-scope findings under existing authority, then run affected checks.
-3. Review all edits since the last reviewed snapshot, including fixes, cleanup, tests, and concurrent or integration edits. Trace affected callers and contracts, verify accepted fixes, and look for regressions introduced by them. Carry unresolved findings forward. Keep unchanged earlier scope closed unless new evidence, changed assumptions, or affected dependencies invalidate its coverage; explain any reopening.
+3. Send all edits since the last reviewed snapshot to independent reviewers, including fixes, cleanup, tests, and concurrent or integration edits. Require them to trace affected callers and contracts, verify accepted fixes, and look for regressions introduced by them. Carry unresolved findings forward. Keep unchanged earlier scope closed unless new evidence, changed assumptions, or affected dependencies invalidate its coverage; explain any reopening.
 4. Repeat fix, affected verification, and delta review until no actionable finding remains unresolved and required checks pass. Only Q may accept a deferral. Report a blocker or missing authority honestly; a pass limit or time budget does not make an unresolved review complete.
-5. Before handoff or an intended commit, confirm the final state is covered by the initial review and subsequent passes. For parallel slices, inspect the combined diff and cross-slice wiring; reuse valid slice evidence while reviewing every previously unreviewed interaction. Any later edit needs affected verification and another delta review. If the previous snapshot or coverage is missing, recover it or review the full identifiable intended diff; disclose unresolved scope instead of claiming incremental coverage.
+5. Before handoff or an intended commit, confirm the final state is covered by returned subagent reviews from the initial and subsequent passes. For parallel slices, assign review of the combined diff and cross-slice wiring; reuse valid slice evidence while reviewers inspect every previously unreviewed interaction. Any later edit needs affected verification and another delegated delta review. If the previous snapshot or coverage is missing, recover it or delegate review of the full identifiable intended diff; disclose unresolved scope instead of claiming incremental coverage.
 
 ## Adaptive Reviewer Selection
 
 Choose reviewer count from the pinned diff's material, separable review work. The eight topics below are a coverage checklist, not an assignment quota.
 
-- Before choosing local or delegated review, read [references/delegated-review.md](references/delegated-review.md) and check its required independent-review triggers. Keep a small or tightly coupled diff local only when no trigger requires independent review; cover all material topics together.
-- Use the minimum useful bounded set of independent subagents when distinct subsystems, contracts, or risk areas benefit from separate context. A reviewer may cover one or more related topics; split work only where independence improves evidence or reduces context interference.
-- Discover active subagent capacity before dispatch. Start independent reviewers together when slots are available; otherwise run bounded waves. If subagents are unavailable, review locally when the scope remains tractable and disclose the missing independent pass; stop blocked when trustworthy coverage would require it.
+- Read [references/delegated-review.md](references/delegated-review.md) before assigning review tracks. Every actual review pass requires independent subagents; diff size, low risk, and prior main-agent inspection do not waive delegation.
+- Select roles from the material checks. Split independent subsystems, contracts, risk areas, and mechanical checks into bounded tracks; group tightly coupled topics under one reviewer. Use as many subagents as the separable work warrants, with no fixed topic-to-agent quota.
+- Discover active subagent capacity before dispatch. Start independent reviewers together when slots are available; otherwise run bounded waves. If no suitable independent agent is available, report blocked review coverage. Main-agent inspection cannot replace the required subagent pass.
 - Give each reviewer the same pinned scope and Standards/Intent digest plus its material focus. Keep reviewers read-only: no edits, staging, commits, pushes, or state mutation.
 - Delegate substantive review to `oracle`, using the built-in `review-agent` skill for defect review when available. Use `fast_reviewer` only for bounded mechanical evidence and `verifier` for command evidence. Include the selected role and its assigned concern in each brief.
 - Tell independent Codex reviewers not to invoke this skill or any repo post-code review gate recursively.
-- Require file/symbol, checklist topic, issue, recommended fix, confidence, evidence, and validation needed. A reviewer may report no finding.
+- Require file/symbol, checklist topic, issue, recommended fix, confidence, evidence, and validation needed. A reviewer may report no finding after completing its assigned checks; retain its coverage and proof gaps.
 - The main agent owns checklist accounting, synthesis, judgment, edits, validation, and completion claims.
 
 ## Scope and read-only reviews

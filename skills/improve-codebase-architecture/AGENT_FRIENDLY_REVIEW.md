@@ -52,7 +52,7 @@ A sound architecture plan leaves future agents with better names, clearer entryp
 
 ## Delegation fit
 
-Delegate bounded, read-only evidence gathering when independent subsystems benefit from separate context. Keep small or tightly coupled reviews local.
+For standalone audits, delegate bounded, read-only evidence gathering when independent subsystems benefit from separate context; small or tightly coupled audits may stay local. Checks assigned through `review-and-simplify-changes` retain its required independent reviewers, who return findings without further delegation.
 
 In monorepos, split the review along real ownership and seam boundaries rather than package count alone.
 Typical tracks are frontend, backend, shared contracts or packages, and build or CI workflow.

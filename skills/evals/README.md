@@ -41,7 +41,7 @@ Routing live mode classifies tasks in a read-only sandbox. The prompt specifies 
 
 Reference output uses exact paths relative to the supplied skills root, beginning with the owning skill folder. Root Markdown files, `references/` paths, and nested reference folders preserve their filename case. The validated fixture allowlist still rejects unknown or invented references.
 
-`keep-coupled-review-local` satisfies `select-minimum-useful-reviewers`: it selects one local reviewer. Delegation alone does not satisfy that requirement. Other required actions use exact matching.
+Required actions use exact matching. `keep-coupled-review-local` remains a known action so fixtures can reject main-agent review explicitly; it cannot satisfy reviewer selection.
 
 Progressive review cases cover:
 
@@ -50,13 +50,19 @@ Progressive review cases cover:
 - `follow-up-review-missing-snapshot`: recover coverage or review the full identifiable intended diff. The fixture makes recovery unavailable, so an assumed delta is insufficient.
 - `combined-slice-review`: inspect previously unreviewed wiring before relying on completed slice reviews.
 
-`forbidden_actions` applies only where the case excludes an action. New evidence can justify reopening earlier scope; the follow-up case states that no such evidence exists. Review cases load `review-and-simplify-changes/references/delegated-review.md` before choosing local or delegated review. These classifications do not prove review depth, defect detection, or use of a host-provided `review-agent`.
+Every substantive pass requires independent Oracle review plus assigned Standards, Intent, and simplification coverage. The main agent orchestrates, judges findings, applies fixes, verifies, and owns completion; its own inspection cannot supply review coverage. Children stay nonrecursive. A reviewer may take fix follow-ups when it did not author the fixes.
 
-Oracle selection cases require `delegate-oracle-review` for changed tenant access, charge retry correctness, mixed-version migration safety, and a material review dispute unresolved after checking evidence. The migration case requires the data-systems modifier and its foundations/transactions references because backfill, overlapping writers, and rollback affect durable data. `oracle-unresolved-review-dispute` also requires a delta pass and forbids an unnecessary full repeat. `billing-copy-review-no-oracle` and `small-coupled-review` forbid oracle selection for display wording and routine local review. The cases test intended role selection from source guidance; they do not execute delegated agents or prove their model and effort settings.
+`forbidden_actions` applies only where the case excludes an action. New evidence can justify reopening earlier scope; the follow-up case states that no such evidence exists. Review cases load `review-and-simplify-changes/references/delegated-review.md` before assigning tracks. These classifications do not prove review depth, defect detection, or use of a host-provided `review-agent`.
+
+Tenant access, charge retries, mixed-version migrations, and unresolved review disputes retain their risk-specific coverage. The migration case requires the data-systems modifier and its foundations/transactions references because backfill, overlapping writers, and rollback affect durable data. `oracle-unresolved-review-dispute` also requires a delta pass and forbids an unnecessary full repeat.
+
+- `billing-copy-independent-review` and `small-coupled-review`: one independent reviewer covers the coupled scope, even without a risk trigger.
+- `independent-review-tracks`: assign material tracks and dispatch them in parallel when capacity is available. Topics do not imply a fixed agent count.
+- `review-no-independent-capacity`: report blocked coverage, without main-agent fallback, claimed completion, or unnecessary questions.
 
 Role boundaries also cover ordinary delegated work:
 
-- `delegated-substantive-defect-review`: select `oracle` and the available host `review-agent`, while the main agent retains Standards, Intent, simplification, and completion ownership.
+- `delegated-substantive-defect-review`: select `oracle` and the available host `review-agent`, assign Standards, Intent, and simplification to independent reviewers, and keep the outer loop with the main agent.
 - `delegated-mechanical-review-evidence`: select `fast_reviewer` for bounded symbol/import evidence.
 - `delegated-review-command-evidence`: select `verifier` for actual command results.
 - `oracle-design-advice` and `oracle-stalled-debugging-advice`: consult `oracle` without invoking defect review when there is no implementation diff.

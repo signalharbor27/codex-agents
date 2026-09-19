@@ -54,7 +54,7 @@ Remove, demote, or rewrite tests that:
 
 ## Delegation fit
 
-Delegate bounded, read-only review tracks when independent subsystems or test layers benefit from separate context. Keep small or tightly coupled reviews local.
+For standalone audits, delegate bounded, read-only tracks when independent subsystems or test layers benefit from separate context; small or tightly coupled audits may stay local. Checks assigned through `review-and-simplify-changes` retain its required independent reviewers, who return findings without further delegation.
 
 Useful subagent tracks include:
 

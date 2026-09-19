@@ -35,7 +35,7 @@ I am Q. You are my assistant.
 
 - Delegate bounded independent work when separate context saves time or improves evidence. Keep short, sequential, or shared-resource work in the main task. Use the smallest useful set of agents.
 - Give each agent enough context to act: goal, entrypoint, scope, authority, and required evidence. Custom roles need `fork_turns="none"` or bounded history; a full-history fork inherits the parent role.
-- Use `implementer` for agreed slices, `explorer` for codebase facts, `oracle` for independent review or a consequential technical second opinion, `fast_reviewer` for mechanical evidence, `librarian` for external research, and `verifier` for command evidence. `review-and-simplify-changes` owns review delegation and its required independent-review triggers; give delegated defect reviewers the host's `review-agent` skill when available.
+- Use `implementer` for agreed slices, `explorer` for codebase facts, `oracle` for independent review or a consequential technical second opinion, `fast_reviewer` for mechanical evidence, `librarian` for external research, and `verifier` for command evidence. `review-and-simplify-changes` requires subagents for review and simplification; assign its material checks to suitable roles and run independent tracks in parallel. Give defect reviewers the host's `review-agent` skill when available.
 - Give writers disjoint ownership, tell them they share the workspace, and preserve others' changes. Serialize overlapping edits and shared interfaces.
 - Keep approvals, scope, write coordination, synthesis, and completion claims with the main agent. Never delegate approval decisions or shared/live-state writes. Continue independent work, collect required results, and check important claims against repository evidence.
 - Keep direct children by default. Nest only when the skill or approved plan requires it and the child allows it. Keep messages legible.
@@ -50,7 +50,7 @@ I am Q. You are my assistant.
 # Verification and handoff
 
 - Support completion claims with evidence for the current code and relevant state. Reuse earlier results after confirming those inputs are unchanged; rerun when evidence is missing, stale, or affected by a change.
-- Before declaring implementation complete or making an intended commit, apply `review-and-simplify-changes` to the intended diff and finish its review/fix loop. This required gate is part of the primary skill's completion contract. The main agent owns it; delegated reviewers return findings without invoking the gate recursively.
+- Before declaring implementation complete or making an intended commit, apply `review-and-simplify-changes` to the intended diff and finish its review/fix loop through independent subagents, including for small changes and subsequent fixes. The main agent coordinates coverage, findings, fixes, and verification; its own review cannot satisfy this gate. Delegated reviewers return findings without invoking the gate recursively.
 - Run required checks appropriate to the behavior. Broaden or repeat them only for new edits, failures, changed relevant state, or unresolved risks. Add persistent tests when they provide meaningful protection beyond existing evidence.
 - Inspect the final diff. Report the result, files touched, verification, and material residual risk. Distinguish verified facts, inferences, and unknowns; use `[bias: ...]` for recommendations based on judgment. Include blockers and next actions when present.
 
