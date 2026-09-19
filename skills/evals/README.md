@@ -54,6 +54,17 @@ Progressive review cases cover:
 
 Oracle selection cases require `delegate-oracle-review` for changed tenant access, charge retry correctness, mixed-version migration safety, and a material review dispute unresolved after checking evidence. The migration case requires the data-systems modifier and its foundations/transactions references because backfill, overlapping writers, and rollback affect durable data. `oracle-unresolved-review-dispute` also requires a delta pass and forbids an unnecessary full repeat. `billing-copy-review-no-oracle` and `small-coupled-review` forbid oracle selection for display wording and routine local review. The cases test intended role selection from source guidance; they do not execute delegated agents or prove their model and effort settings.
 
+Role boundaries also cover ordinary delegated work:
+
+- `delegated-substantive-defect-review`: select `oracle` and the available host `review-agent`, while the main agent retains Standards, Intent, simplification, and completion ownership.
+- `delegated-mechanical-review-evidence`: select `fast_reviewer` for bounded symbol/import evidence.
+- `delegated-review-command-evidence`: select `verifier` for actual command results.
+- `oracle-design-advice` and `oracle-stalled-debugging-advice`: consult `oracle` without invoking defect review when there is no implementation diff.
+
+Action IDs record those role and skill choices; no host skill is added to the repository skill inventory. The fixtures state that `review-agent` is available where that condition matters. The tests classify the requested behavior without spawning agents or proving host skill invocation.
+
+Evidence-only cases accept stopping after the requested evidence or verification. They pin scope through `first_action` and require the correct evidence role, read-only handling, and explicit exclusions for broader review. Repeating scope labels in `actions` is unnecessary; selecting another role or reopening full, delta, or integration review still fails.
+
 `--catalog-variant` selects:
 
 - `full`: all source descriptions and paths.

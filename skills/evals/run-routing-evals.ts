@@ -598,7 +598,14 @@ export function validateCase(
       errors.push(`${label} review-and-simplify prompt must pin a diff-like scope`)
     }
     const broad = caseActions.includes("select-minimum-useful-reviewers")
-    const single = caseActions.includes("honor-single-track-scope")
+    const evidenceRoles = ["delegate-fast-review", "delegate-command-verification"]
+    const evidenceRole = evidenceRoles.find(action => caseActions.includes(action))
+    const evidenceOnly = evidenceRole !== undefined && [
+      ...evidenceRoles.filter(action => action !== evidenceRole),
+      "delegate-oracle-review", "consult-oracle", "use-built-in-review-agent", "delegate-independent-tracks",
+      "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration",
+    ].every(action => forbiddenActions?.includes(action))
+    const single = caseActions.includes("honor-single-track-scope") || evidenceOnly
     if (broad === single) errors.push(`${label} review must select adaptive coverage or explicit single-track`)
     if (broad && !caseActions.includes("account-for-all-review-topics")) {
       errors.push(`${label} adaptive review must account for all review topics`)
@@ -606,7 +613,8 @@ export function validateCase(
     if (caseActions.includes("keep-coupled-review-local") && caseActions.some(action => ["delegate-independent-tracks", "delegate-oracle-review"].includes(action))) {
       errors.push(`${label} coupled review cannot require independent delegation`)
     }
-    if (!caseActions.includes("pin-review-scope")) errors.push(`${label} review must pin scope`)
+    const pinsFirst = isRecord(value.expectations) && value.expectations.first_action === "pin-review-scope"
+    if (!caseActions.includes("pin-review-scope") && !pinsFirst) errors.push(`${label} review must pin scope`)
     if (single && !caseActions.includes("keep-task-read-only")) {
       errors.push(`${label} single-track review must remain read-only`)
     }

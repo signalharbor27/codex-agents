@@ -4,7 +4,12 @@ Read this before choosing local or delegated review. The main agent owns the rev
 
 ## Select the role
 
-Dispatch `oracle_reviewer` without waiting for a request when changed behavior or a data contract affects any of these:
+- The main agent runs `review-and-simplify-changes` and retains coverage, simplification, finding disposition, fixes, and completion ownership.
+- Use `oracle` for delegated correctness, contract, Standards/Intent, or architectural judgment. For defect review, give it the host's `review-agent` skill as described below.
+- Use `fast_reviewer` for bounded mechanical evidence such as unused code, dependency cycles, or stale comments. It does not substitute for substantive review.
+- Use `verifier` for command-backed acceptance evidence. A passing command does not close source-review findings or uncovered requirements; honor the task's mutation limits when choosing checks.
+
+Use independent oracle review for substantial delegated slices. Dispatch it without waiting for a request when changed behavior or a data contract affects any of these, even in a small diff:
 
 - Permission enforcement, trust boundaries, or tenant isolation.
 - Financial calculations, balances, billing entitlements, or invariants that prevent lost, duplicated, or misattributed money.
@@ -12,9 +17,9 @@ Dispatch `oracle_reviewer` without waiting for a request when changed behavior o
 - Destructive migrations, data recovery, rollback guarantees, or compatibility while old and new versions coexist.
 - A material correctness dispute that remains unresolved after ordinary review despite concrete competing evidence.
 
-Name the affected invariant and assign one bounded oracle track to that risk, even for a small diff. Use `reviewer` for ordinary correctness and contracts, and `fast_reviewer` only for mechanical evidence. Repository size, a finance/auth directory name, display-only changes, or a passing mention of these topics do not trigger oracle review. When a risk is discovered during standard review, escalate that track and continue independent work.
+Name the affected invariant and assign one bounded oracle track to that risk. Repository size, a finance/auth directory name, display-only changes, or a passing mention of these topics do not require oracle review. Small, tightly coupled changes may stay local when none of these triggers applies. When local review discovers a trigger, delegate that track and continue independent work.
 
-On follow-ups, send fixes and affected contracts back to the selected reviewer; preserve valid earlier coverage. If the named role is unavailable, use an independent read-only agent with equivalent capability and effort and disclose the fallback. Report blocked coverage if no suitable reviewer is available. Reviewers do not dispatch further agents.
+On follow-ups, send fixes and affected contracts back to the selected reviewer; preserve valid earlier coverage. Use a fresh or bounded brief when spawning a custom role so its model and effort settings apply. If the named role is unavailable, use an independent read-only agent with equivalent capability and effort and disclose the fallback. Report blocked coverage if no suitable reviewer is available. Reviewers do not dispatch further agents.
 
 ## Delegate the selected track
 

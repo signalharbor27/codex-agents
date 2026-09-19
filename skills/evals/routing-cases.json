@@ -454,7 +454,7 @@
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-delta-since-last-snapshot", "trace-affected-contracts", "carry-unresolved-findings-forward", "confirm-final-review-coverage", "verify-before-completion"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-delta-since-last-snapshot", "trace-affected-contracts", "carry-unresolved-findings-forward", "retain-main-review-ownership", "confirm-final-review-coverage", "verify-before-completion"],
       "forbidden_actions": ["review-entire-intended-diff"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -590,6 +590,81 @@
         "mutation": "none",
         "question": "only-if-blocked",
         "stop": "findings"
+      }
+    },
+    {
+      "id": "delegated-substantive-defect-review",
+      "prompt": "Review this WIP diff using an independent reviewer for its substantive defect assessment. A text parser changed token precedence and unmatched-delimiter handling. Check Standards, requested behavior, and justified simplification across the intended diff as well. The host provides the built-in review-agent skill. Return findings only; leave files unchanged.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-oracle-review", "use-built-in-review-agent", "retain-main-review-ownership", "keep-standards-and-intent-separate", "trace-each-material-intent-requirement", "keep-task-read-only"],
+      "forbidden_actions": ["delegate-fast-review", "delegate-command-verification"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
+      "id": "delegated-mechanical-review-evidence",
+      "prompt": "For this WIP review, delegate one bounded mechanical evidence task: list the changed exported names and every static import reference to them. Return the evidence without judging behavioral correctness, proposing removals, or editing files. The host provides the built-in review-agent skill.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
+      "required_actions": ["delegate-fast-review", "keep-task-read-only"],
+      "forbidden_actions": ["delegate-oracle-review", "consult-oracle", "delegate-command-verification", "use-built-in-review-agent", "delegate-independent-tracks", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": ["findings", "after-requested-scope"]
+      }
+    },
+    {
+      "id": "delegated-review-command-evidence",
+      "prompt": "Finish this WIP review by delegating independent execution of the existing no-write acceptance checks and reporting their actual outputs and exit status. Substantive review already covers the unchanged snapshot; no new source inspection is needed. The host provides the built-in review-agent skill. Leave files unchanged.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
+      "required_actions": ["delegate-command-verification", "do-not-invent-verification", "retain-main-review-ownership", "keep-task-read-only"],
+      "forbidden_actions": ["delegate-oracle-review", "consult-oracle", "delegate-fast-review", "use-built-in-review-agent", "delegate-independent-tracks", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": ["findings", "after-verification", "after-requested-scope"]
+      }
+    },
+    {
+      "id": "oracle-design-advice",
+      "prompt": "Get an independent judgment on a consequential software design choice before implementation: should each parser own its grammar policy or should all parsers use a shared registry? Repository callers and requirements are already mapped; compare the remaining contract and ownership tradeoffs and recommend an option. The host provides review-agent. There is no implementation diff to review. Leave files unchanged.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": ["engineering/references/boundary-design.md"],
+      "required_actions": ["inspect-before-recommending", "consult-oracle", "keep-task-read-only"],
+      "forbidden_actions": ["delegate-oracle-review", "use-built-in-review-agent"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "recommendation"
+      }
+    },
+    {
+      "id": "oracle-stalled-debugging-advice",
+      "prompt": "A reproducible malformed-value crash is still unexplained after tracing creation and validation, checking callers, and disproving two hypotheses. Get independent analysis of that evidence and recommend the next diagnostic experiment. The host provides review-agent, but there is no proposed fix or implementation diff. Leave files unchanged and stop after the recommendation.",
+      "primary_skill": "debugging",
+      "expected_modifier_skills": [],
+      "expected_references": ["debugging/references/root-cause-tracing.md"],
+      "required_actions": ["consult-oracle", "find-root-cause-before-fix", "keep-task-read-only"],
+      "forbidden_actions": ["delegate-oracle-review", "use-built-in-review-agent"],
+      "expectations": {
+        "first_action": ["build-failing-loop", "inspect-current-state"],
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "recommendation"
       }
     },
     {
