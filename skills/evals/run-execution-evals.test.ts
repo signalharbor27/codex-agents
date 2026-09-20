@@ -66,6 +66,38 @@ describe("execution evidence", () => {
     actual.turns[0]!.commands[0]!.command = "/bin/bash -lc 'bun verify.mjs'"
     expect(judge("authorized-implementation", actual)).toEqual([])
   })
+  test("accepts the bounded conjunctive validation tail with successful artifact proof", () => {
+    const actual = evidence()
+    const command = "bun verify.mjs && git diff --check && git status --short && git diff -- settings.json && cat proof.jsonl"
+    expect(proofCommand(command)).toBe(true)
+    actual.turns[0]!.commands[0]!.command = `/usr/bin/zsh -lc '${command}'`
+    expect(judge("authorized-implementation", actual)).toEqual([])
+    actual.turns[0]!.commands[0]!.exitCode = 1
+    expect(judge("authorized-implementation", actual)).toContain("missing successful proof for final artifact")
+    actual.turns[0]!.commands[0]!.exitCode = 0
+    actual.receipts[0]!.hash = "stale"
+    expect(judge("authorized-implementation", actual)).toContain("missing single successful receipt for final artifact")
+    const repeated = evidence()
+    repeated.turns[0]!.commands[0]!.command = command
+    repeated.receipts.push(repeated.receipts[0]!)
+    expect(judge("authorized-implementation", repeated)).toContain("missing single successful receipt for final artifact")
+  })
+  test("rejects masking, arbitrary tails and extra verification in validation commands", () => {
+    const command = "bun verify.mjs && git diff --check && git status --short && git diff -- settings.json && cat proof.jsonl"
+    for (const invalid of [
+      command.replace(" && git diff --check", "; git diff --check"),
+      command.replace(" && git diff --check", " || git diff --check"),
+      `${command} || true`, `${command}; true`, `${command} && echo done`,
+      `${command} && bun verify.mjs`,
+      command.replace("git status --short", "git status --short && bun verify.mjs"),
+      command.replace("git diff -- settings.json", "git diff -- other.json"),
+    ]) {
+      expect(proofCommand(invalid)).toBe(false)
+      const actual = evidence()
+      actual.turns[0]!.commands[0]!.command = `/usr/bin/zsh -lc '${invalid}'`
+      expect(judge("authorized-implementation", actual)).toContain("unaccounted verification command")
+    }
+  })
   test("uses protected-script receipts when CLI drops stdout, but requires command success and final hash", () => {
     const actual = evidence()
     actual.turns[0]!.commands[0]!.output = ""

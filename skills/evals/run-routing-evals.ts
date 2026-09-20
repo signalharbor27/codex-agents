@@ -926,7 +926,9 @@ export async function terminateSubprocess(
   signalSubprocess(child, "SIGTERM", processGroup)
   if (await exitsWithin(child, graceMs)) return
   signalSubprocess(child, "SIGKILL", processGroup)
-  if (!(await exitsWithin(child, graceMs))) throw new Error(`subprocess ${child.pid} did not exit after SIGKILL`)
+  // Reaping after SIGKILL can take longer than the configurable TERM grace
+  // under concurrent load; keep a separate bounded scheduling allowance.
+  if (!(await exitsWithin(child, Math.max(graceMs, 1_000)))) throw new Error(`subprocess ${child.pid} did not exit after SIGKILL`)
 }
 
 export const shutdownCleanups = new Set<() => Promise<void>>()

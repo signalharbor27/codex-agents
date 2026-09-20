@@ -5,6 +5,7 @@ import { join } from "node:path"
 
 import {
   collectSubprocess,
+  terminateSubprocess,
   codexExecArgs,
   parseArgs,
   validateCase,
@@ -837,4 +838,21 @@ describe("previous source reference validation", () => {
       expect(result.stderr).toContain("EISDIR")
     })
   })
+})
+
+
+test("SIGKILL reaping has a separate scheduling allowance from TERM grace", async () => {
+  const signals: string[] = []
+  let finish!: (code: number) => void
+  const exited = new Promise<number>(resolve => { finish = resolve })
+  const child = {
+    pid: 0, exitCode: null as number | null, exited,
+    kill(signal: string) {
+      signals.push(signal)
+      if (signal === "SIGKILL") setTimeout(() => { child.exitCode = 137; finish(137) }, 50)
+    },
+  }
+  await terminateSubprocess(child as unknown as Parameters<typeof terminateSubprocess>[0], false, 5)
+  expect(signals).toEqual(["SIGTERM", "SIGKILL"])
+  expect(child.exitCode).toBe(137)
 })

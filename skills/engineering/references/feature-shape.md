@@ -6,8 +6,8 @@ A vertical slice is the smallest retained path from the real entrypoint, through
 
 ## Decide between a prototype and a tracer bullet
 
-- Use a throwaway prototype only to answer one uncertainty that inspection or prose cannot settle. Mark it disposable and delete or absorb it before completion.
-- Use a tracer bullet for the first production path. It stays in the system and establishes the real integration and proof shape.
+- Use a throwaway prototype only to answer one uncertainty that inspection or prose cannot settle. State the question and the limits of what its result can establish; mark it disposable and delete or absorb it before completion.
+- Use a tracer bullet for the first production path within the settled scope. It stays in the system and establishes the real integration and proof shape. Its success proves that path; keep the remaining acceptance criteria open.
 
 ## Shape the slice
 
@@ -22,7 +22,7 @@ For a larger feature, order slices by risk and learning, not by technical layer.
 
 ## Design for parallel implementation
 
-Consider parallel execution while choosing slice boundaries. Separate implementation blockers from integration dependencies: an agreed interface can unblock parallel coding while end-to-end proof still waits for its implementation. Map those dependencies, identify which work unlocks the rest, and group slices that can proceed together. Refine later slices using what the tracer bullet reveals.
+Apply engineering's scope check before dividing work into slices; worker assignments must preserve the settled outcome and acceptance criteria. Consider parallel execution while choosing slice boundaries. Separate implementation blockers from integration dependencies: an agreed interface can unblock parallel coding while end-to-end proof still waits for its implementation. Map those dependencies, identify which work unlocks the rest, and group slices that can proceed together. Refine later slices using what the tracer bullet reveals.
 
 - Give each slice an observable outcome, real entrypoint, prerequisites, owned files or boundaries, shared contracts, acceptance criteria, and proof. Include relevant skill/reference pointers and material failure or rollout constraints in the worker's brief.
 - Assign each shared schema, interface, migration, or domain invariant one owner. Settle contracts and necessary setup before dependent workers start. Coordinate contract changes with affected workers and update their acceptance criteria.

@@ -1,12 +1,12 @@
 # Dependency-frontier grilling
 
-Use this procedure whenever `grill-me` is selected, or when inspection under the current primary skill reveals several interdependent consequential choices that belong to the user and block safe progress. Handle a single unresolved approval inline, keep routine choices agent-owned, and resolve factual uncertainty through the relevant research, review, or debugging workflow instead of manufacturing a decision.
+Use this procedure whenever `grill-me` is selected, or when inspection under the current primary skill reveals coupled user-owned choices that materially affect the deliverable, acceptance criteria, or costly commitments, even when coding is technically possible. Resolve them before dependent planning or implementation. Handle a single unresolved user-owned decision inline, keep routine choices agent-owned, and resolve factual uncertainty through the relevant research, review, or debugging workflow instead of manufacturing a decision.
 
-The session is interactive and read-only. Inspect evidence, but do not change code, plans, artifacts, branch state, external services, or live state.
+The interview is interactive and read-only. Its procedure authorizes no changes to code, plans, artifacts, branch state, external services, or live state. When a primary skill loads it during authorized work, that skill can continue unaffected work while answers are pending; keep dependent work open.
 
 ## Workflow
 
-1. Establish the subject, agreed scope, and authority. Inspect the plan and directly relevant sources read-only; separate facts from genuine decision gaps.
+1. Establish the subject, requested outcome, agreed scope, and authority. Inspect directly relevant sources read-only; distinguish facts, plausible interpretations, and genuine decision gaps. Keep any proposed experiment distinct from the requested outcome and state what its evidence could settle.
 2. Build a design tree containing only consequential user-owned decisions, their prerequisites, and dependent branches. Prune branches made irrelevant by settled answers.
 3. If no consequential user-owned decision remains, end the interview and resume any already-authorized work. If discussion needs research, a prototype, or other evidence, name it and return to the relevant primary skill under existing authority. Ask only if that work needs new authority; keep the interview itself read-only.
 4. If the subject cannot fit one healthy session, propose a bounded subject and list the rest as explicit follow-up topics before asking the frontier. If continuity requires another session or a durable artifact, pause the interview and use an authorized handoff; ask only if that authority is missing. Do not silently write an artifact or keep grilling into degraded context.
@@ -22,7 +22,7 @@ The session is interactive and read-only. Inspect evidence, but do not change co
    ➡️ **Recommendation: Q1-A.** <reason and key tradeoff>
    ```
 
-9. Stop after the round and wait. A question that depends on another question still open in this round belongs to a later round.
+9. Wait for answers before the next round; the primary skill may continue unaffected authorized work. A question that depends on another question still open in this round belongs to a later round.
 10. After each reply, record the decisions answered, retain unanswered IDs, and recompute the tree, frontier, options, and recommendations. The frontier is informed judgment, not a computed graph; if an answer exposes same-round coupling, defer or reopen the affected question in the next round. If an earlier answer changes, reopen or prune every affected descendant before the next round.
 11. When no decision or factual prerequisite remains, summarize settled decisions and any material alternatives, verification expectations, or assumptions. Omit empty categories. Ask only if a consequential user-owned choice or authority remains unresolved. End a standalone interview here. If a primary skill loaded this procedure during already-authorized work, return to it and proceed under that authority. Settled discussion alone does not authorize implementation.
 12. If the user explicitly ends or replaces the grill, stop this procedure and route the new request under its own skill and authority. If a message only suggests scope expansion, identify the boundary and ask whether to add it; never expand the tree silently.
@@ -35,4 +35,4 @@ The session is interactive and read-only. Inspect evidence, but do not change co
 - Asking the user to find facts, launching duplicate or unbounded subagents, or blocking unaffected questions on one pending fact
 - Continuing an oversized grill into degraded context instead of narrowing it or requesting an authorized handoff
 - Grilling routine choices, manufacturing questions for an ungrillable task, or expanding scope silently
-- Mutating state during the interview, treating discussion as implementation authority, or asking again for settled decisions
+- Changing state under the interview's authority, treating discussion as implementation authority, or asking again for settled decisions

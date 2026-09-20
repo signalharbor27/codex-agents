@@ -132,7 +132,8 @@ export async function readReviewRollout(stdout: string, codexHome = process.env.
 
 export function proofCommand(command: string, python = false): boolean {
   const inner = python ? "(?:PYTHONDONTWRITEBYTECODE=1 )?python3 -m unittest -q" : "bun (?:\\./)?verify\\.mjs"
-  return new RegExp(`^(?:(?:/[^\\s]+/)?(?:bash|sh|zsh) -lc ['"])?(?:cat settings\\.json && )?${inner}(?: && cat (?:settings\\.json|release\\.md|proof\\.jsonl))?['"]?$`).test(command)
+  const validationTail = python ? "" : "| && git diff --check && git status --short && git diff -- settings\\.json && cat proof\\.jsonl"
+  return new RegExp(`^(?:(?:/[^\\s]+/)?(?:bash|sh|zsh) -lc ['"])?(?:cat settings\\.json && )?${inner}(?: && cat (?:settings\\.json|release\\.md|proof\\.jsonl)${validationTail})?['"]?$`).test(command)
 }
 
 export function judge(id: CaseId, evidence: Evidence): string[] {

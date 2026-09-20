@@ -299,7 +299,7 @@
       "prompt": "Use TDD to add this validation behavior in vertical slices. Before changing production code, show that the focused test fails for the expected reason.",
       "primary_skill": "test-design",
       "expected_modifier_skills": [],
-      "expected_references": ["test-design/references/tdd.md"],
+      "expected_references": ["engineering/references/proof.md", "test-design/references/tdd.md"],
       "required_actions": ["build-red-capable-loop", "use-independent-test-oracle", "verify-before-completion"],
       "expectations": {
         "first_action": "build-failing-loop",
@@ -313,7 +313,7 @@
       "prompt": "Choose the smallest reliable test set for this stateful provider boundary. Explain what remains real, what may be faked, and which failure cases matter. Leave files unchanged.",
       "primary_skill": "test-design",
       "expected_modifier_skills": [],
-      "expected_references": ["test-design/references/test-selection.md"],
+      "expected_references": ["engineering/references/proof.md", "test-design/references/test-selection.md"],
       "required_actions": ["use-independent-test-oracle", "keep-task-read-only"],
       "expectations": {
         "first_action": "identify-proof",
@@ -327,7 +327,7 @@
       "prompt": "Add one stable Playwright browser test for this critical checkout flow. Use meaningful assertions, capture useful failure evidence, and avoid arbitrary sleeps.",
       "primary_skill": "test-design",
       "expected_modifier_skills": [],
-      "expected_references": ["test-design/references/browser-e2e.md"],
+      "expected_references": ["engineering/references/proof.md", "test-design/references/browser-e2e.md"],
       "required_actions": ["inspect-before-editing", "verify-before-completion"],
       "expectations": {
         "first_action": "inspect-current-state",

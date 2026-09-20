@@ -27,6 +27,6 @@ Do not mock the unit’s own collaborators merely to assert implementation chore
 
 Partition inputs and state transitions; test boundaries and representative invalid states. For policy matrices, use decision tables. For combinatorial inputs, add pairwise or property coverage only when interactions are plausible.
 
-Expected values must come from a source capable of disagreeing with production logic. Prefer literal examples, specifications, invariants, trusted fixtures, or an independent implementation.
+Expected values must come from a source capable of disagreeing with production logic. Prefer literal examples, specifications, invariants, trusted fixtures, or an independent implementation. Add cases that close material gaps in setup or falsification; reuse existing evidence when it already does.
 
 Source basis: Gerard Meszaros, *xUnit Test Patterns*; Lee Copeland, *A Practitioner’s Guide to Software Test Design*; and Freeman/Pryce, *Growing Object-Oriented Software, Guided by Tests*.

@@ -34,6 +34,7 @@ Use this rubric to review a test suite and produce a practical cleanup and impro
 - Which tests would fail on a harmless internal refactor
 - Which tests prove the same behavior at multiple layers with no extra signal
 - Where are mocks hiding the real failure boundary
+- What grounds consequential fixtures and setup in real inputs, and which observation would reject a plausible broken implementation
 - Which missing seam-level tests would let us delete broad or brittle coverage
 - Where would vertical-slice TDD make future bug fixes safer and cheaper
 
