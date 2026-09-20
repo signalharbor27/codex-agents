@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { cp, readFile, readdir, writeFile } from "node:fs/promises"
 import { join, resolve } from "node:path"
+import { comparisonOrder } from "./blind-comparisons.ts"
 import { CASES, type JudgmentCase } from "./judgment-cases.ts"
 import { collectSubprocess, discoverSkills, skillCatalog, LIVE_MODEL, LIVE_REASONING_EFFORT, validateModelOptions } from "./run-routing-evals.ts"
 import { executionArgs, inSandbox, readReviewRollout } from "./run-execution-evals.ts"
@@ -34,7 +35,7 @@ export function options(argv: string[]) {
   return { mode, model, effort, sourceRoot, previousSourceRoot, repeat, cases: CASES.filter(c => all || ids.includes(c.id)) }
 }
 
-export type JudgmentEvidence = { trace: Trace; unchanged: boolean; oracle?: { exitCode: number; stdout: string; stderr: string }; review?: Awaited<ReturnType<typeof readReviewRollout>> }
+export type JudgmentEvidence = { cold?: { trace: Trace; authorEvidence: string }; trace: Trace; unchanged: boolean; oracle?: { exitCode: number; stdout: string; stderr: string }; review?: Awaited<ReturnType<typeof readReviewRollout>> }
 // Evidence gates deliberately do not classify semantic correctness from keywords.
 export function judge(c: JudgmentCase, e: JudgmentEvidence) {
   const failures: string[] = []
@@ -43,14 +44,15 @@ export function judge(c: JudgmentCase, e: JudgmentEvidence) {
   for (const file of c.inspect) {
     if (!e.trace.commands.some(cmd => cmd.exitCode === 0 && cmd.command.includes(file) && cmd.output.trim())) failures.push(`missing observable inspection: ${file}`)
   }
+  if (c.coldPrompt && !e.cold?.trace.commands.some(command => command.exitCode === 0)) failures.push("missing fresh-agent execution")
   if (c.implementation) {
-    if (!e.oracle || e.oracle.exitCode !== 0 || !e.oracle.stdout.includes("PASS restart oracle")) failures.push("independent restart oracle failed or missing")
+    if (!e.oracle || e.oracle.exitCode !== 0 || !e.oracle.stdout.includes(c.oracle ? "PASS case oracle" : "PASS restart oracle")) failures.push("independent restart oracle failed or missing")
     if (!e.review || e.review.reviewLifecycle.failures.length || !e.review.reviewLifecycle.reviews.length) failures.push("independent review lifecycle failed or missing")
   }
   return { status: failures.length ? "evidence-failed" : "needs-transcript-assessment", failures, rubric: c.rubric }
 }
 
-async function snapshot(root: string, prefix = ""): Promise<Record<string, string>> {
+export async function snapshot(root: string, prefix = ""): Promise<Record<string, string>> {
   const result: Record<string, string> = {}
   for (const entry of await readdir(join(root, prefix), { withFileTypes: true })) {
     const path = prefix ? `${prefix}/${entry.name}` : entry.name
@@ -69,10 +71,10 @@ for (const [input, expected] of [[old, 3], [{retries: '3'}, 3], [{retries: 3}, 3
 }
 console.log('PASS restart oracle');`
 
-export function oracleArgs(): string[] {
+export function oracleArgs(script = ORACLE): string[] {
   const sandbox = Bun.which("bwrap")
   if (!sandbox) throw Error("restart oracle requires bubblewrap; no unsandboxed fallback")
-  const args = [sandbox, "--unshare-all", "--ro-bind", "/", "/", "--dev", "/dev", "--proc", "/proc", "--die-with-parent", "--new-session", "--", "bun", "--eval", ORACLE]
+  const args = [sandbox, "--unshare-all", "--ro-bind", "/", "/", "--dev", "/dev", "--proc", "/proc", "--die-with-parent", "--new-session", "--", "bun", "--eval", script]
   const setsid = Bun.which("setsid")
   return setsid ? [setsid, ...args] : args
 }
@@ -96,11 +98,12 @@ export async function captureProcess(args: string[], directory: string, label: s
 // Kept separate from fixture setup so failures at every execution stage can be tested without model calls.
 export async function assessPrepared(c: JudgmentCase, directory: string, prompt: string, args: string[], dependencies = { execute: captureProcess, rollout: readReviewRollout }) {
   const before = await snapshot(directory)
-  const mutable = (path: string) => Boolean(c.implementation && (path === "worker.mjs" || /^test-[^/]+\.mjs$/.test(path)))
+  const mutable = (path: string) => Boolean(c.implementation && (c.writable ? c.writable.includes(path) : (path === "worker.mjs" || /^test-[^/]+\.mjs$/.test(path))))
   const protectedEqual = (after: Record<string, string>) => [...new Set([...Object.keys(before), ...Object.keys(after)])].every(path => mutable(path) || before[path] === after[path])
   const base = { prompt_hash: sha256(prompt), fixture_hash: sha256(JSON.stringify(c.files)) }
   const start = performance.now()
   let stage = "model", raw: CapturedProcess | undefined, oracleEnvironment: CapturedProcess | undefined, oracle: CapturedProcess | undefined, trace: Trace | undefined, review: JudgmentEvidence["review"]
+  let coldRaw: CapturedProcess | undefined, coldAuthorEvidence: string | undefined
   let preOracle: Record<string, string> | undefined, postOracle: Record<string, string> | undefined
   const artifacts = async () => {
     const hashes: Record<string, string> = {}, contents: Record<string, string> = {}, errors: Record<string, string> = {}
@@ -127,11 +130,32 @@ export async function assessPrepared(c: JudgmentCase, directory: string, prompt:
     stage = "parse-trace"
     trace = parseTrace(raw.stdout)
     trace.elapsed_ms = Math.round(performance.now() - start)
+    let cold: JudgmentEvidence["cold"]
+    if (c.coldPrompt) {
+      stage = "cold-agent"
+      const authorEvidence = await readFile(join(directory, "evidence.jsonl"), "utf8").catch(() => "")
+      coldAuthorEvidence = authorEvidence
+      const authored = await snapshot(directory)
+      await writeFile(join(directory, "evidence.jsonl"), "")
+      const coldArgs = [...args]
+      coldArgs[coldArgs.length - 1] = c.coldPrompt
+      if (!coldArgs.includes("--ephemeral")) coldArgs.splice(coldArgs.length - 1, 0, "--ephemeral")
+      // A new CLI invocation supplies only the written recipe and repository context.
+      const result = await dependencies.execute(coldArgs, directory, "fresh recipe execution", 180_000)
+      coldRaw = result
+      if (result.error || result.exitCode !== 0) throw Error(result.error ?? `fresh agent exited ${result.exitCode}`)
+      cold = { trace: parseTrace(result.stdout), authorEvidence }
+      const replayed = await snapshot(directory)
+      if ([...new Set([...Object.keys(authored), ...Object.keys(replayed)])].some(path => path !== "evidence.jsonl" && authored[path] !== replayed[path])) {
+        return { ...base, ...await artifacts(), cold_raw: coldRaw, cold_prompt_hash: sha256(c.coldPrompt), evidence: { trace, cold, unchanged: false },
+          verdict: { status: "evidence-failed", failures: ["fresh agent changed recipe or left unexpected resources"], rubric: c.rubric } }
+      }
+    }
     stage = "pre-oracle-snapshot"
     preOracle = await snapshot(directory)
     if (c.implementation) {
       stage = "oracle-environment"
-      const sandboxArgs = oracleArgs()
+      const sandboxArgs = oracleArgs(c.oracle)
       oracleEnvironment = await dependencies.execute([...sandboxArgs.slice(0, -1), "process.exit(0)"], directory, "oracle environment", 10_000)
       if (oracleEnvironment.error || oracleEnvironment.exitCode !== 0) throw Error(oracleEnvironment.error ?? `oracle sandbox exited ${oracleEnvironment.exitCode}: ${oracleEnvironment.stderr}`)
       stage = "oracle"
@@ -147,12 +171,12 @@ export async function assessPrepared(c: JudgmentCase, directory: string, prompt:
     stage = "artifacts"
     const saved = await artifacts()
     const oracleIntact = !postOracle || JSON.stringify(postOracle) === JSON.stringify(preOracle)
-    const evidence = { trace, unchanged: !Object.keys(saved.artifact_errors).length && protectedEqual(saved.artifact_hashes) && oracleIntact, oracle: oracle as JudgmentEvidence["oracle"], review }
-    return { ...base, ...saved, evidence, verdict: judge(c, evidence), oracle_environment: oracleEnvironment, pre_oracle_hashes: preOracle, post_oracle_hashes: postOracle }
+    const evidence = { trace, cold, unchanged: !Object.keys(saved.artifact_errors).length && protectedEqual(saved.artifact_hashes) && oracleIntact, oracle: oracle as JudgmentEvidence["oracle"], review }
+    return { ...base, ...saved, cold_raw: coldRaw, cold_prompt_hash: c.coldPrompt ? sha256(c.coldPrompt) : undefined, evidence, verdict: judge(c, evidence), oracle_environment: oracleEnvironment, pre_oracle_hashes: preOracle, post_oracle_hashes: postOracle }
   } catch (error) {
     let saved: Partial<Awaited<ReturnType<typeof artifacts>>> = {}, artifact_error: string | undefined
     try { saved = await artifacts() } catch (captureError) { artifact_error = String(captureError) }
-    return { ...base, ...saved, initial_hashes: before, status: "runner-error" as const, stage, error: String(error), raw, trace, oracle_environment: oracleEnvironment, oracle, review, pre_oracle_hashes: preOracle, post_oracle_hashes: postOracle, artifact_error, elapsed_ms: Math.round(performance.now() - start) }
+    return { ...base, ...saved, initial_hashes: before, status: "runner-error" as const, stage, error: String(error), raw, trace, cold_raw: coldRaw, cold_author_evidence: coldAuthorEvidence, cold_prompt_hash: c.coldPrompt ? sha256(c.coldPrompt) : undefined, oracle_environment: oracleEnvironment, oracle, review, pre_oracle_hashes: preOracle, post_oracle_hashes: postOracle, artifact_error, elapsed_ms: Math.round(performance.now() - start) }
   }
 }
 
@@ -163,7 +187,7 @@ export async function run(c: JudgmentCase, sourceRoot: string, model: string, ef
     await cp(join(sourceRoot, "AGENTS.md"), join(directory, "AGENTS.md"))
     for (const [name, contents] of Object.entries(c.files)) await writeFile(join(directory, name), contents)
     const scope = c.implementation
-      ? "Work only in this disposable project. You may edit worker.mjs and test-worker.mjs and add test files named test-*.mjs. Preserve persisted settings and all instructions. Independent reviews remain available and required by project guidance. No external actions, dependencies, or changes outside this fixture."
+      ? `Work only in this disposable project. You may edit ${c.writable?.join(", ") ?? "worker.mjs and test-worker.mjs and add test files named test-*.mjs"}. You may create and clean up owned temporary resources needed for the requested checks. Preserve existing product files, persisted settings and instructions except the explicitly permitted edits. Independent reviews remain available and required by project guidance. No external actions, dependencies, or changes outside this fixture.`
       : "This is a read-only task in a disposable project. Do not modify files or take external actions."
     const prompt = `${scope}\n\nAvailable skills:\n${await skillCatalog(join(directory, ".agents/skills"), skills)}\n\n${c.prompt}`
     const args = executionArgs(directory, prompt, model, effort, !c.implementation, Boolean(c.implementation))
@@ -178,7 +202,7 @@ if (import.meta.main) {
     let failed = false
     for (let repetition = 1; repetition <= o.repeat; repetition++) {
       for (const c of o.cases) {
-        for (const source of [...(o.previousSourceRoot ? [{ label: "previous", root: o.previousSourceRoot }] : []), { label: "candidate", root: o.sourceRoot }]) {
+        for (const source of comparisonOrder([...(o.previousSourceRoot ? [{ label: "previous", root: o.previousSourceRoot }] : []), { label: "candidate", root: o.sourceRoot }], c.id, repetition)) {
           const provenance = await sourceProvenance(source.root)
           try {
             const result = await run(c, source.root, o.model, o.effort, o.mode === "dry-run")

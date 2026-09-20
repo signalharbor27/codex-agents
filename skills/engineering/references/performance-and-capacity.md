@@ -12,6 +12,12 @@ Load this for hot paths, latency/throughput targets, resource limits, or capacit
 
 Use profiles, query plans, tracing, counters, and load tests appropriate to the suspected boundary. Average latency alone is insufficient when tail latency, saturation, or queue growth matters.
 
+## Sustained optimization
+
+Before comparing small gains, check that the benchmark can detect a change large enough to matter to the stated budget. Compare a representative slow case with an easy control to show where the bottleneck appears. Keep workload definitions and measurement conditions fixed across candidates. Use a known perturbation where practical, and estimate run-to-run noise under the same workload and environment. If noise hides the target effect, improve the measurement before selecting a winner.
+
+Across repeated attempts, keep a terse record of the bottleneck hypothesis, tested revision, workload, result, and reason for retaining or rejecting the change. Preserve rejected hypotheses with their evidence; revisit them only when new evidence or changed conditions justify it. Report inconclusive measurements as inconclusive.
+
 ## Decision rules
 
 - Fix algorithms, query shape, round trips, and contention before micro-optimizing syntax.

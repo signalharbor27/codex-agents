@@ -35,8 +35,9 @@ Diagnosis-only requests stop at evidence. Fix requests, including failure report
 
 ## Reference Routing
 
-- Read [references/root-cause-tracing.md](references/root-cause-tracing.md) when a bad value or state must be followed through several callers or components.
+- Read [references/root-cause-tracing.md](references/root-cause-tracing.md) when a bad value or state must be followed through several callers or components, or repeated failed fixes call for a premise reset.
 - Read [references/async-and-flakes.md](references/async-and-flakes.md) when timing, polling, concurrency, ordering, or intermittent reproduction dominates.
+- Read [../codebase-investigation/references/historical-evidence.md](../codebase-investigation/references/historical-evidence.md) when recorded intent or change history can distinguish causal hypotheses.
 - After the cause is known, use the matching `engineering` pressure reference only if the repair genuinely involves that pressure.
 
 ## Failure modes

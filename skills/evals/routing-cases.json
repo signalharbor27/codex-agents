@@ -1,6 +1,8 @@
 {
   "version": 6,
   "engineering_skills": [
+    "codebase-investigation",
+    "project-verification",
     "debugging",
     "describe-pr",
     "designing-data-intensive-systems",
@@ -19,6 +21,13 @@
   ],
   "explicit_only_skills": [],
   "skill_references": [
+    "engineering/references/typescript-contracts.md",
+    "writing-skills/SESSION-LESSONS.md",
+    "codebase-investigation/references/historical-evidence.md",
+    "codebase-investigation/references/teaching.md",
+    "project-verification/references/authoring.md",
+    "project-verification/references/maintenance.md",
+
     "debugging/references/async-and-flakes.md",
     "debugging/references/root-cause-tracing.md",
     "designing-data-intensive-systems/FOUNDATIONS.md",
@@ -39,6 +48,9 @@
     "test-design/references/test-selection.md"
   ],
   "invocation_coverage": {
+    "project-verification": {"positive": ["verification-authoring", "verification-maintenance"], "near_negative": ["routine-existing-check"]},
+    "codebase-investigation": {"positive": ["investigation-how", "investigation-why"], "near_negative": ["direct-symbol-lookup"]},
+
     "debugging": {"positive": ["unknown-flaky-failure"], "near_negative": ["understood-bug-fix"]},
     "describe-pr": {"positive": ["describe-pr"], "near_negative": ["broad-read-only-review"]},
     "designing-data-intensive-systems": {"positive": ["data-workload"], "near_negative": ["hot-path-query"]},
@@ -56,6 +68,165 @@
     "writing-skills": {"positive": ["skill-authoring"], "near_negative": ["describe-pr"]}
   },
   "cases": [
+    {
+      "id": "typescript-contract-plan",
+      "prompt": "Plan the TypeScript changes needed to prevent invalid durations in our established constructor. The runtime contract is settled: finite nonnegative milliseconds; preserve our existing schema and brand conventions. Explain compile-time versus runtime guarantees. Do not edit.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": [
+        "engineering/references/typescript-contracts.md"
+      ],
+      "required_actions": [
+        "inspect-before-recommending",
+        "keep-task-read-only",
+        "load-only-present-pressure-references"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": [
+          "none",
+          "only-if-blocked"
+        ],
+        "stop": "plan"
+      }
+    },
+    {
+      "id": "session-skill-lesson",
+      "prompt": "Use the last coding-session transcript to decide whether our skill instructions need a change. Inspect the proposed destination before recommending anything; the failure may be an ignored existing instruction. Return recommendations only.",
+      "primary_skill": "writing-skills",
+      "expected_modifier_skills": [],
+      "expected_references": [
+        "writing-skills/SESSION-LESSONS.md"
+      ],
+      "required_actions": [
+        "inspect-before-recommending",
+        "keep-task-read-only"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": [
+          "none",
+          "only-if-blocked"
+        ],
+        "stop": [
+          "findings",
+          "plan",
+          "recommendation"
+        ]
+      }
+    },
+    {
+      "id": "verification-authoring",
+      "prompt": "Create a repeatable verification runbook for this CLI project. Exercise one isolated path, have a fresh agent execute the written recipe, retain evidence after owned cleanup, and label untested features honestly.",
+      "primary_skill": "project-verification",
+      "expected_modifier_skills": [],
+      "expected_references": [
+        "project-verification/references/authoring.md"
+      ],
+      "required_actions": [
+        "inspect-before-editing",
+        "verify-before-completion",
+        "do-not-invent-verification"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "verification-maintenance",
+      "prompt": "Audit our verification runbook against current behavior. Distinguish stale documentation, missing harness coverage, and product regressions. Read-only findings only.",
+      "primary_skill": "project-verification",
+      "expected_modifier_skills": [],
+      "expected_references": [
+        "project-verification/references/maintenance.md"
+      ],
+      "required_actions": [
+        "keep-task-read-only",
+        "do-not-invent-verification"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "findings"
+      }
+    },
+    {
+      "id": "investigation-how",
+      "prompt": "Explain how requests reach the cache and database and where state is owned. Give a walkthrough for a new teammate; no edits or architecture audit.",
+      "primary_skill": "codebase-investigation",
+      "expected_modifier_skills": [],
+      "expected_references": [
+        "codebase-investigation/references/teaching.md"
+      ],
+      "required_actions": [
+        "keep-task-read-only",
+        "trace-affected-contracts"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "after-requested-scope"
+      }
+    },
+    {
+      "id": "investigation-why",
+      "prompt": "Investigate why authorization precedes the cache hit. Check the original review discussion against current code and distinguish documented rationale from inference. No edits.",
+      "primary_skill": "codebase-investigation",
+      "expected_modifier_skills": [],
+      "expected_references": [
+        "codebase-investigation/references/historical-evidence.md"
+      ],
+      "required_actions": [
+        "keep-task-read-only",
+        "separate-facts-inference-and-recommendations"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "after-requested-scope"
+      }
+    },
+    {
+      "id": "direct-symbol-lookup",
+      "prompt": "Which file declares the function parseInvoice? Return only the location.",
+      "primary_skill": "none",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": [
+        "keep-task-read-only"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": ["none", "only-if-blocked"],
+        "stop": "after-requested-scope"
+      }
+    },
+    {
+      "id": "routine-existing-check",
+      "prompt": "Run the existing documented focused CLI checks and report command results. Do not change the runbook, design tests, or repair the product.",
+      "primary_skill": "none",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": [
+        "do-not-invent-verification"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+
     {
       "id": "explicit-grill-me",
       "prompt": "Use $grill-me to challenge this implementation plan. Resolve repository facts yourself, ask every consequential question that can be answered now, keep question numbers stable between rounds, and do not implement anything.",
@@ -208,6 +379,29 @@
         "mutation": "requested-repo-writes",
         "question": "only-if-blocked",
         "stop": "after-verification"
+      }
+    },
+    {
+      "id": "mechanical-transformation",
+      "prompt": "Plan a straightforward mechanical rename across forty well-tested, independent files. The behavior and exact replacement are settled; preserve excluded generated files and explain how to check the complete edit. Do not change files.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": [
+        "engineering/references/legacy-change.md"
+      ],
+      "required_actions": [
+        "inspect-before-recommending",
+        "load-only-present-pressure-references",
+        "keep-task-read-only"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "none",
+        "question": [
+          "none",
+          "only-if-blocked"
+        ],
+        "stop": "plan"
       }
     },
     {

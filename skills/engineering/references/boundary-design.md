@@ -37,6 +37,10 @@ Use the deletion test: if removing the module would not spread meaningful comple
 
 When two or more materially plausible shapes remain, sketch two or three real caller examples for each. Compare the number of concepts and states, caller knowledge, hidden complexity, misuse risk, migration cost, and fit with the existing domain model. Do not manufacture alternatives for ceremony; recommend the simplest shape that satisfies the real contracts and hides more complexity than it introduces.
 
+## Repeated workarounds
+
+When successive requirements need the same exception, translation, or state-dependent branch, check whether the owner or domain model is missing a distinction. Compare the concrete cases and their invariants before changing the design. Repetition is a diagnostic clue; keep a justified compatibility or recovery path, and keep any redesign within the authorized outcome.
+
 ## Agent guardrails
 
 - Patterns are responses to observed pressure, never goals.

@@ -682,7 +682,7 @@ describe("source agent catalog", () => {
 describe("invocation coverage and catalog stress", () => {
   test("all descriptions have positive and near-negative cases; none is a valid route", () => {
     expect(validateInvocationCoverage(fixture)).toEqual([])
-    const entry = fixture.cases.find(entry => entry.primary_skill === "none")!
+    const entry = fixture.cases.find(entry => entry.id === "no-applicable-skill")!
     expect(parseLiveResult(JSON.stringify({ ...validResult, primary_skill: "none" }), fixture, resultSchema).primary_skill).toBe("none")
     expect(validateCase(entry, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)).toEqual([])
     expect(compareResult(entry, validResult)).toContain("primary_skill: expected none, got engineering")
@@ -753,7 +753,7 @@ describe("invocation coverage and catalog stress", () => {
 })
 
 test("none route allows no extra actions and either direct-answer stop", () => {
-  const entry = fixture.cases.find(entry => entry.primary_skill === "none")!
+  const entry = fixture.cases.find(entry => entry.id === "no-applicable-skill")!
   for (const stop of ["after-artifact", "after-requested-scope"]) {
     expect(compareResult(entry, { primary_skill: "none", modifier_skills: [], references: [], actions: [], first_action: "answer-directly", mutation: "none", question: "only-if-blocked", stop })).toEqual([])
   }
