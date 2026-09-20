@@ -19,7 +19,8 @@ Prefer existing repository tests and commands. Test through public or stable int
 ## Avoid false confidence
 
 - Derive expected results from an independent oracle: a specification example, literal worked result, invariant, trusted fixture, or independent implementation.
-- Make regression loops red-capable: observe the failure before trusting the fix when practical.
+- Ground consequential inputs and setup in the real producer, contract, or observed behavior. Check stored formats, external responses, clock and deadline semantics, permissions, filesystem layout, and concurrency where they affect the claim. A correct expected value cannot rescue a fixture that bypasses the failure.
+- For material behavior, identify a plausible broken implementation and the observation that rejects it. Use an existing reproduction, replay, boundary case, or negative control where sufficient; observe the failure before trusting a regression fix when practical. Run a targeted fault or mutation only when it resolves a remaining proof gap.
 - Cover the changed failure mode, not an exhaustive matrix.
 - Keep incident tests unless stronger evidence subsumes the same contract.
 - Screenshots, successful acknowledgements, typechecks, and mocked calls prove only their own narrow claim.

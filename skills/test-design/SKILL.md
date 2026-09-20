@@ -28,7 +28,7 @@ Keep routine implementation proof in `engineering`. Use this skill when the test
 1. State the behavior claim, the failure risk, and the public or stable seam that can falsify it.
 2. Inspect existing coverage, repository commands, incident history, and the real dependency boundary before adding tests.
 3. Choose the cheapest layer that can fail for the target behavior. Prefer focused contract or integration proof over broad E2E and internal mock choreography.
-4. Derive expected results from an independent oracle: specification example, literal worked result, invariant, trusted fixture, property, or independent implementation.
+4. Apply the [proof guidance](../engineering/references/proof.md) to ground setup and expected results, and establish how the test rejects a plausible broken implementation for material behavior.
 5. Keep the boundary under test real. Fake slow or uncontrollable collaborators; mock only an understood external protocol, never the behavior being trusted.
 6. Select only relevant cases: happy path, boundary partitions, invalid input, state transition, duplicate/retry, partial failure, permission denial, concurrency, or recovery.
 7. For TDD, complete one vertical red-green-refactor slice at a time and observe the expected failure before production edits. Continue through the requested behavior; the first green slice does not end a larger task.

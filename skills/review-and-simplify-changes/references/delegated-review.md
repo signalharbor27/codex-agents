@@ -14,6 +14,7 @@ For each substantive review, assign correctness, simplification, and Standards/I
 - Permission enforcement, trust boundaries, or tenant isolation.
 - Financial calculations, balances, billing entitlements, or invariants that prevent lost, duplicated, or misattributed money.
 - Concurrent or retried state transitions where ordering, atomicity, idempotency, or recovery determines correctness.
+- Material proof risks where implementation and tests could share a wrong assumption about inputs, setup, or the observed event. Assign an Oracle to challenge that assumption using `engineering/references/proof.md`.
 - Destructive migrations, data recovery, rollback guarantees, or compatibility while old and new versions coexist.
 - A material correctness dispute that remains unresolved after ordinary review despite concrete competing evidence.
 
@@ -26,6 +27,7 @@ On follow-ups, send fixes and affected contracts back to the selected reviewer; 
 - Discover the built-in `review-agent` skill in the current host and give defect reviewers its actual path. Read it before dispatch. It is host-provided; do not assume this repository installs it or hard-code a home directory. If unavailable, give an available reviewer equivalent read-only instructions from this brief.
 - Assign reviewers who did not implement the changes or fixes they judge. A verifier supplies command evidence separately.
 - Supply intent, applicable rules, exact base and reviewed snapshot, the current target, owned paths or concern, prior findings and dispositions, and required evidence. For follow-ups, provide the delta since the previous reviewed snapshot and enough original context to verify fixes and affected contracts. Keep review inputs stable or isolate a snapshot; later writes remain unreviewed.
+- Include the original requested outcome, consequential interpretations, material contracts and assumptions, and what the supplied proof establishes or leaves uncertain. Give reviewers paths or excerpts from original evidence so they can challenge the implementer's summary. Distinguish an experiment's limits from conclusions about the requested outcome.
 - Include the assigned checklist criteria and relevant skill/reference paths in each brief. Require complete coverage of that track, with findings or an explicit account of checks completed and proof gaps.
 - Require inspection of the complete assigned diff and affected callers and tests. Return every concrete, actionable defect introduced by the target change, including a fix that failed to resolve an earlier defect. Confirm scenarios from code and distinguish intentional behavior from regressions. Continue after the first finding; omit speculative concerns and style nits.
 - Reviewers stay read-only and do not delegate or invoke the orchestration gate. Use the built-in's severity-ordered findings format when available; retain evidence, a precise changed location, and material test gaps. `No findings.` is valid after completing the assigned coverage.

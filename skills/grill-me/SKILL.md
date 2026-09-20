@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: "Use when the user asks to be grilled or interviewed, or several interdependent consequential user-owned decisions block progress; not for routine, factual, or settled choices."
+description: "Use when the user asks to be grilled or interviewed, or coupled user-owned choices materially affect the deliverable, acceptance criteria, or costly commitments; not for routine, factual, or settled choices."
 ---
 
 # Grill me
@@ -11,12 +11,12 @@ This skill owns the interview procedure in a local reference. An existing primar
 
 ## When to Use
 
-- The work contains several interdependent consequential product, scope, architecture, or behavior choices that belong to the user
+- Coupled consequential product, scope, architecture, or behavior choices belong to the user, including plausible interpretations that change the deliverable or acceptance criteria while leaving coding technically possible
 - The user asks to be grilled, interviewed, or interactively pressure-tested, including through `$grill-me`
 
 ## When Not to Use
 
-- Keep routine choices, already-settled work, and one approval question with the current primary skill
+- Keep routine choices, already-settled work, and one unresolved user-owned decision with the current primary skill
 - Use the relevant research, review, or debugging skill when the unresolved issue is factual rather than a user decision
 - Do not use it as an implementation skill or as authority to change files, branch state, external services, or live state
 
@@ -33,7 +33,7 @@ This skill owns the interview procedure in a local reference. An existing primar
 ## Failure modes
 
 - Failing to invoke `grill-me` because the user did not use its name even though the work meets its trigger
-- Invoking it for routine, factual, single-approval, or already-settled work
+- Invoking it for routine, factual, single-decision, or already-settled work
 - Starting the interview before reading the procedure completely
 - Duplicating or overriding the interview behavior in this entrypoint or a consumer skill
-- Treating settled discussion as implementation authority or mutating files, artifacts, services, or live state
+- Treating settled discussion as implementation authority or changing state under the interview's authority

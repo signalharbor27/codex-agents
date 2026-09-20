@@ -40,6 +40,8 @@ Diagnose weak, redundant, brittle, or low-signal tests across a repository or su
 
 ## Reference Routing
 
+- Read [../engineering/references/proof.md](../engineering/references/proof.md) when assessing fixture realism, assertion strength, or whether passing tests can detect material defects.
+
 - Read [TEST_SUITE_REVIEW.md](TEST_SUITE_REVIEW.md) when judging test quality, removal risk, or replacement coverage.
 - Read [../grill-me/references/frontier.md](../grill-me/references/frontier.md) only for an interactive interview over several interdependent consequential user-owned decisions; retain this skill as primary.
 - Read [../engineering/references/durable-plan.md](../engineering/references/durable-plan.md) only after a durable target-repo plan file is explicitly authorized.
