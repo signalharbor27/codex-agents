@@ -95,8 +95,8 @@ therefore contains shared agent settings only.
 - `explorer`: `gpt-5.6-terra` / `low`, codebase facts and tracing
 - `fast_reviewer`: `gpt-5.6-luna` / `max`, mechanical evidence
 - `oracle`: `gpt-6-astra` / `xhigh`, independent review, consequential design advice, stalled debugging, or unresolved correctness disputes
-- `librarian`: `gpt-5.6-sol` / `none`, external documentation and research
-- `verifier`: `gpt-5.6-terra` / `medium`, command verification
+- `librarian`: `gpt-5.6-sol` / `low`, external documentation and research
+- `verifier`: `gpt-6-astra` / `low`, command verification
 
 The main agent retains scope, approvals, write coordination, synthesis, and the completion claim. Each subagent receives a bounded brief and returns evidence for the main agent to judge.
 
