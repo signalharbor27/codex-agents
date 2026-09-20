@@ -9,6 +9,8 @@ Select a primary skill when its invocation conditions match the task; proceed wi
 - `engineering` owns understood features, bug fixes, refactors, plans, and research from inspection through verified completion.
 - `debugging` owns unexplained failures: reproduce the failure, prove its root cause, then make the smallest authorized fix and verify it.
 - `test-design` owns work where tests are the main task, including explicit TDD, proof-layer selection, doubles, assertions, and focused coverage.
+- `project-verification` owns creating, repairing or auditing project verification runbooks and feature maps. Commands and application details stay in the consuming project; existing checks still run through the verifier role.
+- `codebase-investigation` owns standalone questions about current behavior or historical rationale. Engineering retains research needed for its implementation task.
 
 Review, audit, branch, handoff, and skill-authoring tasks use their narrower skill as primary. Rust, Effect, and data-intensive-system skills are modifiers. They add domain constraints without repeating the generic producer workflow.
 
@@ -160,7 +162,7 @@ npx skills add https://github.com/signalharbor27/codex-agents.git \
   review-and-simplify-changes receiving-code-review improve-codebase-architecture \
   improve-test-suite using-git-worktrees finishing-a-development-branch \
   describe-pr grill-me effect-ts writing-rust designing-data-intensive-systems \
-  writing-skills --copy --yes
+  writing-skills project-verification codebase-investigation --copy --yes
 ```
 
 Compare installed files with the published source and check bundled and
@@ -169,6 +171,14 @@ sibling-skill references. The repository's eval harness stays in the repository.
 Install `grill-me` as a single skill. For post-inspection grilling, also sync the consumer skill directories that link to `grill-me/references/frontier.md`. They reuse the procedure directly, so they do not need nested invocation or another grilling router.
 
 If another installed skill supplies an overlapping umbrella workflow, disable it with an exact `[[skills.config]]` path entry in `~/.codex/config.toml`. Restart Codex after changing discovery configuration.
+
+The optional `bro` shortcut restates the last response plainly. Install it separately:
+
+```bash
+npx skills add https://github.com/cursor/plugins --global --agent codex --skill bro --copy --yes
+```
+
+The project-verification and investigation skills, and selected engineering references, draw on [pstack](https://github.com/cursor/plugins/tree/6ed0f7a9504f577d7529064103cecce9be7dfc5e/pstack/skills). Their guidance targets Codex and preserves this repository's authority, delegation and verification rules.
 
 ## Evals
 

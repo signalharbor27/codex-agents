@@ -15,4 +15,10 @@ Fix at the earliest boundary that has enough information and authority to enforc
 
 Temporary probes must be searchable, narrowly scoped, non-secret, and removed before completion.
 
+## Reset a shared premise
+
+When several attempted fixes fail, list the assumption they share and test it before another patch. Recheck the expected behavior, observed instance, and causal boundary against direct evidence. Keep rejected hypotheses and the observations that rejected them so the next attempt does not repeat the same reasoning.
+
+If the hypothesis predicts leaked resources, compare creation, release, and live ownership over the failing interval. Balanced counts reject only the leak that this census can observe; they do not rule out stale references, incorrect reuse, or timing defects. Choose another discriminating observation when the premise predicts something else.
+
 Source basis: Andreas Zeller, *Why Programs Fail*, and David Agans, *Debugging*, especially scientific hypothesis testing and tracing causes instead of symptoms.

@@ -40,6 +40,7 @@ Design skills that route predictably, disclose relevant detail, and make complet
 
 - Read [DESCRIPTIONS.md](DESCRIPTIONS.md) for description-writing and routing rules.
 - Read [EVALUATING-SKILLS.md](EVALUATING-SKILLS.md) for behavioral evaluation patterns.
+- Read [SESSION-LESSONS.md](SESSION-LESSONS.md) when session evidence or recurring mistakes motivate a skill change.
 
 ## Failure modes
 

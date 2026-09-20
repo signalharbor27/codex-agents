@@ -14,6 +14,10 @@ Before editing, write the shortest useful state/effect map:
 
 Name the stable identity or idempotency key, valid state transitions, and the postcondition that means complete. An accepted request or queued job is not proof of completion.
 
+## Shared-state ownership
+
+Before adding synchronization, ask whether concurrent actors publish independent facts that can have separate owners. Separate those writes when readers can safely combine them. Keep one atomic owner or transaction where correctness depends on a cross-field invariant or a consistent snapshot; separate files or records alone do not establish independence.
+
 ## Close failure windows
 
 Consider only applicable windows:

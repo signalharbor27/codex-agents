@@ -41,7 +41,9 @@ Build the smallest production-complete change that delivers the requested outcom
 - Read [../grill-me/references/frontier.md](../grill-me/references/frontier.md) when several coupled user-owned choices materially affect the deliverable, acceptance criteria, or costly commitments, even when implementation could proceed.
 - Read [references/feature-shape.md](references/feature-shape.md) for greenfield work, a new integration, or planning multiple slices and their parallel implementation.
 - Read [references/boundary-design.md](references/boundary-design.md) when callers, ownership, trust boundaries, invariant-bearing types, module/API shape, or a proposed abstraction is consequential.
-- Read [references/legacy-change.md](references/legacy-change.md) when behavior is poorly understood, under-tested, tightly coupled, or migration-sensitive.
+- Read [references/typescript-contracts.md](references/typescript-contracts.md) when TypeScript schema ownership, inference, semantic IDs, assertions, or exhaustiveness affect the contract; follow repository and `effect-ts` conventions.
+- Read [../codebase-investigation/references/historical-evidence.md](../codebase-investigation/references/historical-evidence.md) when a change depends on why existing behavior was introduced or retained.
+- Read [references/legacy-change.md](references/legacy-change.md) when behavior is poorly understood, under-tested, tightly coupled, migration-sensitive, or requires repeated mechanical edits.
 - Read [references/state-and-effects.md](references/state-and-effects.md) for money, durable state, external effects, webhooks, jobs, retries, concurrency, or recovery.
 - Read [references/compatibility-and-delivery.md](references/compatibility-and-delivery.md) for public contracts, SDK/schema changes, mixed-version deploys, migrations, rollout, or rollback.
 - Read [references/security.md](references/security.md) for auth, permissions, secrets, attacker-controlled input, abuse, replay, or sensitive data.

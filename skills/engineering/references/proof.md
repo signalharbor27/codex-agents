@@ -21,6 +21,7 @@ Prefer existing repository tests and commands. Test through public or stable int
 - Derive expected results from an independent oracle: a specification example, literal worked result, invariant, trusted fixture, or independent implementation.
 - Ground consequential inputs and setup in the real producer, contract, or observed behavior. Check stored formats, external responses, clock and deadline semantics, permissions, filesystem layout, and concurrency where they affect the claim. A correct expected value cannot rescue a fixture that bypasses the failure.
 - For material behavior, identify a plausible broken implementation and the observation that rejects it. Use an existing reproduction, replay, boundary case, or negative control where sufficient; observe the failure before trusting a regression fix when practical. Run a targeted fault or mutation only when it resolves a remaining proof gap.
+- When safety depends on dependency behavior, inspect the resolved version and applied patches, then exercise the relevant contract. A declared version range or current upstream documentation may describe different behavior. Trace indirect consumers when they rely on the changed contract.
 - Cover the changed failure mode, not an exhaustive matrix.
 - Keep incident tests unless stronger evidence subsumes the same contract.
 - Screenshots, successful acknowledgements, typechecks, and mocked calls prove only their own narrow claim.

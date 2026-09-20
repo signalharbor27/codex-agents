@@ -1,6 +1,6 @@
 # Legacy change
 
-Load this when behavior is poorly understood, under-tested, tightly coupled, or migration-sensitive.
+Load this when behavior is poorly understood, under-tested, tightly coupled, migration-sensitive, or requires repeated mechanical edits.
 
 ## Preserve before improving
 
@@ -19,6 +19,10 @@ Treat unfamiliar code as load-bearing until callers, stored data, operational us
 - Add a seam only when it enables observation or replacement needed by this change.
 - Keep cleanup separate from behavior changes when combining them would hide causality.
 - If callers cannot migrate in one green slice, use an additive transition and remove the old path only after usage is gone.
+
+## Repeated mechanical edits
+
+Validate one representative edit and its proof before automating the repetition. Bound the transformation to explicit paths and syntax; check exclusions and ambiguous matches before writing. Use a dry run or inspect the proposed diff, then check rerun behavior so repeated execution does not duplicate or corrupt edits. Verify the complete transformed scope, including exceptional cases. Retain the helper only when it has continuing value.
 
 ## Agent guardrails
 

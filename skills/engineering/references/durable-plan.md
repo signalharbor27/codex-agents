@@ -18,6 +18,12 @@ Keep one terse source of truth containing:
 - parallel groups, shared-contract owners, and integration checks;
 - current status, ready slices, blockers, and residual risk.
 
+## Handoff evidence
+
+For work that crosses sessions or workers, tie each result to its attempt, owner, reviewed revision or reproducible working snapshot, and evidence location. Record what was observed and what acceptance remains open. Decision checkpoints can use decision, reason, evidence, and observed result within this same artifact; correct an append-only record by explicit supersession.
+
+Distinguish running, completed, failed, and lost attempts. Before retrying a lost worker, account for its existing writes and unresolved ownership. A late result belongs to its original attempt and snapshot: reconcile it against the current state before using its code or proof. Worker dropout never waives required acceptance or review coverage; reassign the work or report the gap.
+
 ## Build the plan
 
 1. Record the destination, verified facts, durable decisions, explicit exclusions, and current blockers.
