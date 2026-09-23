@@ -1,5 +1,5 @@
 name = "oracle"
-description = "Use when implementation needs independent review, a consequential design needs a second opinion, difficult debugging has stalled, or conflicting evidence leaves correctness unresolved."
+description = "Use when the user explicitly requests Oracle, or investigation or ordinary review has stalled on a concrete technical blocker. Excludes routine review and automatic second opinions."
 model = "gpt-6-astra"
 model_reasoning_effort = "xhigh"
 sandbox_mode = "read-only"

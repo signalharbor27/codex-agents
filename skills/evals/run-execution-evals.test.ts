@@ -332,12 +332,20 @@ describe("automatic independent review", () => {
     expect(judge("automatic-independent-review", actual)).toContain("missing independent review lifecycle evidence")
     actual.reviewLifecycle = { reviews: [], failures: [] }
     expect(judge("automatic-independent-review", actual)).toContain("no returned independent review")
-    actual.reviewLifecycle = { reviews: [{ taskName: "/root/review", role: "oracle", result: "No findings." }], failures: ["review returned after completion"] }
+    actual.reviewLifecycle = { reviews: [{ taskName: "/root/review", role: "reviewer", result: "No findings." }], failures: ["review returned after completion"] }
     expect(judge("automatic-independent-review", actual)).toContain("review returned after completion")
     actual.reviewLifecycle.failures = []
     expect(judge("automatic-independent-review", actual)).toEqual([])
     actual.settings = SETTINGS
     expect(judge("automatic-independent-review", actual)).toContain("requested observable behavior missing")
+  })
+
+  test("Oracle-only escalation cannot satisfy the ordinary reviewer case", () => {
+    const actual = evidence()
+    actual.reviewLifecycle = { reviews: [{ taskName: "/root/oracle", role: "oracle", result: "No findings." }], failures: [] }
+    expect(judge("automatic-independent-review", actual)).toContain("ordinary implementation lacks returned reviewer review")
+    actual.reviewLifecycle.reviews.push({ taskName: "/root/reviewer", role: "reviewer", result: "No findings." })
+    expect(judge("automatic-independent-review", actual)).toEqual([])
   })
 
   test("persisted rollout must match the exact CLI session", async () => {

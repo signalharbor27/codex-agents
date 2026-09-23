@@ -602,7 +602,7 @@ export function validateCase(
     const evidenceRole = evidenceRoles.find(action => caseActions.includes(action))
     const evidenceOnly = evidenceRole !== undefined && [
       ...evidenceRoles.filter(action => action !== evidenceRole),
-      "delegate-oracle-review", "consult-oracle", "use-built-in-review-agent", "delegate-independent-tracks",
+      "delegate-reviewer-review", "delegate-oracle-review", "consult-oracle", "use-built-in-review-agent", "delegate-independent-tracks",
       "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local",
       "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration",
     ].every(action => forbiddenActions?.includes(action))
@@ -615,8 +615,11 @@ export function validateCase(
     if (caseActions.includes("keep-coupled-review-local")) errors.push(`${label} review cannot require main-agent coverage`)
     if (!forbiddenActions?.includes("keep-coupled-review-local")) errors.push(`${label} review must forbid main-agent coverage`)
     if (!evidenceOnly && !blocked) {
-      for (const action of ["delegate-oracle-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]) {
+      for (const action of ["delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]) {
         if (!caseActions.includes(action)) errors.push(`${label} substantive review must require ${action}`)
+      }
+      if (!caseActions.includes("delegate-reviewer-review") && !caseActions.includes("delegate-oracle-review")) {
+        errors.push(`${label} substantive review must require independent reviewer dispatch`)
       }
     }
     if (blocked && (!isRecord(value.expectations) || value.expectations.stop !== "blocked")) {

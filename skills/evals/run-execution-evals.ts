@@ -168,6 +168,7 @@ export function judge(id: CaseId, evidence: Evidence): string[] {
     else {
       errors.push(...evidence.reviewLifecycle.failures)
       if (!evidence.reviewLifecycle.reviews.length) errors.push("no returned independent review")
+      else if (!evidence.reviewLifecycle.reviews.some(review => review.role === "reviewer")) errors.push("ordinary implementation lacks returned reviewer review")
     }
   }
   if (evidence.discoveredSkill === false) errors.push("no applicable skill read observed in command evidence")

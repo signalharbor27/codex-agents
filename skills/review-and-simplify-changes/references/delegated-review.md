@@ -5,22 +5,26 @@ Read this before assigning review tracks. Independent subagents perform review a
 ## Select the role
 
 - The main agent runs `review-and-simplify-changes`, assigns each material check, collects reviewer results, resolves findings, and coordinates authorized fixes and verification. Every initial, fix, and integration review requires independent subagent coverage.
-- Use `oracle` for delegated correctness, contract, Standards/Intent, or architectural judgment. For defect review, give it the host's `review-agent` skill as described below.
+- Use `reviewer` for delegated correctness, contract, Standards/Intent, or architectural judgment. For defect review, give it the host's `review-agent` skill as described below.
 - Use `fast_reviewer` for bounded mechanical evidence such as unused code, dependency cycles, or stale comments. It does not substitute for substantive review.
 - Use `verifier` for command-backed acceptance evidence. A passing command does not close source-review findings or uncovered requirements; honor the task's mutation limits when choosing checks.
 
-For each substantive review, assign correctness, simplification, and Standards/Intent checks to `oracle` subagents. Use separate instances for independent tracks and run them alongside relevant mechanical checks when capacity permits. One instance may cover a small coupled change. Give affected risk tracks explicit invariants and failure paths to inspect:
+For each substantive review, assign correctness, simplification, and Standards/Intent checks to `reviewer` subagents. Use separate instances for independent tracks and run them alongside relevant mechanical checks when capacity permits. One instance may cover a small coupled change. Give affected risk tracks explicit invariants and failure paths to inspect:
 
 - Permission enforcement, trust boundaries, or tenant isolation.
 - Financial calculations, balances, billing entitlements, or invariants that prevent lost, duplicated, or misattributed money.
 - Concurrent or retried state transitions where ordering, atomicity, idempotency, or recovery determines correctness.
-- Material proof risks where implementation and tests could share a wrong assumption about inputs, setup, or the observed event. Assign an Oracle to challenge that assumption using `engineering/references/proof.md`.
+- Material proof risks where implementation and tests could share a wrong assumption about inputs, setup, or the observed event. Assign the reviewer to challenge that assumption using `engineering/references/proof.md`.
 - Destructive migrations, data recovery, rollback guarantees, or compatibility while old and new versions coexist.
 - A material correctness dispute that remains unresolved after ordinary review despite concrete competing evidence.
 
 Choose risk tracks from changed behavior and contracts. Directory names or display wording alone do not create financial or security review work. Low-risk changes still need an independent reviewer. A task explicitly limited to mechanical evidence or command execution uses its corresponding role and does not establish substantive review coverage.
 
-On follow-ups, send fixes and affected contracts back to the selected reviewer; preserve valid earlier coverage. Use a fresh or bounded brief when spawning a custom role so its model and effort settings apply. If the named role is unavailable, use an independent read-only agent with equivalent capability and effort and disclose the fallback. Report blocked coverage if no suitable reviewer is available; main-agent review cannot close it. Reviewers do not dispatch further agents.
+On follow-ups, send fixes and affected contracts back to the selected reviewer; preserve valid earlier coverage. Use a fresh or bounded brief when spawning a custom role so its model and effort settings apply. If the named role is unavailable, use an independent read-only agent with equivalent capability and effort and disclose the fallback; do not automatically upgrade to Oracle. Report blocked coverage if no suitable reviewer is available; main-agent review cannot close it. Reviewers do not dispatch further agents.
+
+Use `oracle` only when the user explicitly requests it or investigation or ordinary review remains stuck on a concrete blocker. Include the unresolved question, attempted checks, and conflicting evidence. Risk or complexity alone does not require an Oracle.
+
+Reviewers return after their assigned pass. The parent coordinates fixes; `verifier` runs acceptance checks. Do not keep reviewers polling writers or managing the fix loop. Reuse a reviewer while its context helps; when it becomes dominated by old work, start a fresh reviewer with the current delta, unresolved findings, and a concise record of valid coverage.
 
 ## Delegate the selected track
 

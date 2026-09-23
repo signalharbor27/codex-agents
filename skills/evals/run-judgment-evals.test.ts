@@ -185,7 +185,7 @@ test("cold replay receives only recipe task and cannot reuse author receipts", a
         if (label === "restart oracle") return { stdout: "", stderr: "missing cold proof", exitCode: 1 }
         return { stdout: completedTrace, stderr: "", exitCode: 0 }
       },
-      rollout: async () => ({ reviewLifecycle: { reviews: [{taskName:"/root/reviewer",role:"oracle",result:"review"}], failures: [] }, rollout: {path:"private",hash:"hash",threadId:"author"} }),
+      rollout: async () => ({ reviewLifecycle: { reviews: [{taskName:"/root/reviewer",role:"reviewer",result:"review"}], failures: [] }, rollout: {path:"private",hash:"hash",threadId:"author"} }),
     })
     expect(coldRan).toBe(true)
     expect(result.evidence?.cold?.authorEvidence).toBe("author receipts")
