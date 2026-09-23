@@ -1,132 +1,33 @@
-# Codex skills
+# Codex agents and skills
 
-Q's global Codex instructions, engineering skills, and custom agents. Evaluation default: GPT-6 Astra at `high`. The main chat default is Astra at `medium`. The main setting is configured per installation or task; custom agents set their own models and reasoning efforts.
+Q's global Codex instructions, skills, and agent profiles. The main chat uses GPT-6 Astra at `medium`; each custom agent sets its own model and reasoning effort.
 
-Select a primary skill when its invocation conditions match the task; proceed without one when none applies. Descriptions state when to invoke a skill. Bodies contain workflow and output requirements. Add domain guidance or references only when the task needs them.
+## Install
 
-## Engineering flow
+Install the skills from this repository:
 
-- `engineering` owns understood features, bug fixes, refactors, plans, and research from inspection through verified completion.
-- `debugging` owns unexplained failures: reproduce the failure, prove its root cause, then make the smallest authorized fix and verify it.
-- `test-design` owns work where tests are the main task, including explicit TDD, proof-layer selection, doubles, assertions, and focused coverage.
-- `project-verification` owns creating, repairing or auditing project verification runbooks and feature maps. Commands and application details stay in the consuming project; existing checks still run through the verifier role.
-- `codebase-investigation` owns standalone questions about current behavior or historical rationale. Engineering retains research needed for its implementation task.
+```bash
+npx skills add https://github.com/signalharbor27/codex-agents.git \
+  --global --agent codex --skill engineering debugging test-design \
+  review-and-simplify-changes receiving-code-review improve-codebase-architecture \
+  improve-test-suite using-git-worktrees finishing-a-development-branch \
+  describe-pr grill-me effect-ts writing-rust designing-data-intensive-systems \
+  writing-skills project-verification codebase-investigation --copy --yes
+```
 
-Review, audit, branch, handoff, and skill-authoring tasks use their narrower skill as primary. Rust, Effect, and data-intensive-system skills are modifiers. They add domain constraints without repeating the generic producer workflow.
+The installer copies skills. After updates, reinstall the selected skills and compare them with the source. Keep sibling skills together when their references depend on one another. The evaluation harness stays in this repository.
 
-A primary skill owns its whole loop, including the mandatory `review-and-simplify-changes` gate before implementation handoff or an intended commit. The main agent retains integration and completion ownership. Load other workflow skills only when their distinct task applies.
+### Global instructions
 
-`grill-me` is the sole model-invoked owner of dependency-aware interactive decisions. It can route from a natural request, an exact `$grill-me` invocation, or work that exposes several consequential, interdependent choices owned by the user. After inspection, `engineering` and the two improve skills may load the shared grilling procedure without giving up primary ownership.
+[AGENTS.md](AGENTS.md) defines scope, permissions, delegation, verification, and Git rules. Project instructions supply local commands and conventions.
 
-## Progressive disclosure
+Codex reads `$CODEX_HOME/AGENTS.md`, normally `~/.codex/AGENTS.md`. On Q's installation, that file links through `~/.agents/AGENTS.md` to this repository's `AGENTS.md`. Check the links on another machine before editing. Start a new task to load changed instructions.
 
-Routine engineering begins with [engineering/SKILL.md](skills/engineering/SKILL.md) alone. That entrypoint names the active pressure and opens a one-level reference only when the pressure is present:
+### Agent profiles
 
-- new or large feature, including conceptual integrity: `feature-shape.md`
-- consequential ownership, trust boundaries, invariant-bearing types, module/API shape, or competing abstractions: `boundary-design.md`
-- poorly understood or migration-sensitive code: `legacy-change.md`
-- durable state, money, jobs, retries, or external effects: `state-and-effects.md`
-- contracts, schemas, SDKs, rollout, or rollback: `compatibility-and-delivery.md`
-- auth, permissions, abuse, replay, or sensitive data: `security.md`
-- hot paths or capacity: `performance-and-capacity.md`
-- non-obvious proof: `proof.md`
-- explicitly authorized multi-session discovery or execution plan: `durable-plan.md`
+[agents](agents) contains the profiles. Link the global agent directory to this checkout so profile edits apply when new tasks load them. Preserve existing profiles before replacing that directory.
 
-`debugging` and `test-design` follow the same pattern with their own short, one-level references. Reference files do not link to other references.
-
-This structure keeps detailed production guidance available while protecting routine tasks from irrelevant checklists.
-
-## Why these principles
-
-- Tracer bullets and vertical slices establish a real end-to-end path before broad scaffolding.
-- Conceptual integrity keeps a feature centered on one coherent model while treating every extra concept, state, and option as a reasoning cost.
-- Deep modules and information hiding reduce caller knowledge and change amplification.
-- Trusted boundary values preserve what parsing proved, while domain-owned operations keep invariants with one responsible module.
-- Characterization seams make legacy changes observable before agents rewrite plausible behavior.
-- Durable state/effect maps expose retries, duplicate delivery, partial failure, and reconciliation before production.
-- Compatibility and expand/migrate/contract sequencing protect mixed-version consumers.
-- Trust-boundary reasoning focuses security work on concrete authorization and abuse paths.
-- Measurement-first performance work prevents speculative caches, concurrency, and denormalization.
-- Claim-matched proof keeps tests small while preventing stale or partial completion claims.
-
-The concise references synthesize established work including Hunt and Thomas, Brooks, Hoare, Wirth, Dijkstra, Ousterhout, Parnas, King, Wlaschin, Meyer, Bernhardt, Cockburn, Bogard, Metz, Feathers, Fowler, Evans, Beck, Meszaros, Humble and Farley, Nygard, Kleppmann, Google SRE, Brendan Gregg, and OWASP. Each reference states its source basis.
-
-## Review and improve skills
-
-- `review-and-simplify-changes` reviews the full intended diff, then loops over fixes and affected contracts until actionable findings are resolved and required checks pass. Follow-up passes use recorded review snapshots; new evidence can reopen earlier scope. Integrated slices need combined coverage. Reviewer count follows the material work; the eight topics are a coverage checklist.
-- Every review pass uses independent subagents, including small changes and follow-up fixes. The main agent maps material checks to review tracks and dispatches independent tracks in parallel: `oracle` instances inspect correctness, Standards, Intent, simplification, and integration; `fast_reviewer` supplies bounded mechanical evidence; `verifier` runs checks. Defect reviewers use the host's `review-agent` skill when available, or an equivalent scoped read-only brief. The main agent collects results, judges findings, and coordinates fixes; its own inspection cannot replace delegated coverage.
-- `improve-codebase-architecture` and `improve-test-suite` produce evidence-backed plans, with phases and decisions only when the findings need them.
-
-## Other skills
-
-- `designing-data-intensive-systems`: workload, storage, consistency, partitioning, and recovery modifier
-- `writing-rust`: Rust ownership, traits, errors, async, and unsafe modifier
-- `effect-ts`: Effect service, error, layer, runtime, wrapper, and stream modifier
-- `grill-me`: model-invoked interview owner with a shared procedure for latent consequential decisions
-- `receiving-code-review`: validate review feedback against repository truth
-- `using-git-worktrees`: explicitly requested or necessary workspace isolation
-- `finishing-a-development-branch`: verified branch integration choices
-- `describe-pr`: reviewer-oriented summary from the final diff and evidence
-- `writing-skills`: skill routing, descriptions, progressive disclosure, and evals
-
-## Global operating contract
-
-[AGENTS.md](AGENTS.md) defines permissions, scope, delegation, verification, and Git boundaries across projects. Skills own their task workflows; project guidance supplies local commands and conventions.
-
-Codex discovers global instructions from `$CODEX_HOME/AGENTS.md`, normally
-`~/.codex/AGENTS.md`. Q's `~/.codex/AGENTS.md` links to `~/.agents/AGENTS.md`,
-which links to this repository's `AGENTS.md`. Edits here therefore update the
-global source immediately. Verify the links before editing; on another machine,
-sync the approved file and compare bytes. Start a new Codex task to load updates.
-
-Global defaults allow routine local choices, necessary files and dependencies,
-and safe workspace isolation within authorized work. Initial inspection can
-precede skill selection. Substantial engineering starts with a production-shaped
-tracer bullet and continues through the remaining slices. Earlier proof remains
-usable after confirming its inputs are unchanged. Destructive operations,
-publication, deployment, and shared-state changes retain explicit authorization
-boundaries. Responses stay concise without dropping required evidence.
-
-## Custom agents
-
-Installable profiles live in [agents](agents). Current Codex releases discover
-these standalone files automatically. [agent-settings.toml](agent-settings.toml)
-therefore contains shared agent settings only.
-
-- `implementer`: `gpt-6-sol` / `xhigh`, agreed implementation slices
-- `explorer`: `gpt-6-sol` / `low`, codebase facts and tracing
-- `fast_reviewer`: `gpt-6-luna` / `max`, mechanical evidence
-- `oracle`: `gpt-6-astra` / `xhigh`, independent review, consequential design advice, stalled debugging, or unresolved correctness disputes
-- `librarian`: `gpt-6-sol` / `low`, external documentation and research
-- `verifier`: `gpt-6-sol` / `high`, command verification
-
-The main agent retains scope, approvals, write coordination, synthesis, and the completion claim. Each subagent receives a bounded brief and returns evidence for the main agent to judge.
-
-The main chat default is Astra / `medium`.
-Profiles pin both model and effort, so changing the chat setting does not change
-their assignments. The custom `explorer` replaces the built-in role of that name.
-Use `implementer` with explicit `fork_turns="none"` and a self-contained slice
-brief. Full-history forks inherit the parent role in hosts that expose this
-option; they do not reliably select a custom profile. For harder implementation,
-the Astra parent can take over. Generic agents inherit the parent settings;
-use a named profile for the assignments above. No documented config setting
-enforces fork mode. See
-[Codex subagent settings](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents).
-
-The review skill assigns every material check to an independent reviewer.
-Small coupled changes can share one Oracle; separable checks use parallel
-tracks. Follow-up passes delegate fixes and affected contracts while preserving
-valid earlier coverage. Unavailable subagents leave review blocked. Oracle can
-also advise on design or debugging; those assignments do not load the
-defect-review skill.
-
-Link the global agent directory to this checkout's `agents` directory.
-Codex 0.154.0 discovers individual file symlinks but refuses to load them when
-spawning an agent. A directory symlink leaves each profile as a regular file.
-Repository edits then apply when a new task loads the profiles. Explicit profile
-settings override the parent model and effort.
-
-From the repository root, check for unrelated profiles and preserve the old directory:
+Run from the repository root:
 
 ```bash
 codex_repo_root="$(pwd -P)"
@@ -148,59 +49,67 @@ ln -s "$codex_repo_root/agents" "$codex_profile_root/agents" || exit 1
 test "$(readlink "$codex_profile_root/agents")" = "$codex_repo_root/agents" || exit 1
 ```
 
-Start a new Codex task after installation and verify the exposed role settings.
+Merge [agent-settings.toml](agent-settings.toml) into the existing `$CODEX_HOME/config.toml`. It sets the shared agent depth. Keep a single `[agents]` table and leave this settings fragment outside `$CODEX_HOME/agents/`; the profiles need no separate registrations.
 
-Merge only the shared settings from [agent-settings.toml](agent-settings.toml)
-into the existing `$CODEX_HOME/config.toml`; do not append a second `[agents]`
-table. Do not add redundant `[agents.<role>]` registrations for profiles already
-installed under `$CODEX_HOME/agents/`. Keep `agent-settings.toml` outside that directory;
-it is a shared-settings fragment, not an agent profile.
+On this host, the custom provider also uses `model_catalog_url` and `features.api_key_model_discovery` in global config to discover available models. Those settings are local to the provider setup. Codex labels API-key discovery as under development.
 
-## Skill installation
+Start a new task after installation. Check both the exposed roles and an actual agent launch.
 
-Install from this Git repository with the `skills` CLI. Its installation command
-is `add`; select the intended skill folders and preserve unrelated installed skills.
+## Agents
+
+- `implementer`: `gpt-6-sol` / `xhigh`, implementation slices with agreed contracts and acceptance criteria.
+- `explorer`: `gpt-6-sol` / `low`, repository structure, callers, and existing tests.
+- `librarian`: `gpt-6-sol` / `low`, external documentation and public code.
+- `verifier`: `gpt-6-sol` / `high`, running checks and reporting command evidence.
+- `oracle`: `gpt-6-astra` / `xhigh`, independent review, consequential design decisions, and unresolved technical questions.
+- `fast_reviewer`: `gpt-6-luna` / `max`, bounded checks for unused code, dependency cycles, stale comments, and stubs.
+
+Use custom roles with explicit `fork_turns="none"` and a brief containing the goal, file ownership, contracts, acceptance criteria, and required evidence. Full-history forks inherit the parent role in hosts that expose that option. Generic agents inherit parent settings. See [Codex subagent settings](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents).
+
+The main agent owns scope, approvals, integration, and the final completion claim. It assigns independent implementation slices in parallel and checks the combined result.
+
+## Choosing skills
+
+Skills load when their invocation conditions match the task. They can also be requested by name. Descriptions say when to invoke them; each `SKILL.md` contains the workflow.
+
+- `engineering`: understood changes, implementation plans, and supporting research.
+- `debugging`: unexplained failures, from reproduction through a verified fix.
+- `test-design`: test strategy, assertions, doubles, coverage, and explicit TDD.
+- `project-verification`: a project's repeatable verification runbook and feature map.
+- `codebase-investigation`: questions about how a codebase works or why a design was chosen.
+- `grill-me`: interviews and coupled decisions that need the user's judgment.
+- `review-and-simplify-changes`: reviewing a diff and subsequent fixes.
+- `receiving-code-review`: checking incoming review feedback against the code.
+- `improve-codebase-architecture` and `improve-test-suite`: audits and improvement plans.
+- `designing-data-intensive-systems`, `writing-rust`, and `effect-ts`: guidance for those domains.
+- `using-git-worktrees` and `finishing-a-development-branch`: workspace isolation and requested branch integration or cleanup.
+- `describe-pr`: PR descriptions based on the final diff and verification.
+- `writing-skills`: skill descriptions, instructions, references, and evaluations.
+
+Start with the relevant entrypoint, such as [engineering/SKILL.md](skills/engineering/SKILL.md). It links to detailed guidance for the task. Substantial engineering starts with a working path through the system, then continues through the remaining vertical slices.
+
+### Review before completion
+
+Every implementation handoff or intended commit requires independent subagent review through `review-and-simplify-changes`, including small changes. Oracle reviews correctness and simplification; other roles provide focused evidence as needed. Defect reviewers use the host's `review-agent` skill when available.
+
+Review the full intended diff first. After fixes, review the changed portions and affected contracts, retaining earlier evidence where it still applies. Check the integrated result before declaring completion. The main agent coordinates this loop; its own review cannot satisfy the independent-review requirement.
+
+## Workspaces
+
+Agent-created workspaces use Worktrunk. Reuse existing isolated task directories. Codex app-created worktrees retain the app's setup and cleanup lifecycle.
+
+See [using-git-worktrees](skills/using-git-worktrees/SKILL.md) and the [remote setup guide](skills/using-git-worktrees/references/worktrunk.md) for environment copying, dependencies, and this VPS's configuration.
 
 ```bash
-npx skills add https://github.com/signalharbor27/codex-agents.git \
-  --global --agent codex --skill engineering debugging test-design \
-  review-and-simplify-changes receiving-code-review improve-codebase-architecture \
-  improve-test-suite using-git-worktrees finishing-a-development-branch \
-  describe-pr grill-me effect-ts writing-rust designing-data-intensive-systems \
-  writing-skills project-verification codebase-investigation --copy --yes
+wt list
+wt switch --create lewissmith/my-task --base origin/main
+# For authorized cleanup, from a retained workspace:
+wt remove lewissmith/my-task --no-delete-branch --foreground
 ```
 
-Compare installed files with the published source and check bundled and
-sibling-skill references. The repository's eval harness stays in the repository.
+## Checks
 
-Install `grill-me` as a single skill. For post-inspection grilling, also sync the consumer skill directories that link to `grill-me/references/frontier.md`. They reuse the procedure directly, so they do not need nested invocation or another grilling router.
-
-If another installed skill supplies an overlapping umbrella workflow, disable it with an exact `[[skills.config]]` path entry in `~/.codex/config.toml`. Restart Codex after changing discovery configuration.
-
-The optional `bro` shortcut restates the last response plainly. Install it separately:
-
-```bash
-npx skills add https://github.com/cursor/plugins --global --agent codex --skill bro --copy --yes
-```
-
-The project-verification and investigation skills, and selected engineering references, draw on [pstack](https://github.com/cursor/plugins/tree/6ed0f7a9504f577d7529064103cecce9be7dfc5e/pstack/skills). Their guidance targets Codex and preserves this repository's authority, delegation and verification rules.
-
-## Evals
-
-The local suite checks the skill inventory and behavior contract:
-
-- exact top-level skill inventory
-- quoted, trigger-focused descriptions no longer than 240 characters
-- bounded entrypoints, valid metadata, and resolvable references
-- valid local links and one-level pressure references
-- invocation metadata plus implicit and exact `$skill` routing
-- an applicable primary skill or no skill, expected modifiers, and relevant references
-- representative routine, pressure, debugging, testing, review, improve, domain, and handoff routes
-- the adaptive review delegation contract
-- guarded live routing classification, defaulting to GPT-6 Astra / `high`
-- isolated execution cases for authorization, complete approval drafts, read-only limits, proof reuse and rechecks, project-native commands, unrelated changes, and continuation
-
-Run:
+The local suite validates skill metadata, references, agent profiles, and evaluation fixtures. Dry runs prepare routing cases without model calls.
 
 ```bash
 bash skills/evals/check-skill-surface.sh
@@ -208,24 +117,19 @@ bun test skills/evals
 bun skills/evals/run-routing-evals.ts dry-run
 ```
 
-Live evaluation requires `--allow-live` and an explicit case or `--all`. Compare
-baseline and candidate instructions through the same runner and fixtures. Model,
-effort, hashes, timings, and available usage/tool evidence identify each run.
-Full source-catalog routing and synthetic crowded or truncated catalogs measure different
-conditions. Routing classification checks selection; execution cases inspect
-artifacts and tool activity. Scripted continuation does not prove mid-turn
-steering. Static checks do not establish model improvement. See [the eval README](skills/evals/README.md)
-for commands and limits.
+Live evaluations require `--allow-live` and an explicit case or `--all`. Their default is GPT-6 Astra at `high`, separate from the main chat setting. Routing evaluations test skill selection; execution evaluations inspect edits and tool activity. Neither static checks nor a successful agent launch establishes code quality. See [the eval README](skills/evals/README.md) for live commands, comparisons, and limits.
 
-## Prompt design basis
+## Optional skill and sources
 
-- Start with outcomes, success evidence, important constraints, authority, and stop condition.
-- Give the model freedom for routine choices; use strict ordered steps only where sequence protects correctness.
-- Keep metadata trigger-focused, entrypoints small, and branch-specific material behind precise pointers.
-- Add instructions only for observed failure modes and remove sentence-level no-ops.
-- Evaluate task success and required evidence before tokens, latency, or cost.
+The external `bro` skill restates the last response plainly:
 
-Current agent-behavior authority:
+```bash
+npx skills add https://github.com/cursor/plugins --global --agent codex --skill bro --copy --yes
+```
+
+The verification and investigation skills, plus selected engineering references, draw on [pstack](https://github.com/cursor/plugins/tree/6ed0f7a9504f577d7529064103cecce9be7dfc5e/pstack/skills). They are adapted for Codex. Engineering references name the software-design sources behind their guidance.
+
+Prompt and skill guidance:
 
 - [OpenAI GPT-6 Astra guidance](https://developers.openai.com/api/docs/guides/latest-model)
 - [Rethinking skills and prompts for GPT-6 Astra](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra)
@@ -235,16 +139,4 @@ Current agent-behavior authority:
 - [OpenAI skills documentation](https://learn.chatgpt.com/docs/build-skills)
 - [Matt Pocock's writing-great-skills reference](https://github.com/mattpocock/skills/tree/main/skills/productivity/writing-great-skills)
 
-Use maintained vendor guidance as corroboration for context management, planning, delegation, and verification, not as an OpenAI platform contract:
-
-- [Anthropic context engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) and [Claude Code best practices](https://code.claude.com/docs/en/best-practices)
-- [Cursor rules](https://cursor.com/docs/rules) and [Cursor subagents](https://cursor.com/docs/subagents)
-- [Devin effective instructions](https://docs.devin.ai/essential-guidelines/instructing-devin-effectively)
-
-Do not base current-agent behavior on stale benchmark results.
-
-Canonical SWE sources own code design: module depth and information hiding, domain language and ownership, trusted boundaries and contracts, production tracer bullets, state/effect reasoning, compatibility, and behavior-focused proof. The routed reference that applies the idea names its source basis.
-
-Comparative material such as Ousterhout's *A Philosophy of Software Design* versus *Clean Code* helps explain tradeoffs, but the primary works and the repository's explicit decision rules remain authoritative.
-
-Practitioner material such as Sandi Metz's “The Wrong Abstraction,” Kent C. Dodds's AHA Programming, Dan Abramov's “Goodbye, Clean Code,” Carson Gross's Locality of Behaviour and *The Grug Brained Developer*, and Joel Spolsky's “Architecture Astronauts” is secondary reinforcement. It can explain a rule but does not create independent runtime doctrine.
+Other workflow references include [Anthropic context engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents), [Claude Code best practices](https://code.claude.com/docs/en/best-practices), [Cursor rules](https://cursor.com/docs/rules), [Cursor subagents](https://cursor.com/docs/subagents), and [Devin effective instructions](https://docs.devin.ai/essential-guidelines/instructing-devin-effectively).
