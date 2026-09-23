@@ -1,7 +1,7 @@
 name = "verifier"
 description = "Use when completed implementation needs command-backed acceptance evidence. Excludes source-only review, test design, and repairs."
-model = "gpt-6-astra"
-model_reasoning_effort = "low"
+model = "gpt-6-sol"
+model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 
 developer_instructions = """

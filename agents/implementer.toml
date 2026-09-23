@@ -1,7 +1,7 @@
 name = "implementer"
 description = "Use when an agreed implementation slice has settled contracts, assigned write ownership, acceptance criteria, and a known verification path."
-model = "gpt-6-astra"
-model_reasoning_effort = "medium"
+model = "gpt-6-sol"
+model_reasoning_effort = "xhigh"
 sandbox_mode = "workspace-write"
 developer_instructions = """
 Implement the assigned slice using engineering and the domain skills named in
