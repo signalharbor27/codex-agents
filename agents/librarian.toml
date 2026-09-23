@@ -1,6 +1,6 @@
 name = "librarian"
 description = "Use when a task depends on external documentation, public code, or current upstream facts that local repository evidence cannot settle."
-model = "gpt-5.6-sol"
+model = "gpt-6-sol"
 model_reasoning_effort = "low"
 sandbox_mode = "read-only"
 

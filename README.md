@@ -1,6 +1,6 @@
 # Codex skills
 
-Q's global Codex instructions, engineering skills, and custom agents. Evaluation default: GPT-6 Astra at `high`, also the recommended main setting for substantial engineering. Routine tasks can use `medium`. The main setting is configured per installation or task; custom agents set their own models and reasoning efforts.
+Q's global Codex instructions, engineering skills, and custom agents. Evaluation default: GPT-6 Astra at `high`. The main chat default is Astra at `medium`. The main setting is configured per installation or task; custom agents set their own models and reasoning efforts.
 
 Select a primary skill when its invocation conditions match the task; proceed without one when none applies. Descriptions state when to invoke a skill. Bodies contain workflow and output requirements. Add domain guidance or references only when the task needs them.
 
@@ -93,20 +93,25 @@ Installable profiles live in [agents](agents). Current Codex releases discover
 these standalone files automatically. [agent-settings.toml](agent-settings.toml)
 therefore contains shared agent settings only.
 
-- `implementer`: `gpt-6-astra` / `medium`, agreed implementation slices
-- `explorer`: `gpt-5.6-terra` / `low`, codebase facts and tracing
-- `fast_reviewer`: `gpt-5.6-luna` / `max`, mechanical evidence
+- `implementer`: `gpt-6-sol` / `xhigh`, agreed implementation slices
+- `explorer`: `gpt-6-sol` / `low`, codebase facts and tracing
+- `fast_reviewer`: `gpt-6-luna` / `max`, mechanical evidence
 - `oracle`: `gpt-6-astra` / `xhigh`, independent review, consequential design advice, stalled debugging, or unresolved correctness disputes
-- `librarian`: `gpt-5.6-sol` / `low`, external documentation and research
-- `verifier`: `gpt-6-astra` / `low`, command verification
+- `librarian`: `gpt-6-sol` / `low`, external documentation and research
+- `verifier`: `gpt-6-sol` / `high`, command verification
 
 The main agent retains scope, approvals, write coordination, synthesis, and the completion claim. Each subagent receives a bounded brief and returns evidence for the main agent to judge.
 
-The main chat default is Astra / `high`; routine tasks may select `medium`.
+The main chat default is Astra / `medium`.
 Profiles pin both model and effort, so changing the chat setting does not change
 their assignments. The custom `explorer` replaces the built-in role of that name.
-Use `implementer` for ordinary slices. For harder implementation, the main agent
-can take over or explicitly select the unpinned `worker` at higher effort.
+Use `implementer` with explicit `fork_turns="none"` and a self-contained slice
+brief. Full-history forks inherit the parent role in hosts that expose this
+option; they do not reliably select a custom profile. For harder implementation,
+the Astra parent can take over. Generic agents inherit the parent settings;
+use a named profile for the assignments above. No documented config setting
+enforces fork mode. See
+[Codex subagent settings](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents).
 
 The review skill assigns every material check to an independent reviewer.
 Small coupled changes can share one Oracle; separable checks use parallel
