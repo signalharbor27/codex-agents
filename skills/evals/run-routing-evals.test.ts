@@ -412,20 +412,21 @@ describe("progressive review contract", () => {
   })
 })
 
-describe("oracle review selection", () => {
+describe("independent review role selection", () => {
   const resultFor = (entry: RoutingCase): RoutingResult => ({
     primary_skill: entry.primary_skill, modifier_skills: entry.expected_modifier_skills, references: entry.expected_references,
     actions: entry.required_actions, first_action: "pin-review-scope", mutation: "none", question: "only-if-blocked", stop: "findings",
   })
 
-  test("delegated substantive review needs Oracle, all assigned coverage, and nonrecursive children", () => {
+  test("delegated substantive review needs reviewer, all assigned coverage, and nonrecursive children", () => {
     const entry = fixture.cases.find(candidate => candidate.id === "delegated-substantive-defect-review")!
     const result = resultFor(entry)
     expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
     expect(compareResult(entry, result)).toEqual([])
-    for (const action of ["delegate-oracle-review", "delegate-standards-intent-simplification", "use-built-in-review-agent", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]) {
+    for (const action of ["delegate-reviewer-review", "delegate-standards-intent-simplification", "use-built-in-review-agent", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]) {
       expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
     }
+    expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
   })
 
   test("every substantive pass requires independent review including initial, fix, and integration passes", () => {
@@ -437,12 +438,16 @@ describe("oracle review selection", () => {
         ...Object.fromEntries(Object.entries(entry.expectations).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
       } as RoutingResult
       expect(compareResult(entry, result)).toEqual([])
-      for (const action of ["delegate-oracle-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]) {
+      const reviewRole = entry.required_actions.includes("delegate-oracle-review") ? "delegate-oracle-review" : "delegate-reviewer-review"
+      for (const action of [reviewRole, "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]) {
         expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
         const incomplete = { ...entry, required_actions: entry.required_actions.filter(value => value !== action) }
-        expect(validateCase(incomplete, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)).toContain(`cases[0] substantive review must require ${action}`)
+        expect(validateCase(incomplete, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)).toContain(action === reviewRole
+          ? "cases[0] substantive review must require independent reviewer dispatch"
+          : `cases[0] substantive review must require ${action}`)
       }
       expect(compareResult(entry, { ...result, actions: [...result.actions, "keep-coupled-review-local"] })).toEqual(["forbidden action keep-coupled-review-local"])
+      if (reviewRole === "delegate-reviewer-review") expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
     }
   })
 
@@ -467,7 +472,7 @@ describe("oracle review selection", () => {
     expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
     expect(compareResult(entry, result)).toEqual([])
     expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== "report-blocked-review-coverage") })).toEqual(["missing required action report-blocked-review-coverage"])
-    for (const action of ["keep-coupled-review-local", "delegate-oracle-review", "confirm-final-review-coverage"]) {
+    for (const action of ["keep-coupled-review-local", "delegate-oracle-review", "delegate-reviewer-review", "confirm-final-review-coverage"]) {
       expect(compareResult(entry, { ...result, actions: [...result.actions, action] })).toEqual([`forbidden action ${action}`])
     }
     expect(compareResult(entry, { ...result, question: "only-if-blocked" })).toEqual(["question: expected none, got only-if-blocked"])
@@ -484,6 +489,7 @@ describe("oracle review selection", () => {
       expect(compareResult(entry, result)).toEqual([])
       expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== role) })).toEqual([`missing required action ${role}`])
       expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
+      expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-reviewer-review"] })).toEqual(["forbidden action delegate-reviewer-review"])
       expect(compareResult(entry, { ...result, actions: [...result.actions, "consult-oracle"] })).toEqual(["forbidden action consult-oracle"])
       expect(compareResult(entry, { ...result, actions: [...result.actions, "use-built-in-review-agent"] })).toEqual(["forbidden action use-built-in-review-agent"])
       const otherRole = role === "delegate-fast-review" ? "delegate-command-verification" : "delegate-fast-review"
@@ -558,17 +564,25 @@ describe("oracle review selection", () => {
     }
   })
 
-  test("each concrete risk requires oracle selection and preserves read-only review", () => {
-    for (const id of ["oracle-tenant-boundary-review", "oracle-charge-retry-review", "oracle-mixed-version-migration-review", "oracle-unresolved-review-dispute"]) {
+  test("concrete risk alone selects reviewer and preserves read-only review", () => {
+    for (const id of ["reviewer-tenant-boundary-review", "reviewer-charge-retry-review", "reviewer-mixed-version-migration-review"]) {
       const entry = fixture.cases.find(candidate => candidate.id === id)!
       const result = resultFor(entry)
       expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
       expect(compareResult(entry, result)).toEqual([])
-      expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== "delegate-oracle-review") })).toEqual([
-        "missing required action delegate-oracle-review",
+      expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== "delegate-reviewer-review") })).toEqual([
+        "missing required action delegate-reviewer-review",
       ])
+      expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
       expect(compareResult(entry, { ...result, mutation: "requested-repo-writes" })).toEqual(["mutation: expected none, got requested-repo-writes"])
     }
+  })
+
+  test("unresolved disagreement after ordinary review permits Oracle escalation", () => {
+    const entry = fixture.cases.find(candidate => candidate.id === "oracle-unresolved-review-dispute")!
+    const result = resultFor(entry)
+    expect(compareResult(entry, result)).toEqual([])
+    expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== "delegate-oracle-review") })).toEqual(["missing required action delegate-oracle-review"])
   })
 
   test("billing copy and a small coupled helper still require one independent reviewer", () => {
@@ -576,9 +590,10 @@ describe("oracle review selection", () => {
       const entry = fixture.cases.find(candidate => candidate.id === id)!
       const result = resultFor(entry)
       expect(compareResult(entry, result)).toEqual([])
-      for (const action of ["delegate-oracle-review", "delegate-one-coupled-review"]) {
+      for (const action of ["delegate-reviewer-review", "delegate-one-coupled-review"]) {
         expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
       }
+      expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
       for (const action of ["keep-coupled-review-local", "delegate-independent-tracks", "dispatch-independent-tracks-in-parallel"]) {
         expect(compareResult(entry, { ...result, actions: [...result.actions, action] })).toEqual([`forbidden action ${action}`])
       }
@@ -586,7 +601,7 @@ describe("oracle review selection", () => {
   })
 
   test("migration review retains its data modifier and actual root references", () => {
-    const entry = fixture.cases.find(candidate => candidate.id === "oracle-mixed-version-migration-review")!
+    const entry = fixture.cases.find(candidate => candidate.id === "reviewer-mixed-version-migration-review")!
     const result = resultFor(entry)
     expect(compareResult(entry, { ...result, modifier_skills: [] })).toEqual([
       "modifier_skills: expected designing-data-intensive-systems, got ",
@@ -611,6 +626,13 @@ describe("oracle review selection", () => {
 })
 
 describe("source agent catalog", () => {
+  test("accepts the seven source roles including reviewer and Oracle", async () => {
+    const catalog = await agentCatalog(join(import.meta.dir, "../.."))
+    expect([...catalog.matchAll(/^- ([a-z_]+):/gm)].map(match => match[1])).toEqual([
+      "explorer", "fast_reviewer", "implementer", "librarian", "oracle", "reviewer", "verifier",
+    ])
+  })
+
   test("consumed symlinked profile changes alter provenance without traversing directory links", async () => {
     const root = await mkdtemp(join(tmpdir(), "routing-symlink-profile-"))
     try {

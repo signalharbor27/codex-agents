@@ -61,7 +61,8 @@ Start a new task after installation. Check both the exposed roles and an actual 
 - `explorer`: `gpt-6-sol` / `low`, repository structure, callers, and existing tests.
 - `librarian`: `gpt-6-sol` / `low`, external documentation and public code.
 - `verifier`: `gpt-6-sol` / `high`, running checks and reporting command evidence.
-- `oracle`: `gpt-6-astra` / `xhigh`, independent review, consequential design decisions, and unresolved technical questions.
+- `reviewer`: `gpt-6-sol` / `xhigh`, independent correctness and simplification review.
+- `oracle`: `gpt-6-astra` / `xhigh`, explicit user requests or concrete blockers that remain after investigation or ordinary review.
 - `fast_reviewer`: `gpt-6-luna` / `max`, bounded checks for unused code, dependency cycles, stale comments, and stubs.
 
 Use custom roles with explicit `fork_turns="none"` and a brief containing the goal, file ownership, contracts, acceptance criteria, and required evidence. Full-history forks inherit the parent role in hosts that expose that option. Generic agents inherit parent settings. See [Codex subagent settings](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents).
@@ -90,7 +91,7 @@ Start with the relevant entrypoint, such as [engineering/SKILL.md](skills/engine
 
 ### Review before completion
 
-Every implementation handoff or intended commit requires independent subagent review through `review-and-simplify-changes`, including small changes. Oracle reviews correctness and simplification; other roles provide focused evidence as needed. Defect reviewers use the host's `review-agent` skill when available.
+Every implementation handoff or intended commit requires independent subagent review through `review-and-simplify-changes`, including small changes. The reviewer checks correctness and simplification; other roles provide focused evidence as needed. Defect reviewers use the host's `review-agent` skill when available.
 
 Review the full intended diff first. After fixes, review the changed portions and affected contracts, retaining earlier evidence where it still applies. Check the integrated result before declaring completion. The main agent coordinates this loop; its own review cannot satisfy the independent-review requirement.
 

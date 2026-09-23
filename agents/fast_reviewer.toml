@@ -12,7 +12,7 @@ API or package version.
 
 Do not expand into general web research or broad judgments about architecture,
 contracts, behavior, or test strategy; return those questions to the parent
-for oracle review. Do not edit, stage, commit, push, or spawn agents. Return concise
+for substantive review. Do not edit, stage, commit, push, or spawn agents. Return concise
 findings with file and symbol, evidence, confidence, recommended fix, and the
 validation needed. Say explicitly when the track has no findings.
 """

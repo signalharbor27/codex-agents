@@ -50,11 +50,11 @@ Progressive review cases cover:
 - `follow-up-review-missing-snapshot`: recover coverage or review the full identifiable intended diff. The fixture makes recovery unavailable, so an assumed delta is insufficient.
 - `combined-slice-review`: inspect previously unreviewed wiring before relying on completed slice reviews.
 
-Every substantive pass requires independent Oracle review plus assigned Standards, Intent, and simplification coverage. The main agent orchestrates, judges findings, applies fixes, verifies, and owns completion; its own inspection cannot supply review coverage. Children stay nonrecursive. A reviewer may take fix follow-ups when it did not author the fixes.
+Every substantive pass requires independent `reviewer` coverage, including Standards, Intent, and simplification. Reserve `oracle` for an explicit user request or a concrete blocker that remains after investigation or ordinary review. The main agent orchestrates, judges findings, applies fixes, verifies, and owns completion; its own inspection cannot supply review coverage. Children stay nonrecursive. A reviewer may take fix follow-ups when it did not author the fixes.
 
 `forbidden_actions` applies only where the case excludes an action. New evidence can justify reopening earlier scope; the follow-up case states that no such evidence exists. Review cases load `review-and-simplify-changes/references/delegated-review.md` before assigning tracks. These classifications do not prove review depth, defect detection, or use of a host-provided `review-agent`.
 
-Tenant access, charge retries, mixed-version migrations, and unresolved review disputes retain their risk-specific coverage. The migration case requires the data-systems modifier and its foundations/transactions references because backfill, overlapping writers, and rollback affect durable data. `oracle-unresolved-review-dispute` also requires a delta pass and forbids an unnecessary full repeat.
+Tenant access, charge retries, and mixed-version migrations retain risk-specific coverage with `reviewer`; risk alone does not select `oracle`. The migration case requires the data-systems modifier and its foundations/transactions references because backfill, overlapping writers, and rollback affect durable data. `oracle-unresolved-review-dispute` tests escalation after ordinary reviewers investigate a concrete disagreement; it also requires a delta pass and forbids an unnecessary full repeat.
 
 - `billing-copy-independent-review` and `small-coupled-review`: one independent reviewer covers the coupled scope, even without a risk trigger.
 - `independent-review-tracks`: assign material tracks and dispatch them in parallel when capacity is available. Topics do not imply a fixed agent count.
@@ -62,10 +62,10 @@ Tenant access, charge retries, mixed-version migrations, and unresolved review d
 
 Role boundaries also cover ordinary delegated work:
 
-- `delegated-substantive-defect-review`: select `oracle` and the available host `review-agent`, assign Standards, Intent, and simplification to independent reviewers, and keep the outer loop with the main agent.
+- `delegated-substantive-defect-review`: select `reviewer` and the available host `review-agent`, assign Standards, Intent, and simplification to independent reviewers, and keep the outer loop with the main agent.
 - `delegated-mechanical-review-evidence`: select `fast_reviewer` for bounded symbol/import evidence.
 - `delegated-review-command-evidence`: select `verifier` for actual command results.
-- `oracle-design-advice` and `oracle-stalled-debugging-advice`: consult `oracle` without invoking defect review when there is no implementation diff.
+- `oracle-design-advice` explicitly requests Oracle. `oracle-stalled-debugging-advice` presents an unexplained crash after investigation. Both consult `oracle` without invoking defect review when there is no implementation diff.
 
 Action IDs record those role and skill choices; no host skill is added to the repository skill inventory. The fixtures state that `review-agent` is available where that condition matters. The tests classify the requested behavior without spawning agents or proving host skill invocation.
 
@@ -89,7 +89,7 @@ bun skills/evals/run-routing-evals.ts live --case implicit-grilling-frontier \
 [run-execution-evals.ts](run-execution-evals.ts) runs real edits and commands in disposable fixtures. Tasks describe the requested behavior. A skill catalog supplies discovery paths; a README identifies the local check. The prompt does not choose an owner or require completion wording.
 
 - `authorized-implementation`: change the greeting, verify it, and finish without asking again.
-- `automatic-independent-review`: the same ordinary implementation request with subagents allowed. Requires a successful fresh or bounded-context Oracle spawn, its actual returned review, and a later main-agent final response and completed turn. Main-agent claims alone cannot pass.
+- `automatic-independent-review`: the same ordinary implementation request with subagents allowed. Requires a successful fresh or bounded-context `reviewer` spawn, its actual returned review, and a later main-agent final response and completed turn. The parser also recognizes a genuine Oracle escalation; main-agent claims alone cannot pass.
 - `permission-citation`: draft both behavior facts, then ask for approval with the exact synthetic `release-preview/SKILL.md` path and quoted rule. The greeting is already implemented. Publication would create local `published-release.md`; creating it before exact-draft approval fails. A title alone fails. One relevant successful check is allowed.
 - `verification-reuse`: complete the change and check, then answer `Status?` using unchanged proof.
 - `status-preserves-objective`: pause after the edit for the first turn, then receive `Status?`; finish the original verification.
@@ -117,7 +117,7 @@ bun skills/evals/run-execution-evals.ts live --case automatic-independent-review
 
 The other execution cases explicitly prohibit subagents to isolate their own contracts; they do not establish automatic review. This case leaves the task prompt unchanged and removes that restriction. It uses the host's installed agent profiles, so source comparisons cover source skills and instructions with the same ambient profiles. It does not verify global profile installation or model selection inside the child.
 
-The saved rollout must contain correlated dispatch, successful spawn, and a nonempty final result from that same independent Oracle before the parent finishes. Missing or unsupported trace evidence fails the case. Unit negatives reject narrative-only review claims, failed dispatch, unrelated results, and late or missing completion.
+The saved rollout must contain correlated dispatch, successful spawn, and a nonempty final result from that same independent reviewer before the parent finishes. Missing or unsupported trace evidence fails the case. Unit negatives reject narrative-only review claims, failed dispatch, unrelated results, full-history forks, and late or missing completion.
 
 Lifecycle evidence establishes that an independent result reached the parent before handoff. Inspect the returned review and final response to assess scope coverage, finding resolution, and whether the parent incorporated it correctly. This bounded fixture does not prove review quality or the full fix/delta/integration loop across arbitrary projects.
 
