@@ -30,6 +30,7 @@ Verify the branch state and carry out the authorized integration choice. Ask onl
 
 - Reuse recorded proof across turns when the tested code and relevant state are unchanged. Run missing checks or repeat affected checks when code, state, or integration requirements change.
 - Use `describe-pr` when the next step is writing or updating the PR summary.
+- For authorized workspace removal, follow [using-git-worktrees](../using-git-worktrees/SKILL.md#authorized-cleanup).
 
 ## Failure modes
 

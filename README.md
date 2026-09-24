@@ -97,7 +97,7 @@ Review the full intended diff first. After fixes, review the changed portions an
 
 ## Workspaces
 
-Agent-created workspaces use Worktrunk. Reuse existing isolated task directories. Codex app-created worktrees retain the app's setup and cleanup lifecycle.
+Agent-created workspaces use Worktrunk. Reuse existing isolated task directories. Codex app-created worktrees retain the app's cleanup lifecycle; run setup in them explicitly when the app does not.
 
 See [using-git-worktrees](skills/using-git-worktrees/SKILL.md) and the [remote setup guide](skills/using-git-worktrees/references/worktrunk.md) for environment copying, dependencies, and this VPS's configuration.
 
