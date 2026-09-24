@@ -91,7 +91,7 @@ Start with the relevant entrypoint, such as [engineering/SKILL.md](skills/engine
 
 ### Review before completion
 
-Every implementation handoff or intended commit requires independent subagent review through `review-and-simplify-changes`, including small changes. The reviewer checks correctness and simplification; other roles provide focused evidence as needed. Defect reviewers use the host's `review-agent` skill when available.
+Every implementation handoff or intended commit requires independent subagent review through `review-and-simplify-changes`, including small changes. The reviewer checks correctness and simplification; other roles provide focused evidence as needed. Defect reviewers use the host's `review-agent` skill when available. On the first full pass, the main agent also runs `codex review` as a supplementary check.
 
 Review the full intended diff first. After fixes, review the changed portions and affected contracts, retaining earlier evidence where it still applies. Check the integrated result before declaring completion. The main agent coordinates this loop; its own review cannot satisfy the independent-review requirement.
 
