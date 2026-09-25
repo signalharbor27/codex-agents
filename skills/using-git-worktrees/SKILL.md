@@ -36,7 +36,7 @@ Follow `finishing-a-development-branch` for the integration/cleanup decision. Be
 
 For an agent-owned workspace whose removal is authorized, run `wt remove <branch-or-path> --no-delete-branch --foreground` from a retained workspace, then verify the exact path and registration are gone. Keep branch deletion separate. Stop on dirty/locked state or active references; resolve ownership rather than forcing removal. Stop only processes known to belong to the task within existing authority; Worktrunk's experimental `--reap` is not a blanket cleanup default.
 
-Host- or app-created workspaces, such as Codex app worktrees, retain their creator's cleanup ownership. Keep active existing paths stable.
+Host- or app-created workspaces retain their creator's cleanup ownership. Keep active existing paths stable.
 
 ## Reference Routing
 

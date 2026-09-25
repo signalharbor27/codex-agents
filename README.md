@@ -1,6 +1,6 @@
 # Codex agents and skills
 
-Q's global Codex instructions, skills, and agent profiles. The main chat uses GPT-6 Astra at `medium`; each custom agent sets its own model and reasoning effort.
+Q's global instructions, skills, and agent profiles for Codex and Claude Code. In Codex, the main chat uses GPT-6 Astra at `medium`; each custom agent sets its own model and reasoning effort.
 
 ## Install
 
@@ -19,7 +19,9 @@ The installer copies skills. After updates, reinstall the selected skills and co
 
 ### Global instructions
 
-[AGENTS.md](AGENTS.md) defines scope, permissions, delegation, verification, and Git rules. Project instructions supply local commands and conventions.
+The global instructions cover scope, permissions, delegation, verification, and Git rules. Project instructions supply local commands and conventions.
+
+Edit [instructions/global.md](instructions/global.md) and [instructions/response-style.md](instructions/response-style.md), then run `bun scripts/generate-hosts.ts`. It writes `AGENTS.md` for Codex and the Claude Code files under `claude/`. Lines that differ between hosts sit in `<!-- host:codex -->` and `<!-- host:claude -->` blocks next to the rule they belong to. Do not edit the generated files directly; `--check` fails when they drift from the source.
 
 Codex reads `$CODEX_HOME/AGENTS.md`, normally `~/.codex/AGENTS.md`. On Q's installation, that file links through `~/.agents/AGENTS.md` to this repository's `AGENTS.md`. Check the links on another machine before editing. Start a new task to load changed instructions.
 
@@ -91,13 +93,29 @@ Start with the relevant entrypoint, such as [engineering/SKILL.md](skills/engine
 
 ### Review before completion
 
-Every implementation handoff or intended commit requires independent subagent review through `review-and-simplify-changes`, including small changes. The reviewer checks correctness and simplification; other roles provide focused evidence as needed. Defect reviewers use the host's `review-agent` skill when available. On the first full pass, the main agent also runs `codex review` as a supplementary check.
+Every implementation handoff or intended commit requires independent subagent review through `review-and-simplify-changes`, including small changes. The reviewer checks correctness and simplification; other roles provide focused evidence as needed. Defect reviewers use the `review-agent` skill. On the first full pass, the main agent also runs `codex review` as a supplementary check.
 
 Review the full intended diff first. After fixes, review the changed portions and affected contracts, retaining earlier evidence where it still applies. Check the integrated result before declaring completion. The main agent coordinates this loop; its own review cannot satisfy the independent-review requirement.
 
+## Claude Code
+
+Claude Code runs from the same checkout. From the main checkout (install refuses to run from a linked worktree), run:
+
+```bash
+bun scripts/generate-hosts.ts --install
+```
+
+This links `~/.claude/CLAUDE.md`, `~/.claude/agents`, the `Q` output style, and the reply-guard hook to `claude/`, and links Codex's built-in `review-agent` skill into `~/.claude/skills`. It also writes each key of [claude/settings.fragment.json](claude/settings.fragment.json) into `~/.claude/settings.json`, replacing that key's installed value and listing the permission rules and hooks it removes. Keys the fragment doesn't name, including `env`, stay as they are, so tokens stay out of the repository. Replaced files go to `~/.claude/backups/`.
+
+The generator writes `AGENTS.md`, `claude/CLAUDE.md`, `claude/agents/*.md`, and `claude/output-styles/q.md`. Everything else under `claude/` is source.
+
+[claude/roles.ts](claude/roles.ts) sets each Claude agent's model, effort, tools, and preloaded skills. The `Q` output style puts the reply rules from `instructions/response-style.md` into Claude's system prompt. The [reply-guard hook](claude/hooks/reply-guard.ts) stops a reply that ends by offering to continue, and reminds Claude of the word budget after a long reply.
+
+`bun scripts/generate-hosts.ts --check-installed` reports broken links, settings drift, and installed skill copies that differ from `skills/`.
+
 ## Workspaces
 
-Agent-created workspaces use Worktrunk. Reuse existing isolated task directories. Codex app-created worktrees retain the app's cleanup lifecycle; run setup in them explicitly when the app does not.
+Agent-created workspaces use Worktrunk. Reuse existing isolated task directories. Worktrees created by a host or app (Codex app, Claude Code, T3 Code) keep their creator's cleanup lifecycle; run setup in them explicitly when the app does not.
 
 See [using-git-worktrees](skills/using-git-worktrees/SKILL.md) and the [remote setup guide](skills/using-git-worktrees/references/worktrunk.md) for environment copying, dependencies, and this VPS's configuration.
 
@@ -114,7 +132,8 @@ The local suite validates skill metadata, references, agent profiles, and evalua
 
 ```bash
 bash skills/evals/check-skill-surface.sh
-bun test skills/evals
+bash skills/evals/check-skill-surface.sh --installed   # also checks the live install
+bun test skills/evals scripts claude
 bun skills/evals/run-routing-evals.ts dry-run
 ```
 
