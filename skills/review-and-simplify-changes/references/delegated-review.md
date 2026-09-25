@@ -28,7 +28,7 @@ Reviewers return after their assigned pass. The parent coordinates fixes; `verif
 
 ## Delegate the selected track
 
-- Discover the built-in `review-agent` skill in the current host and give defect reviewers its actual path. Read it before dispatch. It is host-provided; do not assume this repository installs it or hard-code a home directory. If unavailable, give an available reviewer equivalent read-only instructions from this brief.
+- Give defect reviewers the `review-agent` skill and read it before dispatch. When the reviewer does not preload it, pass the host's actual path; do not hard-code a home directory. If the host lacks it, give an available reviewer equivalent read-only instructions from this brief.
 - Assign reviewers who did not implement the changes or fixes they judge. A verifier supplies command evidence separately.
 - Supply intent, applicable rules, exact base and reviewed snapshot, the current target, owned paths or concern, prior findings and dispositions, and required evidence. For follow-ups, provide the delta since the previous reviewed snapshot and enough original context to verify fixes and affected contracts. Keep review inputs stable or isolate a snapshot; later writes remain unreviewed.
 - Include the original requested outcome, consequential interpretations, material contracts and assumptions, and what the supplied proof establishes or leaves uncertain. Give reviewers paths or excerpts from original evidence so they can challenge the implementer's summary. Distinguish an experiment's limits from conclusions about the requested outcome.

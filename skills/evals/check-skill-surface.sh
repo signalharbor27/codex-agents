@@ -2,7 +2,16 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${1:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+CHECK_INSTALLED=0
+ROOT=""
+for arg in "$@"; do
+  if [[ "$arg" == "--installed" ]]; then
+    CHECK_INSTALLED=1
+  elif [[ -z "$ROOT" ]]; then
+    ROOT="$arg"
+  fi
+done
+ROOT="${ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 
 if ! command -v bun >/dev/null 2>&1; then
@@ -43,5 +52,11 @@ reject_matches "$legacy_host_pattern" "found legacy host vocabulary in active sk
 stacked_eval_pattern='mandatory_router|secondary_skills|expected_sequence'
 reject_matches "$stacked_eval_pattern" "found retired stacked-routing vocabulary in eval contracts" \
   "$SCRIPT_DIR" --glob '*.json' --glob '*.ts' --glob '*.md'
+
+# Generated host artifacts (AGENTS.md, claude/) must match instructions/ and agents/.
+bun "$REPO_ROOT/scripts/generate-hosts.ts" --check
+if ((CHECK_INSTALLED)); then
+  bun "$REPO_ROOT/scripts/generate-hosts.ts" --check-installed
+fi
 
 echo "skill surface checks passed"

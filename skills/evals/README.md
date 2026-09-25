@@ -4,7 +4,7 @@ The validator checks inventory, invocation metadata, frontmatter, description an
 
 ```bash
 bash skills/evals/check-skill-surface.sh
-bun test skills/evals/*.test.ts
+TMPDIR=/tmp bun test skills/evals scripts claude
 bun skills/evals/run-routing-evals.ts dry-run --case no-applicable-skill
 bun skills/evals/run-execution-evals.ts dry-run --all
 ```
