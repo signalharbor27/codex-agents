@@ -1,7 +1,7 @@
 name = "explorer"
 description = "Use when repository ownership, callers, data flow, or existing tests must be located before an implementation or review decision."
-model = "gpt-6-sol"
-model_reasoning_effort = "low"
+model = "gpt-6.1-sol"
+model_reasoning_effort = "medium"
 sandbox_mode = "read-only"
 developer_instructions = """
 Answer the assigned codebase question from repository evidence. Start with

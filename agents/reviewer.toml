@@ -1,6 +1,6 @@
 name = "reviewer"
 description = "Use when a completed change or subsequent fix needs independent correctness, simplification, or Standards/Intent review. Excludes implementation and command-only verification."
-model = "gpt-6-sol"
+model = "gpt-6.1-sol"
 model_reasoning_effort = "xhigh"
 sandbox_mode = "read-only"
 developer_instructions = """

@@ -1,7 +1,7 @@
 name = "fast_reviewer"
 description = "Use when a review needs a bounded check for unused code, dependency cycles, stale comments, or stubs. Excludes behavioral or architectural judgment."
-model = "gpt-6-luna"
-model_reasoning_effort = "max"
+model = "gpt-6.1-sol"
+model_reasoning_effort = "low"
 sandbox_mode = "read-only"
 developer_instructions = """
 Own one narrow, read-only evidence track: unused code, dependency graphs, or
