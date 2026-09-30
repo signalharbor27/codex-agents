@@ -1,6 +1,6 @@
 # Codex agents and skills
 
-Q's global instructions, skills, and agent profiles for Codex and Claude Code. In Codex, the main chat uses GPT-6 Astra at `medium`; each custom agent sets its own model and reasoning effort.
+Q's global instructions, skills, and agent profiles for Codex and Claude Code. In Codex, the main chat uses GPT-6.1 Sol at `xhigh`; each custom agent sets its own model and reasoning effort.
 
 ## Install
 
@@ -59,13 +59,13 @@ Start a new task after installation. Check both the exposed roles and an actual 
 
 ## Agents
 
-- `implementer`: `gpt-6-sol` / `xhigh`, implementation slices with agreed contracts and acceptance criteria.
-- `explorer`: `gpt-6-sol` / `low`, repository structure, callers, and existing tests.
-- `librarian`: `gpt-6-sol` / `low`, external documentation and public code.
-- `verifier`: `gpt-6-sol` / `high`, running checks and reporting command evidence.
-- `reviewer`: `gpt-6-sol` / `xhigh`, independent correctness and simplification review.
+- `implementer`: `gpt-6.1-sol` / `high`, implementation slices with agreed contracts and acceptance criteria.
+- `explorer`: `gpt-6.1-sol` / `medium`, repository structure, callers, and existing tests.
+- `librarian`: `gpt-6.1-sol` / `medium`, external documentation and public code.
+- `verifier`: `gpt-6.1-sol` / `high`, running checks and reporting command evidence.
+- `reviewer`: `gpt-6.1-sol` / `xhigh`, independent correctness and simplification review.
 - `oracle`: `gpt-6-astra` / `xhigh`, explicit user requests or concrete blockers that remain after investigation or ordinary review.
-- `fast_reviewer`: `gpt-6-luna` / `max`, bounded checks for unused code, dependency cycles, stale comments, and stubs.
+- `fast_reviewer`: `gpt-6.1-sol` / `low`, bounded checks for unused code, dependency cycles, stale comments, and stubs.
 
 Use custom roles with explicit `fork_turns="none"` and a brief containing the goal, file ownership, contracts, acceptance criteria, and required evidence. Full-history forks inherit the parent role in hosts that expose that option. Generic agents inherit parent settings. See [Codex subagent settings](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents).
 
@@ -151,7 +151,7 @@ The verification and investigation skills, plus selected engineering references,
 
 Prompt and skill guidance:
 
-- [OpenAI GPT-6 Astra guidance](https://developers.openai.com/api/docs/guides/latest-model)
+- [OpenAI GPT-6 guidance](https://developers.openai.com/api/docs/guides/latest-model)
 - [Rethinking skills and prompts for GPT-6 Astra](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra)
 - [OpenAI Multi-agent deployment guidance](https://developers.openai.com/api/docs/guides/deployment-checklist#use-multi-agent-for-parallel-work)
 - [Codex subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents)
