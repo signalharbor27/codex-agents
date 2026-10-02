@@ -19,6 +19,9 @@
       "CronCreate",
       "CronDelete",
       "CronList"
+    ],
+    "ask": [
+      "Bash(sudo *)"
     ]
   },
   "disableClaudeAiConnectors": true,
