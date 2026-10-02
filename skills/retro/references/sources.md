@@ -36,7 +36,7 @@ Use GitHub REST through `gh api`; the shared GraphQL quota is often exhausted.
 
 ```bash
 gh api 'repos/<owner>/<repo>/pulls?state=closed&sort=updated&direction=desc&per_page=50' \
-  --jq '.[] | select(.merged_at != null and .merged_at >= "<since>") | [.number, .merged_at, .title] | @tsv'
+  --jq '.[] | select(.merged_at != null and .merged_at >= "<since>") | [.number, .merged_at, .title, (.body // "" | @json)] | @tsv'
 gh api --paginate repos/<owner>/<repo>/pulls/<n>/comments \
   --jq '.[] | [.created_at, .user.login, .path, (.body | .[0:300])] | @tsv'
 gh api --paginate repos/<owner>/<repo>/pulls/<n>/reviews --jq '.[] | [.submitted_at, .user.login, .state, (.body | .[0:300])] | @tsv'

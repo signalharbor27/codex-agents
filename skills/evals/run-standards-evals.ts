@@ -14,7 +14,7 @@ import {
   shutdownCleanups,
   validateModelOptions,
 } from "./run-routing-evals.ts"
-import { STANDARDS_CASES, STANDARDS_CATEGORIES, type PlantedDefect, type StandardsCase, type StandardsCategory } from "./standards-cases.ts"
+import { FINDING_ORIGINS, STANDARDS_CASES, STANDARDS_CATEGORIES, type FindingOrigin, type PlantedDefect, type StandardsCase, type StandardsCategory } from "./standards-cases.ts"
 
 const DEFAULT_SOURCE_ROOT = resolve(import.meta.dir, "../..")
 export const STANDARDS_RELATIVE_PATH = "skills/review-and-simplify-changes/references/coding-standards.md"
@@ -52,22 +52,24 @@ export const STANDARDS_RESULT_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["file", "category", "summary"],
+        required: ["file", "category", "summary", "origin"],
         properties: {
           file: { type: "string" },
           category: { type: "string", enum: [...STANDARDS_CATEGORIES] },
           summary: { type: "string" },
+          origin: { type: "string", enum: [...FINDING_ORIGINS] },
         },
       },
     },
   },
 } as const
 
-export type StandardsFinding = { file: string; category: StandardsCategory; summary: string }
+export type StandardsFinding = { file: string; category: StandardsCategory; summary: string; origin: FindingOrigin }
 export type StandardsVerdict = {
   pass: boolean
   // "no-evidence": a finding had the right file and category but its summary named none of the plant's evidence tokens.
-  missing: { category: StandardsCategory; files: string[]; reason: "not-found" | "no-evidence" }[]
+  // "wrong-origin": a located, evidenced finding carried a different origin than the plant requires.
+  missing: { category: StandardsCategory; files: string[]; reason: "not-found" | "no-evidence" | "wrong-origin" }[]
   // Control-case findings; every one fails the control.
   false_positives: StandardsFinding[]
   // Findings in defect cases that match no plant; more than MAX_STANDARDS_EXTRAS fails the case.
@@ -195,13 +197,14 @@ export function buildStandardsPrompt(diff: string, fixtureRoot: string, standard
   const categories = STANDARDS_CATEGORIES.map(id => `- ${id}: ${CATEGORY_MEANINGS[id]}`).join("\n")
   return `Review the uncommitted change in the repository at ${fixtureRoot}. The diff is below; read files there for context.
 
-Apply the coding standards in ${standardsPath}. Read that file first, and read CODING_STANDARDS.md at the repository root when present. Report every actionable finding in code the diff adds or changes, including defects the standards do not name. Return an empty findings array when nothing is actionable; do not report praise, preferences no standard covers, or pre-existing code.
+Apply the coding standards in ${standardsPath}. Read that file first, and read CODING_STANDARDS.md at the repository root when present. Report every actionable finding in each file the diff touches, including code in those files that predates the diff and defects the standards do not name. Return an empty findings array when nothing is actionable; do not report praise, preferences no standard covers, or files the diff leaves untouched.
 
 For each finding return:
 - file: path relative to the repository root
 - category: exactly one of these ids
 ${categories}
 - summary: one sentence naming the problem and the fix
+- origin: new when the diff adds or changes the code, touched when the code predates the diff
 
 This is a read-only review. Do not edit files.
 
@@ -234,7 +237,8 @@ export function parseStandardsResult(text: string): StandardsFinding[] {
     if (typeof record?.file !== "string" || typeof record.summary !== "string" || !STANDARDS_CATEGORIES.includes(record.category as StandardsCategory)) {
       throw new Error(`reviewer finding ${index} must have file, a known category, and summary`)
     }
-    return { file: record.file, category: record.category as StandardsCategory, summary: record.summary }
+    if (!FINDING_ORIGINS.includes(record.origin as FindingOrigin)) throw new Error(`reviewer finding ${index} needs origin new or touched`)
+    return { file: record.file, category: record.category as StandardsCategory, summary: record.summary, origin: record.origin as FindingOrigin }
   })
 }
 
@@ -254,7 +258,9 @@ export function judgeStandards(entry: StandardsCase, findings: StandardsFinding[
   const missing: StandardsVerdict["missing"] = []
   for (const plant of entry.planted) {
     const candidates = located.filter(finding => locates(plant, finding))
-    if (!candidates.some(finding => evidences(plant, finding))) missing.push({ category: plant.category, files: plant.files, reason: candidates.length ? "no-evidence" : "not-found" })
+    const evidenced = candidates.filter(finding => evidences(plant, finding))
+    if (!evidenced.length) missing.push({ category: plant.category, files: plant.files, reason: candidates.length ? "no-evidence" : "not-found" })
+    else if (plant.origin && !evidenced.some(finding => finding.origin === plant.origin)) missing.push({ category: plant.category, files: plant.files, reason: "wrong-origin" })
   }
   const extra = located.filter(finding => !entry.planted.some(plant => locates(plant, finding)))
   return { pass: missing.length === 0 && extra.length <= MAX_STANDARDS_EXTRAS, missing, false_positives: [], extra }

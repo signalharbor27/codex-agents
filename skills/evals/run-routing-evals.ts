@@ -40,6 +40,8 @@ export type RoutingCase = {
   expected_references: string[]
   // References a correct route may load but need not, e.g. a path the skill names for reviewer briefs.
   optional_references?: string[]
+  // Modifiers a correct route may name but need not, e.g. skills that delegated reviewers apply.
+  optional_modifier_skills?: string[]
   required_actions: string[]
   forbidden_actions?: string[]
   expectations: Expectations
@@ -118,7 +120,7 @@ const CASE_KEYS = [
   "required_actions",
   "expectations",
 ] as const
-const OPTIONAL_CASE_KEYS: readonly string[] = ["forbidden_actions", "optional_references"]
+const OPTIONAL_CASE_KEYS: readonly string[] = ["forbidden_actions", "optional_references", "optional_modifier_skills"]
 const EXPECTATION_KEYS = ["first_action", "mutation", "question", "stop"] as const
 const RESULT_KEYS = [
   "primary_skill",
@@ -587,8 +589,10 @@ export function validateCase(
   const actions = strings(value.required_actions)
   const forbiddenActions = "forbidden_actions" in value ? strings(value.forbidden_actions) : []
   const optionalReferences = "optional_references" in value ? strings(value.optional_references) : []
+  const optionalModifiers = "optional_modifier_skills" in value ? strings(value.optional_modifier_skills) : []
   for (const [key, values] of [
     ["expected_modifier_skills", modifiers],
+    ["optional_modifier_skills", optionalModifiers],
     ["expected_references", expectedReferences],
     ["optional_references", optionalReferences],
     ["required_actions", actions],
@@ -597,7 +601,7 @@ export function validateCase(
     if (!values) errors.push(`${label}.${key} must be a string array`)
     else if (!isUnique(values)) errors.push(`${label}.${key} must not contain duplicates`)
   }
-  for (const modifier of modifiers ?? []) {
+  for (const modifier of [...(modifiers ?? []), ...(optionalModifiers ?? [])]) {
     if (hostSkills.has(modifier)) errors.push(`${label} expects host skill ${modifier}; host skills are ignored by comparison`)
     else if (!skills.has(modifier)) errors.push(`${label} references unknown modifier ${modifier}`)
     if (modifier === value.primary_skill) errors.push(`${label} repeats primary skill as a modifier`)
@@ -681,7 +685,10 @@ export function validateCase(
     if (caseActions.includes("dispatch-independent-tracks-in-parallel") && !caseActions.includes("delegate-independent-tracks")) {
       errors.push(`${label} parallel review must assign independent tracks`)
     }
-    const pinsFirst = isRecord(value.expectations) && value.expectations.first_action === "pin-review-scope"
+    // A continuing review may start by evaluating the open findings it was handed instead of re-pinning scope.
+    const firstAction = isRecord(value.expectations) ? value.expectations.first_action : undefined
+    const pinsFirst = firstAction === "pin-review-scope" ||
+      (Array.isArray(firstAction) && firstAction.includes("pin-review-scope") && firstAction.every(item => item === "pin-review-scope" || item === "evaluate-feedback"))
     if (!caseActions.includes("pin-review-scope") && !pinsFirst) errors.push(`${label} review must pin scope`)
     if (single && !caseActions.includes("keep-task-read-only")) {
       errors.push(`${label} single-track review must remain read-only`)
@@ -922,7 +929,8 @@ export function compareResult(routingCase: RoutingCase, result: RoutingResult, h
   if (result.primary_skill !== routingCase.primary_skill) {
     failures.push(`primary_skill: expected ${routingCase.primary_skill}, got ${result.primary_skill}`)
   }
-  const modifiers = result.modifier_skills.filter(skill => !hostSkills.includes(skill))
+  const optionalModifiers = routingCase.optional_modifier_skills ?? []
+  const modifiers = result.modifier_skills.filter(skill => !hostSkills.includes(skill) && !optionalModifiers.includes(skill))
   if (!sameMembers(modifiers, routingCase.expected_modifier_skills)) {
     failures.push(
       `modifier_skills: expected ${routingCase.expected_modifier_skills.join(",")}, got ${modifiers.join(",")}`,

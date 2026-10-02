@@ -1,6 +1,6 @@
 # Coding standards
 
-Apply these when judging a diff or proposing a standard. Each standard names what to flag, the fix, and where it stops applying. Judge code the diff adds or changes plus its direct effects; list pre-existing instances separately. Report a violation as a Standards finding that cites the standard's name, location, evidence, and fix.
+Apply these when judging a diff or proposing a standard. Each standard names what to flag, the fix, and where it stops applying. Judge every touched file in full, plus the change's direct effects; scope and tags are defined under [Classify each finding](#classify-each-finding). Report a violation as a Standards finding that cites the standard's name, location, evidence, and fix.
 
 ## Repo extension
 
@@ -10,18 +10,26 @@ A `CODING_STANDARDS.md` at the repository root adds project rules or overrides t
 
 - **Mechanical**: a lint rule, type setting, grep, or test could detect it reliably, such as a test that reads source files, a re-asserted literal constant, `as any`, or an ownerless `TODO`. Report it with the suggested deterministic check so it stops recurring.
 - **Reviewed**: only a reader of intent or design can detect it, such as module depth or whether a comment explains a why. Report it with evidence. A recurring reviewed finding becomes a rule in this file or the repo extension, since no check can carry it.
-- This mechanical/reviewed axis is about detection. The separate `fix: clear|judgement` tag says whether the fix is settled enough for `refiner`; a reviewed finding can still have a clear fix.
+- This mechanical/reviewed axis is about detection. The origin and fix tags below are separate; a reviewed finding can still have a clear fix.
+- **Scope**: the touched files are those the first-pass snapshot changes, frozen there. A file that a later fix edits for the first time is judged only on its changed lines. Generated, vendored, lock, and snapshot files are judged only on changed lines.
+- **Origin**: `origin: new` when the diff adds or changes the code; `origin: touched` when the code predates the diff in a touched file. Large-change audit findings in untouched files of a touched subsystem count as `origin: touched`.
+- **Fix tag**, one per Standards finding:
+  - `fix: clear`: the edit preserves behavior, stays within the touched files and their direct tests, changes no exported or public signature or contract, and has one remedy the cited standard names. `refiner` applies it.
+  - `fix: audit`: the fix needs an untouched file, a cross-module redesign, or a public contract change, or would exceed the touched-origin budget below.
+  - `fix: judgement`: the remedy is open; the main agent decides.
+- **Touched-origin caps**: clear touched-origin fixes together may add at most as many changed lines as the original diff, or 200 lines if that is smaller; retag the rest `fix: audit` and bundle them into one audit item. In the one-way-door and hot-path review lanes, every touched-origin finding is `fix: audit`.
+- **Audit items**: a `fix: audit` finding with `origin: touched` is complete once it is listed under `## Audit items` in the PR body when a PR exists, otherwise in the handoff. That listed state is terminal: it is not an open finding and does not count toward `--open-findings`. New code must meet the standards, so a `fix: audit` finding with `origin: new` stays open until it is fixed or Q explicitly defers it.
 - Name the standard behind every Standards finding. A preference that no standard covers belongs in synthesis as a proposed standard, not as a finding.
 
 ## Module design
 
-Doctrine and sources live in `engineering/references/boundary-design.md`; read it when depth or ownership is disputed. Flag at diff level:
+Doctrine and sources live in `engineering/references/boundary-design.md`; read it when depth or ownership is disputed. Flag in touched files:
 
-- **Shallow module**: a new function, class, file, service, or package whose interface is about as large as what it hides, or that serves one caller with little leverage. Apply the deletion test: if deleting it would move only a few lines and no policy into callers, it is shallow. Fix: inline it into the caller or the existing owner. Keep it when it hides policy, provider quirks, storage layout, or coordination, or protects a stable contract.
+- **Shallow module**: a function, class, file, service, or package whose interface is about as large as what it hides, or that serves one caller with little leverage. Apply the deletion test: if deleting it would move only a few lines and no policy into callers, it is shallow. Fix: inline it into the caller or the existing owner. Keep it when it hides policy, provider quirks, storage layout, or coordination, or protects a stable contract.
 - **Pass-through layer**: a wrapper, re-export, adapter, or mapping type that forwards calls or copies fields unchanged. Fix: call the owner directly and drop the parallel type. Keep it when it enforces a trust, lifecycle, or compatibility boundary, such as parsing untrusted input once.
 - **Hypothetical seam**: an interface, port, factory, injection point, or config option with one implementation. Fix: write the concrete code and add the seam when a second adapter arrives. Keep it when a second real adapter exists (a materially different test fake used by tests counts) or it hides real external complexity or policy variation.
 - **Scattered invariant**: one rule, validation, constant, or mapping enforced in two places, or callers re-checking what the owner guarantees. Fix: give the invariant one owner and have callers ask it. Keep a second check at a separate trust boundary such as another process or an external input; similar syntax that encodes different knowledge is not duplication.
-- **Lost locality**: following one behaviour means hopping through new one-use helpers or tiny files. Fix: keep use-case flow near its entrypoint; three clear lines beat a helper used once. Keep a helper that hides volatile protocol, storage, or coordination mechanics.
+- **Lost locality**: following one behaviour means hopping through one-use helpers or tiny files. Fix: keep use-case flow near its entrypoint; three clear lines beat a helper used once. Keep a helper that hides volatile protocol, storage, or coordination mechanics.
 
 ## Test lies
 
@@ -53,4 +61,4 @@ Flag placeholder or stub code too: a body that returns a hard-coded or empty val
 
 ## Errors, fallbacks, and weak types
 
-Detail lives in the weak-types, error-handling, and legacy/fallback topics of the eight-topic checklist in `review-and-simplify-changes/SKILL.md`. At diff level, flag a catch or fallback that hides a failure, a default that masks missing data, and `any` or casts where the real shape is known. Keep boundary handling for untrusted input, external systems, cleanup, retries, and user-safe errors.
+Detail lives in the weak-types, error-handling, and legacy/fallback topics of the eight-topic checklist in `review-and-simplify-changes/SKILL.md`. In touched files, flag a catch or fallback that hides a failure, a default that masks missing data, and `any` or casts where the real shape is known. Keep boundary handling for untrusted input, external systems, cleanup, retries, and user-safe errors.

@@ -19,6 +19,10 @@ export const STANDARDS_CATEGORIES = [
 
 export type StandardsCategory = (typeof STANDARDS_CATEGORIES)[number]
 
+// "new": code the diff adds or changes; "touched": pre-existing code in a file the diff touches.
+export const FINDING_ORIGINS = ["new", "touched"] as const
+export type FindingOrigin = (typeof FINDING_ORIGINS)[number]
+
 export type PlantedDefect = {
   category: StandardsCategory
   // Any listed category id satisfies the plant; the first is canonical.
@@ -28,6 +32,8 @@ export type PlantedDefect = {
   // A matching finding's summary must name at least one of these (case-insensitive), so a
   // finding that guesses the category without locating the defect does not count.
   evidence: string[]
+  // When set, a matching finding must carry this origin.
+  origin?: FindingOrigin
 }
 
 export type StandardsCase = {
@@ -221,7 +227,7 @@ test("keeps the same SKU at different prices on separate lines", () => {
     id: "shallow-module",
     before: { "package.json": PACKAGE },
     after: {
-      "src/invoice.ts": `export type Customer = { id: string; taxRate: number; discountPercent: number }
+      "src/invoice.ts": `export type Customer = { id: string; taxRate: number; discountRate: number }
 
 export function lookupCustomer(customers: Map<string, Customer>, id: string): Customer {
   const customer = customers.get(id)
@@ -234,7 +240,7 @@ export function subtotalCents(lineCents: number[]): number {
 }
 
 export function applyDiscount(cents: number, customer: Customer): number {
-  return cents * (1 - customer.discountPercent / 100)
+  return cents * (1 - customer.discountRate)
 }
 
 export function applyTax(cents: number, customer: Customer): number {
@@ -271,6 +277,91 @@ export function adminInvoiceTotal(customers: Map<string, Customer>, id: string, 
 `,
     },
     planted: [{ category: "shallow-module", accept: ["shallow-module", "pass-through-layer", "lost-locality", "scattered-invariant"], files: ["src/invoice.ts", "src/checkout.ts", "src/admin.ts"], evidence: ["applyDiscount", "applyTax", "lookupCustomer", "subtotalCents", "roundCents", "formatCents"] }],
+  },
+  {
+    id: "touched-tautological-test",
+    before: {
+      "package.json": PACKAGE,
+      "src/pagination.ts": `export const DEFAULT_PAGE_SIZE = 20
+
+export function pageCount(totalItems: number, pageSize = DEFAULT_PAGE_SIZE): number {
+  if (!Number.isInteger(totalItems) || totalItems < 0) throw new RangeError("totalItems must be a non-negative integer")
+  if (!Number.isInteger(pageSize) || pageSize < 1) throw new RangeError("pageSize must be a positive integer")
+  return Math.ceil(totalItems / pageSize)
+}
+`,
+      "src/pagination.test.ts": `import { expect, test } from "bun:test"
+import { DEFAULT_PAGE_SIZE, pageCount } from "./pagination"
+
+test("default page size is 20", () => {
+  expect(DEFAULT_PAGE_SIZE).toBe(20)
+})
+
+test("rounds partial pages up", () => {
+  expect(pageCount(41)).toBe(3)
+  expect(pageCount(40)).toBe(2)
+  expect(pageCount(0)).toBe(0)
+  expect(pageCount(10, 3)).toBe(4)
+})
+
+test("rejects counts and sizes that cannot form pages", () => {
+  expect(() => pageCount(-1)).toThrow(RangeError)
+  expect(() => pageCount(1.5)).toThrow(RangeError)
+  expect(() => pageCount(10, 0)).toThrow(RangeError)
+})
+`,
+    },
+    after: {
+      "src/pagination.ts": `export const DEFAULT_PAGE_SIZE = 20
+
+export function pageCount(totalItems: number, pageSize = DEFAULT_PAGE_SIZE): number {
+  if (!Number.isInteger(totalItems) || totalItems < 0) throw new RangeError("totalItems must be a non-negative integer")
+  if (!Number.isInteger(pageSize) || pageSize < 1) throw new RangeError("pageSize must be a positive integer")
+  return Math.ceil(totalItems / pageSize)
+}
+
+export function pageRange(page: number, totalItems: number, pageSize = DEFAULT_PAGE_SIZE): { start: number; end: number } {
+  const lastPage = Math.max(pageCount(totalItems, pageSize), 1)
+  if (!Number.isInteger(page) || page < 1 || page > lastPage) throw new RangeError(\`page must be an integer from 1 to \${lastPage}\`)
+  const start = (page - 1) * pageSize
+  return { start, end: Math.min(start + pageSize, totalItems) }
+}
+`,
+      "src/pagination.test.ts": `import { expect, test } from "bun:test"
+import { DEFAULT_PAGE_SIZE, pageCount, pageRange } from "./pagination"
+
+test("default page size is 20", () => {
+  expect(DEFAULT_PAGE_SIZE).toBe(20)
+})
+
+test("rounds partial pages up", () => {
+  expect(pageCount(41)).toBe(3)
+  expect(pageCount(40)).toBe(2)
+  expect(pageCount(0)).toBe(0)
+  expect(pageCount(10, 3)).toBe(4)
+})
+
+test("rejects counts and sizes that cannot form pages", () => {
+  expect(() => pageCount(-1)).toThrow(RangeError)
+  expect(() => pageCount(1.5)).toThrow(RangeError)
+  expect(() => pageCount(10, 0)).toThrow(RangeError)
+})
+
+test("returns the item range of a page, with a short last page and an empty first page", () => {
+  expect(pageRange(1, 41)).toEqual({ start: 0, end: 20 })
+  expect(pageRange(3, 41)).toEqual({ start: 40, end: 41 })
+  expect(pageRange(2, 10, 3)).toEqual({ start: 3, end: 6 })
+  expect(pageRange(1, 0)).toEqual({ start: 0, end: 0 })
+})
+
+test("rejects pages outside the available range", () => {
+  expect(() => pageRange(0, 41)).toThrow(RangeError)
+  expect(() => pageRange(4, 41)).toThrow(RangeError)
+  expect(() => pageRange(2, 0)).toThrow(RangeError)
+})
+`,
+    },
+    planted: [{ category: "tautological-test", files: ["src/pagination.test.ts"], evidence: ["DEFAULT_PAGE_SIZE", "20"], origin: "touched" }],
   },
   {
     id: "clean-control",
@@ -351,6 +442,77 @@ test("reading a stored undefined value still protects it from eviction", () => {
 
 test("rejects capacities that cannot hold an entry", () => {
   for (const capacity of [0, -1, 1.5, Number.NaN]) expect(() => new LruCache(capacity)).toThrow(RangeError)
+})
+`,
+    },
+    planted: [],
+  },
+  {
+    id: "untouched-smell-control",
+    before: {
+      "package.json": PACKAGE,
+      "src/duration.ts": `const UNIT_MS = new Map([
+  ["ms", 1],
+  ["s", 1_000],
+  ["m", 60_000],
+])
+
+export function parseDuration(text: string): number {
+  const match = /^(\\d+)([a-z]+)$/.exec(text.trim())
+  const unitMs = match ? UNIT_MS.get(match[2]) : undefined
+  if (!match || unitMs === undefined) throw new RangeError(\`invalid duration: \${JSON.stringify(text)}\`)
+  return Number(match[1]) * unitMs
+}
+`,
+      "src/duration.test.ts": `import { expect, test } from "bun:test"
+import { parseDuration } from "./duration"
+
+test("converts each unit to milliseconds", () => {
+  expect(parseDuration("250ms")).toBe(250)
+  expect(parseDuration("2s")).toBe(2_000)
+  expect(parseDuration(" 3m ")).toBe(180_000)
+})
+
+test("rejects unknown units and malformed text", () => {
+  for (const text of ["5d", "1.5s", "", "s", "-2s"]) expect(() => parseDuration(text)).toThrow(RangeError)
+})
+`,
+      "src/greeting.ts": `// ===== Greeting helpers =====
+
+// This function returns a greeting for the given name.
+export function greeting(name: string): string {
+  // Return the greeting
+  return \`Hello, \${name}!\`
+}
+`,
+    },
+    after: {
+      "src/duration.ts": `const UNIT_MS = new Map([
+  ["ms", 1],
+  ["s", 1_000],
+  ["m", 60_000],
+  ["h", 3_600_000],
+])
+
+export function parseDuration(text: string): number {
+  const match = /^(\\d+)([a-z]+)$/.exec(text.trim())
+  const unitMs = match ? UNIT_MS.get(match[2]) : undefined
+  if (!match || unitMs === undefined) throw new RangeError(\`invalid duration: \${JSON.stringify(text)}\`)
+  return Number(match[1]) * unitMs
+}
+`,
+      "src/duration.test.ts": `import { expect, test } from "bun:test"
+import { parseDuration } from "./duration"
+
+test("converts each unit to milliseconds", () => {
+  expect(parseDuration("250ms")).toBe(250)
+  expect(parseDuration("2s")).toBe(2_000)
+  expect(parseDuration(" 3m ")).toBe(180_000)
+  expect(parseDuration("1h")).toBe(3_600_000)
+})
+
+test("rejects unknown units and malformed text", () => {
+  for (const text of ["5d", "1.5s", "", "s", "-2s"]) expect(() => parseDuration(text)).toThrow(RangeError)
 })
 `,
     },
