@@ -1,19 +1,26 @@
 #!/usr/bin/env bun
-// Claude Code PreToolUse hook for Bash. Denies commands that destroy data or live permissions:
-// Redis FLUSHALL/FLUSHDB anywhere; SQL DROP DATABASE/DROP SCHEMA/TRUNCATE (and dropdb) and recursive
-// rm outside a local scratch container; Discord permission and role writes; GitHub branch-protection
-// and collaborator writes; and, on this host, recursive rm outside git work trees and temp
-// directories. A container is local scratch when the same command starts it with `docker run` and a
-// `*.worktree` label, or when `docker inspect` shows such a label; the hook inspects a container at
-// most once, and only after a SQL or rm check matched. `./shell.ts` finds the commands.
+// Claude Code PreToolUse hook for Bash. Denies commands that destroy data or change live access
+// control: Redis FLUSHALL/FLUSHDB anywhere; SQL DROP DATABASE/DROP SCHEMA/TRUNCATE (and dropdb) and
+// recursive rm outside a local scratch container; access-control writes over HTTP to a non-local
+// host; and, on the local machine, recursive rm outside git work trees and temp directories. A
+// container is local scratch when the same command starts it with `docker run` and a label key ending
+// in `.worktree` (follow the project's convention, e.g. `<project>.worktree=<path>`), or when
+// `docker inspect` shows such a label; the hook inspects a container at most once, and only after a
+// SQL or rm check matched.
+// `./shell.ts` finds the commands.
 // SQL is judged at statement starts in the client's SQL option and stdin; Redis by its command verb;
-// rm targets after symlinks resolve, with a whole-directory glob judged as the directory; HTTP writes
-// per URL, with Discord rules for Discord hosts and hosts hidden in a variable.
+// rm targets after symlinks resolve, with a whole-directory glob judged as the directory. HTTP writes
+// from curl, HTTPie, xh, wget, and `gh api` are judged per URL: PUT/PATCH/DELETE on a permissions,
+// roles, collaborators, acl(s), or branch-protection path; POST creating roles, permissions, or
+// collaborators; and PATCH/PUT whose inline body sets permission_overwrites, or roles or permissions
+// on a member or user. localhost, 127.0.0.0/8, 0.0.0.0, ::1, *.localhost, and a bare path are local
+// development and allowed, except over ssh; a host hidden in a variable counts as live.
 // Scope: an accident guardrail, not a security boundary. Malformed hook input is allowed with a
 // stderr note. It does not decode obfuscated commands: printf-decoded or base64 scripts piped to a
 // shell, `env -S` strings, SQL hidden in dynamic SQL or split by tricks beyond comments (`DROP/**/SCHEMA`
 // reads as `DROP SCHEMA`), and interpreter one-liners (python -c, node -e) are not read. xargs
 // operands are known only from echo/printf/heredoc input; `find ... | xargs rm -rf` is not judged.
+// HTTP bodies read from a file or unseen stdin are not judged.
 // Q overrides it by starting Claude Code with AGENT_DESTRUCTIVE_OK=1 in the environment; a command
 // that sets the variable itself does not count.
 import { spawnSync } from "node:child_process"
@@ -23,7 +30,7 @@ import { dirname, resolve, sep } from "node:path"
 import { type Command, commands, type Context, expandHome, gh, ghApi, runOptions } from "./shell.ts"
 
 const askQ = "Ask Q first; Q can set AGENT_DESTRUCTIVE_OK=1 in the Claude Code environment to allow it."
-const scratchHint = "Run it in a scratch container started with `docker run --label <project>.worktree=<path>`, or"
+const scratchHint = "Run it in a scratch container started with `docker run` and a label key ending in `.worktree` (follow the project's convention, e.g. `<project>.worktree=<path>`), or"
 
 const sqlClients = new Set(["psql", "pgcli", "mysql", "mariadb", "clickhouse-client", "clickhouse", "cockroach", "usql"])
 const httpClients = new Set(["curl", "http", "https", "xh", "xhs", "wget"])
@@ -124,7 +131,7 @@ function check(command: Command, host: Host): string | undefined {
   const { name, args, stdin, ctx } = command
   if (name === "redis-cli") return redis(args, stdin)
   if (sqlClients.has(name) || name === "dropdb") return ctx.container === "scratch" && !ctx.remote ? undefined : sql(name, args, stdin)
-  if (httpClients.has(name)) return http(name, args, stdin)
+  if (httpClients.has(name)) return http(name, args, stdin, ctx.remote)
   if (name === "gh") return githubApi(command)
   if (name === "rm" && (ctx.container !== "scratch" || ctx.remote)) return removal(args, ctx, host)
 }
@@ -194,15 +201,21 @@ function sql(cmd: string, args: string[], stdin: string): string | undefined {
   }
 }
 
-// Discord channel permission overwrites, guild roles, and member role assignments.
-const discordPath = /\/(?:channels|guilds)\/[^/\s?]+\/(?:permissions|roles|members\/[^/\s?]+\/roles)(?:[/?]|$)/
-// POST creates a guild role.
-const discordRoles = /\/guilds\/[^/\s?]+\/roles\/?(?:\?|$)/
-// Channel edits can carry permission_overwrites; member edits can carry roles.
-const discordChannel = /\/channels\/[^/\s?]+\/?(?:\?|$)/
-const discordMember = /\/guilds\/[^/\s?]+\/members\/[^/\s?]+\/?(?:\?|$)/
-// GitHub branch protection and collaborator access, as a REST path.
-const githubPath = /(?:^|\/)repos\/[^/\s]+\/[^/\s]+\/(?:branches\/[^\s?]+\/protection|collaborators\/[^/\s?]+)(?:[/?]|$)/
+// Access-control writes on a live service, judged per URL path and inline body on any non-local host.
+// PUT, PATCH, or DELETE on an access-control collection or one entry of it (permissions, roles, which
+// covers members/<id>/roles, collaborators, acl or acls), or on branches/<branch>/protection and below.
+// An entry with a dot is a file, such as uploads/roles/avatar.png.
+const accessPath = /\/(?:permissions|roles|collaborators|acls?)(?:\/[^/.]+)?\/?$|\/branches\/.+\/protection(?:\/|$)/
+// GitHub file contents and git refs name repository paths and branches, not access control.
+const repositoryFile = /(?:^|\/)repos\/[^/]+\/[^/]+\/(?:contents|git\/refs?)\//
+// POST that creates one: a path ending in such a collection, or a branch protection change.
+const accessCreate = /\/(?:roles|permissions|collaborators)\/?$|\/branches\/.+\/protection(?:\/|$)/
+// A PATCH or PUT body that sets access: permission_overwrites anywhere, and roles or permissions on
+// a member or user resource. JSON keys, or form, HTTPie, or `gh api` fields.
+const bodyKey = (keys: string) => new RegExp(`"(?:${keys})"\\s*:|(?:^|&)(?:${keys})(?:\\[[^\\]]*\\])?:?=`, "m")
+const overwritesKey = bodyKey("permission_overwrites")
+const memberKey = bodyKey("permissions|roles")
+const memberPath = /\/(?:members|users)\/[^/]+\/?$/
 const writes = ["PUT", "PATCH", "DELETE", "POST"]
 const urlLike = /^(?:https?:\/\/|\/|[\w.-]+\.\w+(?::\d+)?\/|\$)/
 // curl/wget options whose value is a request body; a value starting with `@` names a file or stdin.
@@ -210,17 +223,37 @@ const bodyOption = /^(-d|--data|--data-binary|--data-urlencode|--data-ascii|--da
 // curl options that take a separate value, so the value is not read as a URL.
 const curlValues = new Set(["-H", "--header", "-o", "--output", "-u", "--user", "-A", "--user-agent", "-e", "--referer", "-b", "--cookie", "-c", "--cookie-jar", "-m", "--max-time", "--connect-timeout", "-w", "--write-out", "-x", "--proxy", "--retry", "--cacert", "--cert", "--key", "-K", "--config", "--resolve", "--connect-to"])
 
-/** True for discord.com and discordapp.com hosts, and for a host the hook cannot see: a `$VAR` or a bare path. */
-function discordHost(url: string): boolean {
-  const host = url.replace(/^https?:\/\//, "").split("/")[0] ?? ""
-  return host === "" || host.includes("$") || /(?:^|\.)discord(?:app)?\.com(?::\d+)?$/i.test(host)
+/** Host and path of a URL. A bare path has host ""; a host hidden in a variable keeps its `$`. */
+function target(url: string): { host: string; path: string } {
+  const rest = url.replace(/^[a-z][\w+.-]*:\/\//i, "")
+  const cut = rest.search(/[/?#]/)
+  const authority = rest.startsWith("/") ? "" : cut === -1 ? rest : rest.slice(0, cut)
+  const path = (rest.startsWith("/") ? rest : cut === -1 ? "" : rest.slice(cut)).replace(/[?#].*$/s, "")
+  const hostPort = authority.replace(/^.*@/, "")
+  const host = hostPort.startsWith("[") ? hostPort.slice(1, hostPort.indexOf("]")) : hostPort.split(":")[0]!
+  return { host: host.toLowerCase(), path }
 }
 
-type Request = { method?: string; urls: string[]; body: string[]; opaque: boolean }
+/** Local development hosts. On a remote host, its loopback is a live service there. */
+const local = (host: string, remote: boolean) =>
+  !remote &&
+  !host.includes("$") &&
+  (host === "" || host === "localhost" || host.endsWith(".localhost") || host === "::1" || host === "0.0.0.0" || /^127(?:\.\d{1,3}){3}$/.test(host))
 
-/** Method, URLs, and request body of a curl, wget, or HTTPie/xh call. An `@file` or unseen stdin body is opaque. */
+/** The deny reason when `method` on `url` with `body` changes access control on a non-local host. */
+function accessWrite(method: string, url: string, body: string, remote: boolean): string | undefined {
+  const { host, path } = target(url)
+  if (local(host, remote)) return
+  const setsAccess = (method === "PATCH" || method === "PUT") && (overwritesKey.test(body) || (memberPath.test(path) && memberKey.test(body)))
+  const changes = method === "POST" ? accessCreate.test(path) : (accessPath.test(path) && !repositoryFile.test(path)) || setsAccess
+  if (changes) return `Blocked: ${method} ${url} changes access control on a live service.`
+}
+
+type Request = { method?: string; urls: string[]; body: string[] }
+
+/** Method, URLs, and inline request body of a curl, wget, or HTTPie/xh call. File and unseen stdin bodies are not read. */
 function request(cmd: string, args: string[], stdin: string): Request {
-  const req: Request = { urls: [], body: [], opaque: false }
+  const req: Request = { urls: [], body: [] }
   const httpie = cmd !== "curl" && cmd !== "wget"
   for (let j = 0; j < args.length; j++) {
     const arg = args[j]!
@@ -230,50 +263,41 @@ function request(cmd: string, args: string[], stdin: string): Request {
     else if (body) {
       const value = body[2] ?? args[++j] ?? ""
       const flag = body[1]!
+      const file = flag === "-T" || flag === "--upload-file" || flag === "--post-file" || flag === "--body-file"
       if (flag === "-T" || flag === "--upload-file") req.method ??= "PUT"
-      if (flag === "-T" || flag === "--upload-file" || flag === "--post-file" || flag === "--body-file") req.opaque = true
-      else if (value === "@-" && flag !== "--data-raw") stdin ? req.body.push(stdin) : (req.opaque = true)
-      else if (/^@/.test(value) && flag !== "--data-raw") req.opaque = true
-      else if ((flag === "-F" || flag === "--form") && /=[@<]/.test(value)) req.opaque = true
-      else req.body.push(value)
+      if (value === "@-" && flag !== "--data-raw") req.body.push(stdin)
+      else if (!file && !(/^@/.test(value) && flag !== "--data-raw")) req.body.push(value)
       req.method ??= "POST"
     } else if (arg === "--url") req.urls.push(args[++j] ?? "")
     else if (arg.startsWith("--url=")) req.urls.push(arg.slice("--url=".length))
     else if (!httpie && curlValues.has(arg)) j++
     else if (httpie && /^(?:PUT|PATCH|DELETE|POST|GET|HEAD|OPTIONS)$/i.test(arg)) req.method = arg.toUpperCase()
     else if (!arg.startsWith("-") && urlLike.test(arg)) req.urls.push(arg)
-    else if (httpie && /^[\w.-]+(?::=@|=@|@)/.test(arg)) req.opaque = true
-    else if (httpie && /^[\w.\[\]-]+(?::=|==|=|:)/.test(arg)) req.body.push(arg)
+    else if (httpie && /^[\w.\[\]-]+(?::=|==|=|:)/.test(arg) && !/^[\w.-]+(?::=@|=@|@)/.test(arg)) req.body.push(arg)
   }
-  // HTTPie and xh read a request body from stdin, which a dropped `< file` redirect hides.
-  if (httpie && req.body.length === 0 && !req.opaque) stdin ? req.body.push(stdin) : (req.opaque = true)
+  // HTTPie and xh read a request body from stdin when no fields are given.
+  if (httpie && req.body.length === 0) req.body.push(stdin)
   return req
 }
 
-function http(cmd: string, args: string[], stdin: string): string | undefined {
-  const { method, urls, body, opaque } = request(cmd, args, stdin)
+function http(cmd: string, args: string[], stdin: string, remote: boolean): string | undefined {
+  const { method, urls, body } = request(cmd, args, stdin)
   if (!method || !writes.includes(method)) return
-  const payload = body.join("\n")
   for (const url of urls) {
-    if (githubPath.test(url)) return githubDeny(method, url)
-    if (!discordHost(url)) continue
-    if (method !== "POST" && discordPath.test(url)) return discordDeny(method, url)
-    if (method === "POST" && discordRoles.test(url)) return discordDeny(method, url)
-    if (method !== "PATCH" || !(discordChannel.test(url) || discordMember.test(url))) continue
-    if (opaque) return `Blocked: PATCH ${url} sends a body the hook cannot inspect (a file or stdin), and channel or member edits can change live Discord permissions or roles. Pass the JSON inline.`
-    if (discordChannel.test(url) && /permission_overwrites/.test(payload)) return discordDeny(method, url)
-    if (discordMember.test(url) && /\broles\b/.test(payload)) return discordDeny(method, url)
+    const reason = accessWrite(method, url, body.join("\n"), remote)
+    if (reason) return reason
   }
 }
 
-const discordDeny = (method: string, url: string) => `Blocked: ${method} ${url} changes live Discord permissions or roles.`
-const githubDeny = (method: string, path: string) => `Blocked: ${method} ${path} changes GitHub branch protection or collaborator access.`
-
+/** `gh api` calls go to GitHub, or to `--hostname`/GH_HOST; the endpoint is a path on that host. */
 function githubApi(command: Command): string | undefined {
   const call = gh(command)
   if (call?.words[0] !== "api") return
-  const { method, endpoint } = ghApi(call.words.slice(1))
-  if (endpoint && writes.includes(method) && githubPath.test(endpoint)) return githubDeny(method, endpoint)
+  const { method, endpoint, fields, hostname } = ghApi(call.words.slice(1))
+  if (!endpoint || !writes.includes(method)) return
+  const url = /^[a-z][\w+.-]*:\/\//i.test(endpoint) ? endpoint : `https://${hostname ?? call.host ?? "api.github.com"}/${endpoint.replace(/^\//, "")}`
+  const reason = accessWrite(method, url, fields.join("\n"), command.ctx.remote)
+  return reason?.replace(url, endpoint)
 }
 
 const inside = (path: string, root: string) => path.startsWith(root.endsWith(sep) ? root : root + sep)
@@ -288,7 +312,7 @@ function removal(args: string[], ctx: Context, host: Host): string | undefined {
   const options = dashes === -1 ? args : args.slice(0, dashes)
   const recursive = options.some(a => /^-[a-zA-Z]*[rR]/.test(a) || a === "--recursive")
   if (!recursive) return
-  // On a remote host or inside `docker exec`, the paths are not this host's: this host's temp
+  // On a remote host or inside `docker exec`, the paths are not the local machine's: its temp
   // directories and symlinks say nothing about them, and only /tmp is known scratch.
   const away = ctx.remote ? "a remote host" : ctx.container === "exec" ? "a container" : undefined
   const tempRoots = away ? ["/tmp"] : host.tempRoots

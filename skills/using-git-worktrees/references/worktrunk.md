@@ -2,15 +2,15 @@
 
 Use the released Worktrunk CLI, not a custom workspace manager. Check `wt --version`, `git --version`, and `wt config show`; v0.78 requires Git 2.43 or newer. Installation or machine-wide changes need task authority. Follow the official [configuration](https://worktrunk.dev/config/) and [copy-ignored](https://worktrunk.dev/step/#wt-step-copy-ignored) documentation for the installed release.
 
-## VPS configuration
+## Host configuration
 
-This VPS uses `~/.config/worktrunk/config.toml` and `/srv/data/workspaces/{{ repo }}/{{ branch | sanitize }}`. Shell integration lives in `.zshrc` and `.bashrc`. On another host, inspect its configuration rather than assuming these paths exist.
+User config lives in `~/.config/worktrunk/config.toml`; its `worktree-path` template decides where new worktrees land, and shell integration lives in the shell's rc files. Hosts differ, so read `wt config show` on the current host before relying on a path.
 
 The blocking user hook `wt step copy-ignored --require-include` copies only ignored files selected by the source worktree's `.worktreeinclude`. Source defaults to primary; the new branch need not contain the allowlist. Without an allowlist, copying is a no-op. Existing destination files are retained; use explicit reviewed refreshes when required.
 
 Allowlist exact development env and dependency paths. Omit runtime state, test evidence, `.next`, and path-sensitive virtual environments. Never blindly copy all ignored files. Symlinks are copied verbatim: inspect relative targets and avoid an absolute/shared `node_modules` symlink when generated state must be isolated. Recreate Python environments with `uv sync`.
 
-Reflinks require source and destination on the same supporting filesystem. This VPS's primary disk is ext4; `/srv/data` is XFS. A copy from primary to data disk uses full storage. example-app's locked `worktrunk-deps` worktree on XFS supplies dependencies to new XFS workspaces; primary supplies the env files. User-config project hooks reconcile dependencies and generate the Prisma client in the destination. Keep the donor locked; refresh it only while unused and reverify its dependency install. A donor is a warm cache, not authority for a task's lockfile.
+Reflinks require source and destination on the same filesystem, and that filesystem must support them (XFS or Btrfs do; ext4 does not). When `worktree-path` sits on a different filesystem from the primary checkout, every copy from primary uses full storage. A locked donor worktree on the workspace filesystem can then supply dependencies to new workspaces while primary supplies the env files, with user-config project hooks reconciling dependencies and generated code in the destination. Keep the donor locked; refresh it only while unused and reverify its dependency install. A donor is a warm cache, not authority for a task's lockfile.
 
 Existing worktrees require no import into Worktrunk. Leave in-progress paths unchanged while agents or saved tasks depend on them. `wt list` sees them regardless of their original creation tool.
 
