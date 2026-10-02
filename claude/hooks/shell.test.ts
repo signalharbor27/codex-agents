@@ -134,7 +134,7 @@ describe("commands", () => {
   })
 
   test("runOptions reads --name and worktree labels", () => {
-    expect(runOptions(["-d", "--name", "pg", "--label", "tweetstream.worktree=/w", "postgres"])).toEqual({ name: "pg", worktreeLabel: true })
+    expect(runOptions(["-d", "--name", "pg", "--label", "agent.worktree=/w", "postgres"])).toEqual({ name: "pg", worktreeLabel: true })
     expect(runOptions(["--name=pg", "-l", "x.worktree", "postgres"])).toEqual({ name: "pg", worktreeLabel: true })
     expect(runOptions(["--label=owner=x.worktree", "postgres"])).toEqual({ name: undefined, worktreeLabel: false })
   })

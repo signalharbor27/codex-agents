@@ -8,12 +8,12 @@ import { denyReason, gitToplevel, handle, type Host, type Inspect, realpath } fr
 // A fake host: two git work trees, one temp root, a home directory that is not a work tree, and
 // containers: scratch-* carry a worktree label, pg and app carry other labels, anything else fails.
 const repo = "/w/repo"
-const worktree = "/srv/data/workspaces/wt"
+const worktree = "/w/workspaces/wt"
 const home = "/home/agent"
 const inspections: string[] = []
 const inspect: Inspect = (engine, container) => {
   inspections.push(`${engine} ${container}`)
-  if (container.startsWith("scratch-")) return ["tweetstream.worktree", "other"]
+  if (container.startsWith("scratch-")) return ["agent.worktree", "other"]
   if (container === "pg" || container === "app") return ["com.docker.compose.project"]
 }
 // Every path exists and none is a symlink, except the links in `symlinks`.
@@ -38,15 +38,15 @@ const cases = (title: string, commands: string[], expected: RegExp | undefined) 
   })
 
 cases("denies Redis flushes", [
-  "redis-cli -p 6380 FLUSHDB ASYNC",
+  "redis-cli FLUSHDB ASYNC",
   "redis-cli flushall",
   "redis-cli -h 10.0.0.5 -n 2 FlushDb",
   "sudo -u redis redis-cli FLUSHALL",
   "env REDISCLI_AUTH=x redis-cli FLUSHDB",
   "REDISCLI_AUTH=x timeout 5 /usr/bin/redis-cli FLUSHDB",
-  "cd /srv && redis-cli -p 6380 FLUSHDB ASYNC",
+  "cd /srv && redis-cli FLUSHDB ASYNC",
   "true; redis-cli FLUSHALL",
-  "echo FLUSHALL | redis-cli -p 6380",
+  "echo FLUSHALL | redis-cli",
   "printf 'SELECT 2\\nFLUSHDB\\n' | redis-cli",
   "echo FLUSHDB | redis-cli -x",
   "redis-cli <<EOF\nSELECT 1\nflushdb\nEOF",
@@ -55,7 +55,7 @@ cases("denies Redis flushes", [
   "docker exec -it scratch-redis redis-cli FLUSHALL",
   "docker run -d --name r1 --label x.worktree=/w redis:7 && docker exec r1 redis-cli FLUSHALL",
   "docker compose exec -T redis redis-cli FLUSHDB",
-  "ssh prod 'redis-cli -p 6380 FLUSHDB ASYNC'",
+  "ssh prod 'redis-cli FLUSHDB ASYNC'",
   "ssh -p 2222 -o BatchMode=yes prod redis-cli FLUSHDB",
   "ssh prod <<'EOF'\nredis-cli FLUSHALL\nEOF",
   "ssh prod bash -s <<'EOF'\nredis-cli FLUSHALL\nEOF",
@@ -63,7 +63,7 @@ cases("denies Redis flushes", [
   `sudo sh -lc 'redis-cli FLUSHALL'`,
   "echo $(redis-cli FLUSHALL)",
   "kubectl exec -it redis-0 -- redis-cli FLUSHALL",
-  "ssh prod -- redis-cli -p 6380 FLUSHDB ASYNC",
+  "ssh prod -- redis-cli FLUSHDB ASYNC",
   "ssh prod -p 22 -o BatchMode=yes -- redis-cli FLUSHDB",
   `sg docker -c "docker exec redis redis-cli FLUSHDB"`,
   `sg docker -c "ssh prod -- 'redis-cli FLUSHALL'"`,
@@ -108,7 +108,7 @@ cases("denies SQL drops and truncates against non-local targets", [
   `ssh prod 'docker exec pg psql -U postgres -c "TRUNCATE users"'`,
   `docker run --rm postgres:16 psql "$PROD_URL" -c "TRUNCATE users"`,
   `bash -c 'psql "$URL" -c "DROP SCHEMA x"'`,
-  `docker exec uga-pg psql -c "DROP DATABASE x"`,
+  `docker exec prod-pg psql -c "DROP DATABASE x"`,
   `docker exec pg psql -U postgres -c "TRUNCATE users"`,
   `docker exec -i pg psql -U postgres <<'SQL'\nDROP SCHEMA public CASCADE;\nSQL`,
   `docker compose exec -T postgres psql -c "DROP DATABASE test"`,
@@ -154,7 +154,7 @@ cases("allows SQL near misses and local containers", [
   "docker exec -i scratch-pg psql -U postgres <<'SQL'\nDROP SCHEMA public CASCADE;\nSQL",
   `docker exec scratch-pg sh -c "psql -c 'TRUNCATE users'"`,
   `sg docker -c 'docker exec scratch-pg psql -c "DROP DATABASE x"'`,
-  `docker run --rm --label "tweetstream.worktree=$(git rev-parse --show-toplevel)" postgres:16 psql -c "TRUNCATE t"`,
+  `docker run --rm --label "agent.worktree=$(git rev-parse --show-toplevel)" postgres:16 psql -c "TRUNCATE t"`,
   `docker run -d --name pg2 --label x.worktree=/w postgres:16 && docker exec pg2 psql -c "DROP DATABASE x"`,
   `docker exec scratch-pg dropdb test`,
   `docker exec pg psql -c "select 1"`,
@@ -186,84 +186,98 @@ describe("container inspection", () => {
   })
 
   test("names why the container is not scratch", () => {
-    expect(inspected(`docker exec uga-pg psql -c "DROP DATABASE x"`).reason).toContain("`docker inspect uga-pg` failed")
+    expect(inspected(`docker exec prod-pg psql -c "DROP DATABASE x"`).reason).toContain("`docker inspect prod-pg` failed")
     expect(deny(`docker exec pg psql -c "DROP DATABASE x"`)).toContain("Container pg has no label ending in .worktree")
     expect(deny(`docker compose exec pg psql -c "DROP DATABASE x"`)).toContain("compose service")
-    expect(deny(`docker exec pg psql -c "DROP DATABASE x"`)).toContain("docker run --label <project>.worktree=<path>")
+    expect(deny(`docker exec pg psql -c "DROP DATABASE x"`)).toContain("a label key ending in `.worktree` (follow the project's convention, e.g. `<project>.worktree=<path>`)")
   })
 
   test("a scratch label does not excuse Redis flushes or permission writes", () => {
     expect(deny("docker exec scratch-pg redis-cli FLUSHDB")).toMatch(/Redis FLUSHDB/)
-    expect(deny(`docker exec scratch-pg curl -X PUT https://discord.com/api/v10/channels/1/permissions/2`)).toMatch(/Discord/)
+    expect(deny(`docker exec scratch-pg curl -X PUT https://discord.com/api/v10/channels/1/permissions/2`)).toMatch(/access control/)
   })
 })
 
-const channel = "https://discord.com/api/v10/channels/123/permissions/456"
-cases("denies Discord permission and role writes", [
-  `curl -X PUT -H "Authorization: Bot $TOKEN" ${channel} -d '{"allow":"0"}'`,
-  `curl --request DELETE "${channel}"`,
+const discord = "https://discord.com/api/v10/channels/123/permissions/456"
+cases("denies access-control writes on a live service", [
+  // Discord channel permissions, guild roles, and member roles.
+  `curl -X PUT -H "Authorization: Bot $TOKEN" ${discord} -d '{"allow":"0"}'`,
+  `curl --request DELETE "${discord}"`,
   `curl -sXPATCH https://discord.com/api/v10/guilds/1/roles/2`,
   `curl --request=PUT "https://discord.com/api/v10/guilds/1/members/2/roles/3"`,
-  `curl -X DELETE "$API/guilds/$GUILD/members/$USER/roles/$ROLE"`,
-  `http PUT ${channel} "Authorization:Bot $T"`,
+  `http PUT ${discord} "Authorization:Bot $T"`,
   `xh DELETE discord.com/api/guilds/1/roles/2`,
-  `ssh box "curl -X PUT ${channel}"`,
   `curl -X PATCH https://discord.com/api/v10/channels/123 -d '{"permission_overwrites":[]}'`,
   `curl -X PATCH https://discord.com/api/v10/guilds/1/members/2 --json '{"roles":["3"]}'`,
   `http PATCH https://discord.com/api/v10/guilds/1/members/2 roles:='["3"]'`,
-  `curl -X PUT --url ${channel}`,
-  `curl -X PUT --url=${channel}`,
-  `curl -X DELETE https://example.com/ok https://discord.com/api/v10/guilds/1/roles/2`,
-  `curl -X POST https://discord.com/api/v10/guilds/1/roles -d '{"name":"mod"}'`,
   `curl https://discordapp.com/api/guilds/1/roles --json '{"name":"mod"}'`,
-  `curl -X DELETE "$DISCORD/guilds/1/roles/2"`,
-  `curl -X PUT https://canary.discord.com/api/v10/channels/1/permissions/2`,
-], /changes live Discord permissions or roles/)
-
-cases("denies Discord channel and member edits whose body the hook cannot read", [
-  `curl -X PATCH https://discord.com/api/v10/channels/1 -d @body.json`,
-  `curl -X PATCH https://discord.com/api/v10/channels/1 --data-binary @body.json`,
-  `curl -X PATCH https://discord.com/api/v10/guilds/1/members/2 -d@body.json`,
-  `curl -X PATCH https://discord.com/api/v10/guilds/1/members/2 --json @-`,
-  `jq . body.json | curl -X PATCH https://discord.com/api/v10/channels/1 --data-binary @-`,
-  `curl -X PATCH https://discord.com/api/v10/channels/1 -T body.json`,
-  `http PATCH https://discord.com/api/v10/channels/1 < body.json`,
-  `http PATCH https://discord.com/api/v10/channels/1 @body.json`,
-], /body the hook cannot inspect/)
-
-cases("denies GitHub branch protection and collaborator writes", [
+  // GitHub branch protection and collaborators.
   "gh api -X PUT repos/o/r/branches/main/protection --input protection.json",
   "gh api --method DELETE repos/{owner}/{repo}/branches/main/protection",
   "gh api -X POST repos/o/r/branches/main/protection/enforce_admins",
-  "gh api -XPATCH repos/o/r/branches/main/protection/required_status_checks -f strict=true",
+  "gh api -XPATCH repos/o/r/branches/feat/x/protection/required_status_checks -f strict=true",
   "gh api -X PUT repos/o/r/collaborators/someone -f permission=admin",
   "gh -R o/r api -X DELETE repos/o/r/collaborators/someone",
+  "GH_HOST=ghe.example.com gh api -X PUT /repos/o/r/branches/main/protection",
   "curl -X PUT https://api.github.com/repos/o/r/branches/main/protection -d @p.json",
-], /changes GitHub branch protection or collaborator access/)
+  // Slack-style and generic SaaS REST.
+  `curl -X POST https://api.slack.com/v1/workspaces/T1/roles -d '{"name":"admin"}'`,
+  `curl -X DELETE https://api.vendor.io/v2/projects/7/members/9/roles/admin`,
+  `curl -X PUT https://storage.vendor.io/buckets/b/acl -d '{"public":true}'`,
+  `curl -X PATCH https://api.vendor.io/users/1 -d '{"roles":["admin"]}'`,
+  `curl -X PUT https://api.vendor.io/users/1 -d 'roles=admin'`,
+  `curl -X POST https://api.vendor.io/projects/7/permissions/ -d '{"user":1}'`,
+  // Hidden hosts, several URLs, --url, remote loopback, and other wrappers.
+  `curl -X DELETE "$API/guilds/$GUILD/members/$USER/roles/$ROLE"`,
+  `curl -X PUT "http://\${HOST}:8080/roles/1"`,
+  `curl -X DELETE https://example.com/ok https://discord.com/api/v10/guilds/1/roles/2`,
+  `curl -X PUT --url ${discord}`,
+  `curl -X PUT --url=${discord}`,
+  `curl -X PUT https://canary.discord.com/api/v10/channels/1/permissions/2`,
+  `curl -X POST https://discord.com/api/v10/guilds/1/roles -d '{"name":"mod"}'`,
+  `ssh box "curl -X PUT ${discord}"`,
+  `ssh box "curl -X PUT http://localhost:3000/roles/1"`,
+  `curl -X PUT https://example.com/api/channels/1/permissions/2`,
+], /changes access control on a live service/)
 
-cases("allows GitHub near misses", [
+cases("allows access-control near misses", [
+  `curl -H "Authorization: Bot $TOKEN" https://discord.com/api/v10/guilds/1/roles`,
+  `curl -X GET ${discord}`,
+  `http GET https://discord.com/api/v10/guilds/1/roles`,
+  `curl -X POST https://discord.com/api/v10/channels/123/messages -d '{"content":"hi"}'`,
+  `curl -X POST https://api.example.com/messages -d '{"text":"roles: none"}'`,
+  `curl -X PATCH https://discord.com/api/v10/channels/123 -d '{"name":"general"}'`,
+  `http PATCH https://discord.com/api/v10/channels/1 name=general`,
+  `curl -X PATCH https://api.vendor.io/users/1 -d '{"name":"Ada"}'`,
+  `curl -X PATCH https://api.vendor.io/users/1 -d '{"name":"roles"}'`,
+  `curl -X PUT https://example.com/upload/roles.json`,
+  `curl -X POST --url https://discord.com/api/v10/guilds/1/roles/2 -H "X: y"`,
+  `curl -X PATCH https://api.vendor.io/users/1 -d @body.json`,
+  `curl -X PUT http://localhost:3000/roles/1`,
+  `curl -X DELETE http://127.0.0.1:8080/api/guilds/1/roles/2`,
+  `curl -X PUT "http://[::1]:3000/permissions/1"`,
+  `xh PUT http://app.localhost/roles/1`,
+  `curl -X PATCH /users/1/roles`,
+  `docker exec app curl -X PUT http://localhost/roles/1`,
   "gh api repos/o/r/branches/main/protection",
   "gh api repos/o/r/collaborators",
   "gh api -X POST repos/o/r/issues -f title=protection",
+  "gh api -X PATCH repos/o/r -f name=roles",
   "gh pr create --title 'Add branch protection'",
-], undefined)
-
-cases("allows Discord near misses", [
-  `curl -H "Authorization: Bot $TOKEN" https://discord.com/api/v10/guilds/1/roles`,
-  `curl -X GET ${channel}`,
-  `http GET https://discord.com/api/v10/guilds/1/roles`,
-  `curl -X POST https://discord.com/api/v10/channels/123/messages -d '{"content":"hi"}'`,
-  `curl -X PUT https://example.com/upload/roles.json`,
-  `curl -X PATCH https://discord.com/api/v10/channels/123 -d '{"name":"general"}'`,
-  `curl -X PATCH https://discord.com/api/v10/guilds/1/members/2 -d '{"nick":"fan"}'`,
-  `curl -X PUT https://example.com/api/channels/1/permissions/2`,
-  `curl -X DELETE http://localhost:3000/api/guilds/1/roles/2`,
-  `curl -X POST https://discord.com/api/v10/channels/1/messages -d @message.json`,
-  `curl -X POST --url https://discord.com/api/v10/guilds/1/roles/2 -H "X: y"`,
-  `curl -X PATCH https://example.com/channels/1 -d @body.json`,
-  `curl -X PATCH https://discord.com/api/v10/channels/1 --data-binary @- <<'EOF'\n{"name":"general"}\nEOF`,
-  `curl -X PATCH https://discord.com/api/v10/channels/1 --data-raw '@not-a-file'`,
-  `http PATCH https://discord.com/api/v10/channels/1 name=general`,
+  // Files and git refs whose names contain an access-control word.
+  "gh api -X PUT repos/o/r/contents/src/roles/index.ts -f message=x -f content=eA==",
+  "gh api -X PUT repos/o/r/contents/docs/permissions/README.md -f message=x",
+  "gh api -X DELETE repos/o/r/git/refs/heads/feature/permissions",
+  "gh api -X PATCH repos/o/r/git/refs/heads/roles -f sha=abc",
+  "curl -X PUT https://bucket.s3.amazonaws.com/uploads/roles/avatar.png --upload-file a.png",
+  "curl -X PUT https://bucket.s3.amazonaws.com/acl/report.csv -T r.csv",
+  // roles or permissions keys outside a member or user resource.
+  `curl -X PUT https://api.movies.example/films/42 -d '{"title":"Heat","roles":["Neil"]}'`,
+  `curl -X PATCH https://cms.example.com/articles/9 -d '{"roles":["writer"]}'`,
+  `curl -X PATCH https://api.vendor.io/apps/3 -d '{"permissions":["camera"]}'`,
+  // More local hosts.
+  "curl -X PUT http://0.0.0.0:3000/roles/1",
+  "curl -X DELETE http://127.0.0.2:8080/permissions/1",
 ], undefined)
 
 cases("denies recursive rm outside git work trees and temp directories", [
@@ -276,12 +290,12 @@ cases("denies recursive rm outside git work trees and temp directories", [
   "rm -rf /etc",
   "rm -rf /srv",
   "sudo rm -rf /var/lib",
-  "rm -fr /srv/data/workspaces/other",
+  "rm -fr /w/workspaces/other",
   "rm -r --no-preserve-root /",
   "rm -rf -- /etc/nginx",
   "rm -rf ../..",
   "rm -rf .",
-  "rm -rf ~/projects/TweetStream",
+  "rm -rf ~/projects/app",
   "rm -rf /w/elsewhere/build",
   "rm -rf /tmp",
   "rm -rf /tmp/",
@@ -291,7 +305,7 @@ cases("denies recursive rm outside git work trees and temp directories", [
   `rm -rf ${worktree}/`,
   "rm -rf *",
   "cd ~ && rm -rf *",
-  "cd /srv && rm -rf data",
+  "cd /srv && rm -rf app",
   "ssh prod 'rm -rf /srv/app'",
   "ssh prod 'rm -rf build'",
   "sudo bash -c 'rm -rf /var/lib/postgresql'",
@@ -356,11 +370,11 @@ cases("allows recursive rm near misses", [
 ], undefined)
 
 describe("temp directories", () => {
-  const roots = { ...paths, cwd: repo, home, tempRoots: ["/tmp", "/srv/data/tmp/ubuntu"] }
-  test("this host's temp roots allow local removal only", () => {
-    expect(denyReason("rm -rf /srv/data/tmp/ubuntu/db", roots)).toBeUndefined()
-    expect(denyReason("ssh prod rm -rf /srv/data/tmp/ubuntu/db", roots)).toContain("a path in a remote host outside /tmp")
-    expect(denyReason("docker exec app rm -rf /srv/data/tmp/ubuntu/db", roots)).toContain("a path in a container outside /tmp")
+  const roots = { ...paths, cwd: repo, home, tempRoots: ["/tmp", "/w/tmp/agent"] }
+  test("the machine's temp roots allow local removal only", () => {
+    expect(denyReason("rm -rf /w/tmp/agent/db", roots)).toBeUndefined()
+    expect(denyReason("ssh prod rm -rf /w/tmp/agent/db", roots)).toContain("a path in a remote host outside /tmp")
+    expect(denyReason("docker exec app rm -rf /w/tmp/agent/db", roots)).toContain("a path in a container outside /tmp")
   })
 })
 
@@ -420,7 +434,7 @@ describe("hook entry", () => {
 
   test("runs as a hook script", async () => {
     const child = Bun.spawn({ cmd: ["bun", join(import.meta.dir, "destructive-guard.ts")], stdin: "pipe", stdout: "pipe", env: { ...process.env, AGENT_DESTRUCTIVE_OK: undefined } })
-    child.stdin.write(input("ssh prod 'redis-cli -p 6380 FLUSHDB ASYNC'"))
+    child.stdin.write(input("ssh prod 'redis-cli FLUSHDB ASYNC'"))
     child.stdin.end()
     const [stdout, code] = await Promise.all([new Response(child.stdout).text(), child.exited])
     expect(code).toBe(0)

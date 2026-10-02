@@ -53,9 +53,15 @@ test "$(readlink "$codex_profile_root/agents")" = "$codex_repo_root/agents" || e
 
 Merge [agent-settings.toml](agent-settings.toml) into the existing `$CODEX_HOME/config.toml`. It sets the shared agent depth. Keep a single `[agents]` table and leave this settings fragment outside `$CODEX_HOME/agents/`; the profiles need no separate registrations.
 
-On this host, the custom provider also uses `model_catalog_url` and `features.api_key_model_discovery` in global config to discover available models. Those settings are local to the provider setup. Codex labels API-key discovery as under development.
-
 Start a new task after installation. Check both the exposed roles and an actual agent launch.
+
+### Q's host notes
+
+These describe Q's machine; the instructions and skills stay host-neutral.
+
+- The custom provider also uses `model_catalog_url` and `features.api_key_model_discovery` in global config to discover available models. Those settings are local to the provider setup. Codex labels API-key discovery as under development.
+- Worktrunk's `~/.config/worktrunk/config.toml` sets `worktree-path` to `/srv/data/workspaces/{{ repo }}/{{ branch | sanitize }}`. Shell integration lives in `.zshrc` and `.bashrc`.
+- The primary disk is ext4 and `/srv/data` is XFS, so a copy from primary to the data disk uses full storage. TweetStream's locked `lewissmith/worktrunk-deps` worktree on XFS supplies dependencies to new XFS workspaces, and primary supplies the env files. User-config project hooks reconcile dependencies and generate the Prisma client in the destination.
 
 ## Agents
 
@@ -117,7 +123,7 @@ The generator writes `AGENTS.md`, `claude/CLAUDE.md`, `claude/agents/*.md`, and 
 
 - [reply-guard](claude/hooks/reply-guard.ts) stops a reply that ends by offering to continue, and reminds Claude of the word budget after a long reply.
 - [review-gate](claude/hooks/review-gate.ts) denies `gh pr ready`, non-draft `gh pr create`/`gh pr new`, non-draft `gh api` PR creation, and the GraphQL ready-for-review mutation until three things hold: a review record for the current commit's tree has no open findings, the reviewed commit is pushed when the branch has an upstream, and the command names the current branch or its PR. Commit the reviewed snapshot unchanged, then write the record from the reviewed checkout with `review-and-simplify-changes/scripts/record-review.sh <base-ref> --reviewed <rev> --reviewers <role,...> --open-findings <n> [--door … --blast-radius …] [--copy-humanized]`, where `<rev>` is that commit's full commit or tree sha (40 or 64 hex; refs and short shas are rejected); records live in `<git-common-dir>/agent-review/`. Draft PRs pass; `AGENT_REVIEW_GATE=off` in Claude's environment disables it.
-- [destructive-guard](claude/hooks/destructive-guard.ts) blocks Redis FLUSHALL/FLUSHDB everywhere; Discord permission and role writes; GitHub branch-protection and collaborator writes; SQL DROP DATABASE/DROP SCHEMA/TRUNCATE and `dropdb` outside a scratch container; and `rm -r` except of paths strictly inside a scratch container, a git work tree, or a temp directory. A `docker exec` or `podman exec` target is a scratch container when the same command starts it with a label key ending `.worktree`, or its `docker inspect` labels include such a key; `docker compose exec` always counts as non-local. Start Claude Code with `AGENT_DESTRUCTIVE_OK=1` to allow them deliberately.
+- [destructive-guard](claude/hooks/destructive-guard.ts) blocks Redis FLUSHALL/FLUSHDB everywhere; access-control writes to any non-local host; SQL DROP DATABASE/DROP SCHEMA/TRUNCATE and `dropdb` outside a scratch container; and `rm -r` except of paths strictly inside a scratch container, a git work tree, or a temp directory. An access-control write is a curl, HTTPie, xh, wget, or `gh api` request that PUTs, PATCHes, or DELETEs a `permissions`, `roles`, `collaborators`, `acl`/`acls`, or `branches/<b>/protection` path, POSTs to a path ending in `/roles`, `/permissions`, or `/collaborators`, or PATCHes or PUTs an inline body setting `permission_overwrites`, or `roles` or `permissions` on a member or user. GitHub file contents and git refs are exempt. localhost, 127.0.0.0/8, 0.0.0.0, ::1, `*.localhost`, and bare paths count as local unless the command runs over ssh; a host hidden in a `$VAR` does not. A `docker exec` or `podman exec` target is a scratch container when the same command starts it with a label key ending in `.worktree` (follow the project's convention, e.g. `<project>.worktree=<path>`), or its `docker inspect` labels include such a key; `docker compose exec` always counts as non-local. Start Claude Code with `AGENT_DESTRUCTIVE_OK=1` to allow them deliberately.
 
 `--install` refuses a fragment hook that has no source file.
 
@@ -127,7 +133,7 @@ The generator writes `AGENTS.md`, `claude/CLAUDE.md`, `claude/agents/*.md`, and 
 
 Agent-created workspaces use Worktrunk. Reuse existing isolated task directories. Worktrees created by a host or app (Codex app, Claude Code, T3 Code) keep their creator's cleanup lifecycle; run setup in them explicitly when the app does not.
 
-See [using-git-worktrees](skills/using-git-worktrees/SKILL.md) and the [remote setup guide](skills/using-git-worktrees/references/worktrunk.md) for environment copying, dependencies, and this VPS's configuration.
+See [using-git-worktrees](skills/using-git-worktrees/SKILL.md) and the [remote setup guide](skills/using-git-worktrees/references/worktrunk.md) for environment copying, dependencies, and host configuration. Q's values are in [Q's host notes](#qs-host-notes).
 
 ```bash
 wt list
