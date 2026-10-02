@@ -27,7 +27,7 @@ Diagnose structural problems in a codebase or subsystem, then turn the evidence 
 
 ## Minimal Workflow
 
-1. Pin the review boundary and read-only authority. Inspect runtime entrypoints, owners, seams, build and test shape, domain terms, existing decisions, and named problems. For a post-code review, limit findings to the original diff and its direct effects; list broader or pre-existing issues separately.
+1. Pin the review boundary and read-only authority. Inspect runtime entrypoints, owners, seams, build and test shape, domain terms, existing decisions, and named problems. For a post-code review, the boundary is the subsystems the diff touches, pre-existing issues included; tag findings per coding-standards (clear, judgement, audit), and list issues outside those subsystems separately.
 2. For standalone audits, keep small or tightly coupled scope local and delegate material independent questions to read-only subagents. Within `review-and-simplify-changes`, independent reviewers perform the assigned checks and return findings without further delegation. The main agent owns synthesis and decisions.
 3. Find the highest-cost structural problems using the judgment rules below. Support each finding with a trace from a real entrypoint through ownership, interfaces, effects, and proof where relevant. Do not inventory every possible cleanup.
 4. Classify supported findings as pre-existing debt, current regression, preventable by `engineering`, `debugging`, or `test-design`, preventable at review by a coding standard or deterministic check, or a repo-doc candidate. Write a dependency-ordered plan sized to them. Use phases only when dependencies or rollout need them. If no finding is supported, report no actionable findings and any coverage limits.

@@ -449,7 +449,7 @@ describe("progressive review contract", () => {
     expect(validate({ ...routingCase, forbidden_actions: ["review-entire-intended-diff", "review-entire-intended-diff"] })).toContain("cases[0].forbidden_actions must not contain duplicates")
     expect(validate({ ...routingCase, forbidden_actions: ["unknown-review-action"] })).toContain("cases[0] references unknown action unknown-review-action")
     expect(validate({ ...routingCase, forbidden_actions: ["review-delta-since-last-snapshot"] })).toContain("cases[0] both requires and forbids action review-delta-since-last-snapshot")
-    expect(validate({ ...routingCase, unexpected: true }).some(error => error.includes("optional forbidden_actions, optional_references only"))).toBe(true)
+    expect(validate({ ...routingCase, unexpected: true }).some(error => error.includes("optional forbidden_actions, optional_references, optional_modifier_skills only"))).toBe(true)
   })
 
   test("optional references are known, unique, and disjoint from expected references", () => {
@@ -1080,6 +1080,52 @@ describe("retro-week contracts", () => {
       const routingCase = entry(id)
       expect(compareResult(routingCase, { ...resultFor(routingCase), actions: [...routingCase.required_actions, "dispatch-refiner-for-clear-standards-fixes"] }))
         .toEqual(["forbidden action dispatch-refiner-for-clear-standards-fixes"])
+    }
+  })
+
+  test("touched-file debt goes to the refiner when clear and to an audit item when it spans modules", () => {
+    const clear = entry("touched-file-clear-refactor")
+    expect(compareResult(clear, { ...resultFor(clear), actions: clear.required_actions.filter(action => action !== "dispatch-refiner-for-clear-standards-fixes") }))
+      .toEqual(["missing required action dispatch-refiner-for-clear-standards-fixes"])
+    expect(compareResult(clear, { ...resultFor(clear), actions: [...clear.required_actions, "list-audit-item-without-fixing"] }))
+      .toEqual(["forbidden action list-audit-item-without-fixing"])
+    for (const id of ["touched-file-audit-item", "touched-file-budget-audit-item"]) {
+      const audit = entry(id)
+      expect(compareResult(audit, { ...resultFor(audit), actions: [...audit.required_actions, "dispatch-refiner-for-clear-standards-fixes"] }))
+        .toEqual(["forbidden action dispatch-refiner-for-clear-standards-fixes"])
+      expect(compareResult(audit, { ...resultFor(audit), actions: audit.required_actions.filter(action => action !== "list-audit-item-without-fixing") }))
+        .toEqual(["missing required action list-audit-item-without-fixing"])
+    }
+  })
+
+  test("an audit-sized finding in new code stays open instead of becoming a terminal audit item", () => {
+    const routingCase = entry("new-origin-audit-finding-stays-open")
+    expect(compareResult(routingCase, { ...resultFor(routingCase), actions: [...routingCase.required_actions, "list-audit-item-without-fixing"] }))
+      .toEqual(["forbidden action list-audit-item-without-fixing"])
+    expect(compareResult(routingCase, { ...resultFor(routingCase), actions: routingCase.required_actions.filter(action => action !== "carry-unresolved-findings-forward") }))
+      .toEqual(["missing required action carry-unresolved-findings-forward"])
+  })
+
+  test("a review may pin scope or evaluate handed-over findings first, but nothing else replaces pinning", () => {
+    const clear = entry("touched-file-clear-refactor")
+    expect(clear.required_actions).not.toContain("pin-review-scope")
+    expect(validate(clear)).toEqual([])
+    expect(compareResult(clear, { ...resultFor(clear), first_action: "evaluate-feedback" })).toEqual([])
+    expect(validate({ ...clear, expectations: { ...clear.expectations, first_action: ["evaluate-feedback"] } })).toContain("cases[0] review must pin scope")
+    expect(validate({ ...clear, expectations: { ...clear.expectations, first_action: ["pin-review-scope", "inspect-current-state"] } })).toContain("cases[0] review must pin scope")
+  })
+
+  test("only a large change runs the architecture and test-suite audits", () => {
+    const large = entry("large-change-subsystem-review")
+    expect(compareResult(large, { ...resultFor(large), actions: large.required_actions.filter(action => action !== "run-large-change-audits") }))
+      .toEqual(["missing required action run-large-change-audits"])
+    expect(compareResult(large, { ...resultFor(large), modifier_skills: ["improve-codebase-architecture", "improve-test-suite"] })).toEqual([])
+    expect(compareResult(large, { ...resultFor(large), modifier_skills: ["test-design"] })).toEqual(["modifier_skills: expected , got test-design"])
+    expect(validate({ ...large, optional_modifier_skills: ["no-such-skill"] })).toContain("cases[0] references unknown modifier no-such-skill")
+    for (const id of ["touched-file-clear-refactor", "touched-file-audit-item", "touched-file-budget-audit-item", "new-origin-audit-finding-stays-open"]) {
+      const routingCase = entry(id)
+      expect(compareResult(routingCase, { ...resultFor(routingCase), actions: [...routingCase.required_actions, "run-large-change-audits"] }))
+        .toEqual(["forbidden action run-large-change-audits"])
     }
   })
 

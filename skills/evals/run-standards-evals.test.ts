@@ -25,7 +25,7 @@ import { withFakeClaude } from "./fake-claude.ts"
 
 const SOURCE_ROOT = join(import.meta.dir, "../..")
 const byId = (id: string) => STANDARDS_CASES.find(entry => entry.id === id)!
-const finding = (file: string, category: StandardsFinding["category"], summary = "s"): StandardsFinding => ({ file, category, summary })
+const finding = (file: string, category: StandardsFinding["category"], summary = "s", origin: StandardsFinding["origin"] = "new"): StandardsFinding => ({ file, category, summary, origin })
 const control = STANDARDS_CASES.find(entry => entry.planted.length === 0)!
 
 describe("standards fixtures", () => {
@@ -150,8 +150,17 @@ describe("standards judge", () => {
     }
   })
 
+  test("requires the plant's origin when it names one", () => {
+    const entry = byId("touched-tautological-test")
+    const tagged = (origin: StandardsFinding["origin"]) => finding("src/pagination.test.ts", "tautological-test", "re-asserts DEFAULT_PAGE_SIZE", origin)
+    expect(judgeStandards(entry, [tagged("touched")]).pass).toBe(true)
+    expect(judgeStandards(entry, [tagged("new")]).missing).toEqual([{ category: "tautological-test", files: ["src/pagination.test.ts"], reason: "wrong-origin" }])
+    expect(judgeStandards(byId("tautological-test"), [taut("MAX_NICKNAME_LENGTH")]).pass).toBe(true)
+  })
+
   test("fails the control on any finding, including other", () => {
     expect(judgeStandards(control, [])).toEqual({ pass: true, missing: [], false_positives: [], extra: [] })
+    expect(judgeStandards(byId("untouched-smell-control"), [finding("src/greeting.ts", "slop-comment", "restating comments", "touched")]).pass).toBe(false)
     const verdict = judgeStandards(control, [finding("src/lru.ts", "other")])
     expect(verdict.pass).toBe(false)
     expect(verdict.false_positives).toEqual([finding("src/lru.ts", "other")])
@@ -167,8 +176,11 @@ describe("standards judge", () => {
 
 describe("standards result parsing", () => {
   test("accepts the schema shape and rejects unknown categories, extra keys, and prose", () => {
-    expect(parseStandardsResult('{"findings":[{"file":"a.ts","category":"slop-comment","summary":"x"}]}')).toEqual([finding("a.ts", "slop-comment", "x")])
-    expect(() => parseStandardsResult('{"findings":[{"file":"a.ts","category":"style","summary":"x"}]}')).toThrow("known category")
+    expect(parseStandardsResult('{"findings":[{"file":"a.ts","category":"slop-comment","summary":"x","origin":"new"}]}')).toEqual([finding("a.ts", "slop-comment", "x")])
+    expect(() => parseStandardsResult('{"findings":[{"file":"a.ts","category":"slop-comment","summary":"x"}]}')).toThrow("needs origin")
+    expect(() => parseStandardsResult('{"findings":[{"file":"a.ts","category":"style","summary":"x","origin":"new"}]}')).toThrow("known category")
+    expect(parseStandardsResult('{"findings":[{"file":"a.ts","category":"slop-comment","summary":"x","origin":"touched"}]}')).toEqual([finding("a.ts", "slop-comment", "x", "touched")])
+    expect(() => parseStandardsResult('{"findings":[{"file":"a.ts","category":"slop-comment","summary":"x","origin":"old"}]}')).toThrow("needs origin")
     expect(() => parseStandardsResult('{"findings":[],"notes":"x"}')).toThrow("exactly findings")
     expect(() => parseStandardsResult("Looks good")).toThrow("did not return JSON")
   })

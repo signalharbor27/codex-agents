@@ -64,7 +64,7 @@
     "engineering": {"positive": ["routine-refactor"], "near_negative": ["unknown-flaky-failure"]},
     "finishing-a-development-branch": {"positive": ["finish-branch", "merged-cleanup-no-question"], "near_negative": ["merge-conflict-safe-resolution"]},
     "grill-me": {"positive": ["implicit-grilling-frontier"], "near_negative": ["pressure-test-findings-only"]},
-    "improve-codebase-architecture": {"positive": ["repo-architecture-review"], "near_negative": ["wip-cleanup-quality"]},
+    "improve-codebase-architecture": {"positive": ["repo-architecture-review"], "near_negative": ["wip-cleanup-quality", "touched-file-audit-item"]},
     "improve-test-suite": {"positive": ["test-suite-review"], "near_negative": ["test-strategy"]},
     "retro": {"positive": ["retro-explicit-weekly"], "near_negative": ["retro-implicit-session-question", "wip-cleanup-quality"]},
     "receiving-code-review": {"positive": ["review-feedback"], "near_negative": ["small-coupled-review"]},
@@ -1266,6 +1266,87 @@
         "mutation": "none",
         "question": ["none", "only-if-blocked"],
         "stop": "findings"
+      }
+    },
+    {
+      "id": "touched-file-clear-refactor",
+      "prompt": "Continue the review of this WIP implementation. The intended diff changes 60 lines: it adds a bulk-discount rule to pricing.ts and one test to pricing.test.ts, and was reviewed in full at snapshot R1 by an independent reviewer. Both open findings are Standards findings with origin: touched, in code that predates the diff. pricing.ts has an unexported formatPrice helper whose body only forwards to currency.format, called by two functions in the same file. pricing.test.ts has a test asserting that TAX_RATE equals 0.2. No defects, Intent gaps, or other findings are open, and a refiner is available. Existing authorization covers local fixes; do not commit.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
+      "optional_references": ["engineering/references/boundary-design.md", "engineering/references/proof.md"],
+      "required_actions": ["select-minimum-useful-reviewers", "account-for-all-review-topics", "dispatch-refiner-for-clear-standards-fixes", "review-delta-since-last-snapshot", "delta-review-by-non-author", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "confirm-final-review-coverage", "verify-before-completion"],
+      "forbidden_actions": ["delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review", "list-audit-item-without-fixing", "run-large-change-audits"],
+      "expectations": {
+        "first_action": ["pin-review-scope", "evaluate-feedback"],
+        "mutation": "requested-repo-writes",
+        "question": ["none", "only-if-blocked"],
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "large-change-subsystem-review",
+      "prompt": "The requested report-export feature is implemented: a new reports/export subsystem of about 800 non-generated source lines (CSV and PDF writers, a column registry, and an export job runner) with its tests, wired into the existing reports page. The WIP passes its checks. No review has run. Finish this implementation task; existing authorization covers local fixes. Do not commit or publish.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "optional_modifier_skills": ["improve-codebase-architecture", "improve-test-suite"],
+      "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
+      "optional_references": ["describe-pr/references/merge-danger.md", "engineering/references/boundary-design.md", "engineering/references/proof.md"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-entire-intended-diff", "record-review-snapshot", "confirm-final-review-coverage", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "run-codex-review", "run-large-change-audits"],
+      "forbidden_actions": ["delegate-oracle-review", "keep-coupled-review-local"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "touched-file-audit-item",
+      "prompt": "Continue the review of this WIP implementation. The intended diff adds a gift-note field to checkout.ts and was reviewed in full at snapshot R1 by an independent reviewer. Since R1, the main agent fixed that review's one defect, a missing length check on the gift note, and its test. The remaining open finding is a Standards finding tagged origin: touched: code in checkout.ts that predates the diff re-checks stock limits that inventory.ts and warehouse.ts also enforce. Giving the rule one owner means changing all three modules and the public reserveStock contract. No defects, Intent gaps, or other findings are open, and a refiner is available. Existing authorization covers local fixes; do not commit.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
+      "optional_references": ["engineering/references/boundary-design.md"],
+      "required_actions": ["select-minimum-useful-reviewers", "account-for-all-review-topics", "list-audit-item-without-fixing", "review-delta-since-last-snapshot", "delta-review-by-non-author", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"],
+      "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review", "run-large-change-audits"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": ["none", "requested-repo-writes"],
+        "question": ["none", "only-if-blocked"],
+        "stop": ["after-verification", "findings", "after-requested-scope"]
+      }
+    },
+    {
+      "id": "touched-file-budget-audit-item",
+      "prompt": "Continue the review of this WIP implementation. The intended diff changes 12 lines: it adds a rounding-mode option to invoice.ts and one test to invoice.test.ts, and was reviewed in full at snapshot R1 by an independent reviewer. Since R1, the main agent fixed that review's one defect, an unhandled negative total, and its test. The remaining open finding is a Standards finding with origin: touched: nine tests in invoice.test.ts that predate the diff read invoice.ts source text instead of calling its exported functions. Rewriting them through the public API changes about 150 lines of invoice.test.ts and cannot be split, because they share one source-reading fixture. No Intent gaps or other findings are open, and a refiner is available. Existing authorization covers local fixes; do not commit.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
+      "optional_references": ["engineering/references/proof.md"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "list-audit-item-without-fixing", "review-delta-since-last-snapshot", "delta-review-by-non-author", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"],
+      "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review", "run-large-change-audits"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": ["none", "requested-repo-writes"],
+        "question": ["none", "only-if-blocked"],
+        "stop": ["after-verification", "findings", "after-requested-scope"]
+      }
+    },
+    {
+      "id": "new-origin-audit-finding-stays-open",
+      "prompt": "Continue the review of this WIP implementation. The intended diff adds a new shipping-quote module and wires it into cart.ts, and was reviewed in full at snapshot R1 by an independent reviewer. Since R1, the main agent fixed that review's one defect, a missing currency on free-shipping quotes, and its test. The remaining open finding is a Standards finding with origin: new: the new module re-implements weight limits that carrier.ts and warehouse.ts already enforce, and giving the rule one owner means changing all three modules and the public quoteShipment contract. No defects, Intent gaps, or other findings are open. Existing authorization covers local fixes but not public contract changes; do not commit.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
+      "optional_references": ["engineering/references/boundary-design.md", "describe-pr/references/merge-danger.md"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "carry-unresolved-findings-forward", "review-delta-since-last-snapshot", "delta-review-by-non-author"],
+      "forbidden_actions": ["list-audit-item-without-fixing", "dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review", "run-large-change-audits"],
+      "expectations": {
+        "first_action": ["pin-review-scope", "evaluate-feedback"],
+        "mutation": ["none", "requested-repo-writes", "after-user-choice"],
+        "question": ["only-if-blocked", "required-before-unapproved-action"],
+        "stop": ["wait-for-answer", "after-verification", "findings"]
       }
     }
   ]

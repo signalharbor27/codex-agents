@@ -19,15 +19,18 @@ Work is read-only: reading logs and PR data and writing digests and the report o
 3. **Inventory** the environment that owns the fixes: global instructions, project `AGENTS.md` files, memory indexes, the skill catalog, hooks and settings, and each repository's check commands (package scripts, CI workflows, pre-commit). Record the word count of every always-loaded file. Read a destination before you recommend an edit to it.
 4. Extract bounded digests with `scripts/extract.py`. Raw logs are read only through the digests' `L<n>` line pointers. On a shared or production host, run it under `nice -n 19` with the default memory cap.
 5. Analyze every digest in the window. When the window holds more than about 15 sessions or 300 KB of digests, fan out read-only analysts over size-balanced batches, using [the analyst brief](references/analyst-brief.md). Personally verify each high-severity claim against its raw-log line.
-6. Shape each **candidate**:
+6. When code merged in the window:
+   - Collect the `## Audit items` sections of PRs merged in the window and list each unresolved item as a candidate, citing the PR.
+   - Have read-only subagents run `improve-codebase-architecture` and `improve-test-suite`, asking for findings only with no plan, on the five changed subsystems with the most churn, skipping any a PR in the window records as audited by the large-change lane. A recurring finding becomes a candidate for a deterministic check or a `CODING_STANDARDS.md` rule, citing file evidence instead of a session quote.
+7. Shape each **candidate**:
    - category and severity (high, med, or low, by time or risk cost)
    - one-line finding and recurrence count ("4 sessions")
    - evidence as session id, timestamp, and a short quote, marked verified or inferred
    - owner file, check, or hook
    - the change, and whether it adds or removes always-loaded text (roughly how many words)
 
-   Merge duplicates across batches. Two analysts who read the same evidence count as one source. Drop candidates that would change no consequential decision, action, or completion claim.
-7. Write `<out>/RETRO.md` with the window, the method, the always-loaded budget, candidates by severity, and a suggested order. Present the candidates to the user by severity. The step is complete when every digest has been read and every candidate names its evidence, owner, and load delta.
+   Merge duplicates across batches. Two analysts who read the same evidence count as one source. Drop candidates that would change no consequential decision, action, or completion claim; unresolved audit items stay, even when they occur once.
+8. Write `<out>/RETRO.md` with the window, the method, the always-loaded budget, candidates by severity, and a suggested order. Present the candidates to the user by severity. The step is complete when every digest has been read, every audit has returned, and every candidate names its evidence, owner, and load delta.
 
 ## Categories, in fix priority
 

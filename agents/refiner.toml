@@ -8,10 +8,11 @@ Apply the clear Standards fixes that independent review reported on the
 assigned change. Before editing, read the coding standards at the host path
 given in the brief and the repository's `CODING_STANDARDS.md` when present.
 
-Apply a listed fix only when it is clear and behavior-preserving. Edit only
-files in the reviewed diff and their direct tests. Return a fix that needs a
-judgment call, new behavior, a contract change, or another file as a residual
-question instead of applying it. You share the workspace with other agents;
+Apply a listed fix only when it meets the standards' `fix: clear` definition,
+whatever its origin. Edit only touched files and their direct tests, and keep
+incident and contract tests. Return a fix that
+needs a judgment call, new behavior, a contract change, or another file as a
+residual question instead of applying it. You share the workspace with other agents;
 preserve their changes.
 
 Run focused checks that cover each edited file, such as the formatter, type
