@@ -156,12 +156,17 @@ export const skillsLockSource = "signalharbor27/codex-agents"
 export type InstallOptions = { codexHome?: string; stamp?: string; onLine?: (line: string) => void }
 type Link = { path: string; target: string; optional?: boolean }
 
+/** Hook scripts the install links one by one, so other files in ~/.claude/hooks stay untouched. */
+export function hookFiles(repo: string): string[] {
+  return readdirSync(join(repo, "claude/hooks")).filter(f => f.endsWith(".ts") && !f.endsWith(".test.ts")).sort()
+}
+
 function links(repo: string, home: string, codexHome = join(home, ".codex")): Link[] {
   return [
     { path: join(home, ".claude/CLAUDE.md"), target: join(repo, "claude/CLAUDE.md") },
     { path: join(home, ".claude/agents"), target: join(repo, "claude/agents") },
     { path: join(home, ".claude/output-styles/q.md"), target: join(repo, "claude/output-styles/q.md") },
-    { path: join(home, ".claude/hooks/reply-guard.ts"), target: join(repo, "claude/hooks/reply-guard.ts") },
+    ...hookFiles(repo).map(f => ({ path: join(home, ".claude/hooks", f), target: join(repo, "claude/hooks", f) })),
     { path: join(home, ".claude/skills/review-agent"), target: join(codexHome, "skills/.system/review-agent"), optional: true },
   ]
 }
@@ -202,6 +207,12 @@ function readJsonObject(path: string): Json {
 function readFragment(repo: string): Json {
   const fragment = readJsonObject(join(repo, "claude/settings.fragment.json"))
   if ("env" in fragment) throw new Error("claude/settings.fragment.json must not contain env")
+  // A hook registered under ~/.claude/hooks must be one the install links from claude/hooks.
+  const linked = hookFiles(repo)
+  for (const { event, script } of hookScripts(fragment, "$HOME")) {
+    const file = /^\$HOME\/\.claude\/hooks\/([^/]+)$/.exec(script ?? "")?.[1]
+    if (file && !linked.includes(file)) throw new Error(`claude/settings.fragment.json: ${event} hook ${file} has no claude/hooks/${file}`)
+  }
   return fragment
 }
 

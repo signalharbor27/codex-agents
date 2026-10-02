@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 
-import { access, readdir, readFile } from "node:fs/promises"
+import { access, cp, mkdir, mkdtemp, readdir, readFile, rm } from "node:fs/promises"
+import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
-import { harnessHash, parseTrace, readAgentProfileFiles, sha256, sourceProvenance } from "./eval-evidence.ts"
+import { harnessHash, parseClaudeTrace, parseTrace, readAgentProfileFiles, sha256, sourceProvenance } from "./eval-evidence.ts"
 
 const SCRIPT_DIR = import.meta.dir
 const CASES_PATH = join(SCRIPT_DIR, "routing-cases.json")
@@ -10,7 +11,15 @@ const RESULT_SCHEMA_PATH = join(SCRIPT_DIR, "routing-result.schema.json")
 const DEFAULT_SKILLS_ROOT = resolve(SCRIPT_DIR, "..")
 export const LIVE_MODEL = "gpt-6-astra"
 export const LIVE_REASONING_EFFORT = "high"
+export const CLAUDE_LIVE_MODEL = "claude-opus-5-5"
+export const HARNESSES = ["codex", "claude"] as const
+export type Harness = (typeof HARNESSES)[number]
+const CODEX_EFFORTS = ["low", "medium", "high", "xhigh", "max", "ultra"]
+const CLAUDE_EFFORTS = ["low", "medium", "high", "xhigh", "max"]
+// Read-only built-in tools; the claude harness never exposes Bash, Edit, Write, or Agent.
+export const CLAUDE_READ_ONLY_TOOLS = "Read,Grep,Glob"
 const LIVE_TIMEOUT_MS = 120_000
+const CLAUDE_LIVE_TIMEOUT_MS = 300_000
 const TERMINATION_GRACE_MS = 250
 const SETSID = process.platform === "win32" ? null : Bun.which("setsid")
 
@@ -29,6 +38,8 @@ export type RoutingCase = {
   primary_skill: string
   expected_modifier_skills: string[]
   expected_references: string[]
+  // References a correct route may load but need not, e.g. a path the skill names for reviewer briefs.
+  optional_references?: string[]
   required_actions: string[]
   forbidden_actions?: string[]
   expectations: Expectations
@@ -38,6 +49,9 @@ export type RoutingFixture = {
   version: number
   engineering_skills: string[]
   explicit_only_skills: string[]
+  // Skills the host supplies outside this source tree (for example humanizer). A result may name them
+  // as modifiers; the comparison ignores them, so naming one neither fails nor is required.
+  host_skills: string[]
   skill_references: string[]
   invocation_coverage: Record<string, { positive: string[]; near_negative: string[] }>
   cases: RoutingCase[]
@@ -57,6 +71,8 @@ export type RoutingResult = {
 type ValidatedSuite = {
   fixture: RoutingFixture
   resultSchema: unknown
+  // Fixture skills and references the validated source tree lacks; non-empty only for a previous source.
+  absent: { skills: string[]; references: string[] }
 }
 
 type SkillInvocationPolicy = {
@@ -81,12 +97,14 @@ type CliOptions = {
   catalogVariant: CatalogVariant
   model: string
   effort: string
+  harness: Harness
 }
 
 const TOP_LEVEL_KEYS = [
   "version",
   "engineering_skills",
   "explicit_only_skills",
+  "host_skills",
   "skill_references",
   "invocation_coverage",
   "cases",
@@ -100,6 +118,7 @@ const CASE_KEYS = [
   "required_actions",
   "expectations",
 ] as const
+const OPTIONAL_CASE_KEYS: readonly string[] = ["forbidden_actions", "optional_references"]
 const EXPECTATION_KEYS = ["first_action", "mutation", "question", "stop"] as const
 const RESULT_KEYS = [
   "primary_skill",
@@ -118,8 +137,10 @@ function usage(): never {
   bun skills/evals/run-routing-evals.ts dry-run [--case ID] [--source-root PATH] [--previous-source-root PATH]
   All modes accept --catalog-variant full|synthetic-truncated|synthetic-crowded.
   bun skills/evals/run-routing-evals.ts live (--case ID | --all) --allow-live [--model MODEL] [--effort EFFORT]
+  dry-run and live accept --harness codex|claude (default codex).
 
-Live mode runs codex exec with ${LIVE_MODEL} at ${LIVE_REASONING_EFFORT} in a read-only sandbox.`)
+Live mode runs codex exec with ${LIVE_MODEL} at ${LIVE_REASONING_EFFORT} in a read-only sandbox, or
+claude -p with ${CLAUDE_LIVE_MODEL} at ${LIVE_REASONING_EFFORT} limited to ${CLAUDE_READ_ONLY_TOOLS}.`)
   process.exit(2)
 }
 
@@ -135,7 +156,9 @@ export function parseArgs(argv: string[]): CliOptions {
     catalogVariant: "full",
     model: LIVE_MODEL,
     effort: LIVE_REASONING_EFFORT,
+    harness: "codex",
   }
+  let explicitModel: string | undefined
   while (argv.length > 0) {
     const arg = argv.shift()
     if (arg === "--case") options.caseId = argv.shift() ?? usage()
@@ -143,7 +166,8 @@ export function parseArgs(argv: string[]): CliOptions {
     else if (arg === "--source-root") options.skillsRoot = join(resolve(argv.shift() ?? usage()), "skills")
     else if (arg === "--previous-source-root") options.previousSourceRoot = resolve(argv.shift() ?? usage())
     else if (arg === "--catalog-variant") options.catalogVariant = (argv.shift() ?? usage()) as CatalogVariant
-    else if (arg === "--model") options.model = argv.shift() ?? usage()
+    else if (arg === "--model") explicitModel = argv.shift() ?? usage()
+    else if (arg === "--harness") options.harness = (argv.shift() ?? usage()) as Harness
     else if (arg === "--effort") options.effort = argv.shift() ?? usage()
     else if (arg === "--all") options.all = true
     else if (arg === "--allow-live") options.allowLive = true
@@ -151,7 +175,9 @@ export function parseArgs(argv: string[]): CliOptions {
     else usage()
   }
   if (!["full", "synthetic-truncated", "synthetic-crowded"].includes(options.catalogVariant)) throw new Error("invalid catalog variant")
-  validateModelOptions(options.model, options.effort)
+  if (!HARNESSES.includes(options.harness)) throw new Error("invalid harness; use codex or claude")
+  options.model = explicitModel ?? (options.harness === "claude" ? CLAUDE_LIVE_MODEL : LIVE_MODEL)
+  validateModelOptions(options.model, options.effort, options.harness)
   if (options.caseId && options.all) usage()
   if (mode === "live" && !options.caseId && !options.all) {
     throw new Error("live mode requires --case ID or --all")
@@ -162,10 +188,10 @@ export function parseArgs(argv: string[]): CliOptions {
   return options
 }
 
-export function validateModelOptions(model: string, effort: string): void {
+export function validateModelOptions(model: string, effort: string, harness: Harness = "codex"): void {
   if (!/^[a-z0-9][a-z0-9._-]*$/i.test(model)) throw new Error("invalid model identifier")
-  if (!["low", "medium", "high", "xhigh", "max", "ultra"].includes(effort)) {
-    throw new Error("invalid reasoning effort")
+  if (!(harness === "claude" ? CLAUDE_EFFORTS : CODEX_EFFORTS).includes(effort)) {
+    throw new Error(`invalid reasoning effort for ${harness}`)
   }
 }
 
@@ -191,8 +217,13 @@ function sameMembers(left: string[], right: string[]): boolean {
   return [...left].sort().join("\0") === [...right].sort().join("\0")
 }
 
-function sameOrder(left: string[], right: string[]): boolean {
-  return left.length === right.length && left.every((value, index) => value === right[index])
+async function exists(path: string): Promise<boolean> {
+  try {
+    await access(path)
+    return true
+  } catch {
+    return false
+  }
 }
 
 function isUnique(values: string[]): boolean {
@@ -272,7 +303,7 @@ export function validateResultSchema(schema: unknown): string[] {
 export function parseSkillFrontmatter(
   contents: string,
   path = "SKILL.md",
-): { name: string; description: string; lines: string[] } {
+): { name: string; description: string; disableModelInvocation: boolean; lines: string[] } {
   const lines = contents.split(/\r?\n/)
   const closing = lines.indexOf("---", 1)
   if (lines[0] !== "---" || closing < 2) throw new Error(`${path} has invalid frontmatter delimiters`)
@@ -285,8 +316,13 @@ export function parseSkillFrontmatter(
     if (fields.has(key)) throw new Error(`${path} repeats frontmatter key ${key}`)
     fields.set(key, raw)
   }
-  if (!sameMembers([...fields.keys()], ["name", "description"])) {
-    throw new Error(`${path} frontmatter must contain exactly name and description`)
+  const keys = [...fields.keys()].filter(key => key !== "disable-model-invocation")
+  if (!sameMembers(keys, ["name", "description"])) {
+    throw new Error(`${path} frontmatter must contain exactly name and description, plus optional disable-model-invocation`)
+  }
+  const disable = fields.get("disable-model-invocation")
+  if (disable !== undefined && disable !== "true") {
+    throw new Error(`${path} disable-model-invocation must be true when present`)
   }
   let description: unknown
   try {
@@ -295,7 +331,7 @@ export function parseSkillFrontmatter(
     throw new Error(`${path} description must be a quoted string`)
   }
   if (typeof description !== "string") throw new Error(`${path} description must be a quoted string`)
-  return { name: fields.get("name") ?? "", description, lines }
+  return { name: fields.get("name") ?? "", description, disableModelInvocation: disable === "true", lines }
 }
 
 export function parseOpenAiPolicy(
@@ -438,6 +474,13 @@ export async function validateSkillEntrypoints(
       continue
     }
     if (frontmatter.name !== skill) errors.push(`${path} name must match its directory`)
+    // Claude Code reads disable-model-invocation; Codex reads agents/openai.yaml. Both must agree.
+    const explicitOnly = explicitOnlySkills.has(skill)
+    if (frontmatter.disableModelInvocation && !explicitOnly) {
+      errors.push(`${path} sets disable-model-invocation but agents/openai.yaml allows implicit invocation`)
+    } else if (!frontmatter.disableModelInvocation && explicitOnly) {
+      errors.push(`${path} must set disable-model-invocation: true because agents/openai.yaml disallows implicit invocation`)
+    }
     if (!frontmatter.description.includes("Use when")) {
       errors.push(`${path} description must contain 'Use when'`)
     } else if (frontmatter.description.length > 240) {
@@ -522,12 +565,13 @@ export function validateCase(
   references: Set<string>,
   explicitOnlySkills: Set<string>,
   resultSchema: unknown,
+  hostSkills: Set<string> = new Set(),
 ): string[] {
   const errors: string[] = []
   const label = `cases[${index}]`
   if (!isRecord(value)) return [`${label} must be an object`]
-  if (!sameMembers(Object.keys(value).filter(key => key !== "forbidden_actions"), [...CASE_KEYS])) {
-    errors.push(`${label} must contain ${CASE_KEYS.join(", ")} and optional forbidden_actions only`)
+  if (!sameMembers(Object.keys(value).filter(key => !OPTIONAL_CASE_KEYS.includes(key)), [...CASE_KEYS])) {
+    errors.push(`${label} must contain ${CASE_KEYS.join(", ")} and optional ${OPTIONAL_CASE_KEYS.join(", ")} only`)
   }
   if (typeof value.id !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.id)) {
     errors.push(`${label}.id must be kebab-case`)
@@ -542,9 +586,11 @@ export function validateCase(
   const expectedReferences = strings(value.expected_references)
   const actions = strings(value.required_actions)
   const forbiddenActions = "forbidden_actions" in value ? strings(value.forbidden_actions) : []
+  const optionalReferences = "optional_references" in value ? strings(value.optional_references) : []
   for (const [key, values] of [
     ["expected_modifier_skills", modifiers],
     ["expected_references", expectedReferences],
+    ["optional_references", optionalReferences],
     ["required_actions", actions],
     ["forbidden_actions", forbiddenActions],
   ] as const) {
@@ -552,7 +598,8 @@ export function validateCase(
     else if (!isUnique(values)) errors.push(`${label}.${key} must not contain duplicates`)
   }
   for (const modifier of modifiers ?? []) {
-    if (!skills.has(modifier)) errors.push(`${label} references unknown modifier ${modifier}`)
+    if (hostSkills.has(modifier)) errors.push(`${label} expects host skill ${modifier}; host skills are ignored by comparison`)
+    else if (!skills.has(modifier)) errors.push(`${label} references unknown modifier ${modifier}`)
     if (modifier === value.primary_skill) errors.push(`${label} repeats primary skill as a modifier`)
   }
   if (typeof value.prompt === "string") {
@@ -562,10 +609,13 @@ export function validateCase(
     ]
     errors.push(...validateExplicitOnlySelections(value.prompt, selectedSkills, explicitOnlySkills, label))
   }
-  for (const reference of expectedReferences ?? []) {
+  for (const reference of [...(expectedReferences ?? []), ...(optionalReferences ?? [])]) {
     if (!references.has(reference)) errors.push(`${label} references unknown reference ${reference}`)
   }
-  if (value.primary_skill === "none" && ((modifiers?.length ?? 0) > 0 || (expectedReferences?.length ?? 0) > 0)) errors.push(`${label} none route must not select modifiers or references`)
+  for (const reference of optionalReferences ?? []) {
+    if (expectedReferences?.includes(reference)) errors.push(`${label} both expects and optionally accepts reference ${reference}`)
+  }
+  if (value.primary_skill === "none" && ((modifiers?.length ?? 0) > 0 || (expectedReferences?.length ?? 0) > 0 || (optionalReferences?.length ?? 0) > 0)) errors.push(`${label} none route must not select modifiers or references`)
   const knownActions = new Set(enumValues(resultSchema, "actions"))
   if ((actions ?? []).length === 0 && value.primary_skill !== "none") errors.push(`${label}.required_actions must not be empty`)
   for (const action of [...(actions ?? []), ...(forbiddenActions ?? [])]) {
@@ -604,7 +654,7 @@ export function validateCase(
       ...evidenceRoles.filter(action => action !== evidenceRole),
       "delegate-reviewer-review", "delegate-oracle-review", "consult-oracle", "use-built-in-review-agent", "delegate-independent-tracks",
       "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local",
-      "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration",
+      "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration", "run-codex-review",
     ].every(action => forbiddenActions?.includes(action))
     const single = caseActions.includes("honor-single-track-scope") || evidenceOnly
     const blocked = caseActions.includes("report-blocked-review-coverage")
@@ -642,7 +692,7 @@ export function validateCase(
 
 export async function validateFixture(
   skillsRoot: string,
-  { allowMissingFixtureReferences = false }: { allowMissingFixtureReferences?: boolean } = {},
+  { previous = false }: { previous?: boolean } = {},
 ): Promise<ValidatedSuite> {
   const [fixture, resultSchema, actualSkills, linkErrors] = await Promise.all([
     readJson(CASES_PATH),
@@ -654,10 +704,34 @@ export async function validateFixture(
   const topErrors = validateFixtureTopLevel(fixture)
   if (!isRecord(fixture)) throw new Error(topErrors.join("\n"))
   const errors = [...topErrors, ...linkErrors, ...validateResultSchema(resultSchema)]
-  if (fixture.version !== 6) errors.push("routing fixture version must be 6")
+  if (fixture.version !== 7) errors.push("routing fixture version must be 7")
   const skillSurface = await validateSkillEntrypoints(skillsRoot, actualSkills)
   errors.push(...skillSurface.errors)
-  errors.push(...(await validateProgressiveReferences(skillsRoot, fixture.skill_references, allowMissingFixtureReferences)))
+  errors.push(...(await validateProgressiveReferences(skillsRoot, fixture.skill_references, previous)))
+  const hostSkills = strings(fixture.host_skills)
+  if (!hostSkills) errors.push("host_skills must be a string array")
+  else if (!isUnique(hostSkills)) errors.push("host_skills must be unique")
+  else for (const skill of hostSkills) if (actualSkills.includes(skill)) errors.push(`host skill ${skill} is also a source skill`)
+
+  // A previous source predates some fixture skills or references. Its cases are validated against the
+  // candidate; here it only needs a valid skill surface, and absent entries are reported for skipping.
+  if (previous) {
+    if (errors.length > 0) throw new Error(`routing eval validation failed (previous source):\n- ${errors.join("\n- ")}`)
+    const routing = fixture as unknown as RoutingFixture
+    const present = new Set(actualSkills)
+    const references = await Promise.all(routing.skill_references.map(async reference => ({ reference, exists: await exists(join(skillsRoot, reference)) })))
+    const absentReferences = references.filter(entry => !entry.exists).map(entry => entry.reference)
+    return {
+      fixture: {
+        ...routing,
+        engineering_skills: routing.engineering_skills.filter(skill => present.has(skill)),
+        explicit_only_skills: [...skillSurface.explicitOnlySkills],
+        skill_references: routing.skill_references.filter(reference => !absentReferences.includes(reference)),
+      },
+      resultSchema,
+      absent: { skills: routing.engineering_skills.filter(skill => !present.has(skill)), references: absentReferences },
+    }
+  }
 
   const inventory = strings(fixture.engineering_skills)
   if (!inventory) errors.push("engineering_skills must be a string array")
@@ -676,7 +750,7 @@ export async function validateFixture(
     errors.push("cases must be an array")
   } else {
     fixture.cases.forEach((entry, index) => {
-      errors.push(...validateCase(entry, index, skillSet, referenceSet, skillSurface.explicitOnlySkills, resultSchema))
+      errors.push(...validateCase(entry, index, skillSet, referenceSet, skillSurface.explicitOnlySkills, resultSchema, new Set(hostSkills ?? [])))
     })
     const records = fixture.cases.filter(isRecord)
     const ids = records.map((entry) => entry.id).filter((id): id is string => typeof id === "string")
@@ -697,7 +771,18 @@ export async function validateFixture(
   }
   errors.push(...validateInvocationCoverage(fixture as unknown as RoutingFixture))
   if (errors.length > 0) throw new Error(`routing eval validation failed:\n- ${errors.join("\n- ")}`)
-  return { fixture: fixture as unknown as RoutingFixture, resultSchema }
+  return { fixture: fixture as unknown as RoutingFixture, resultSchema, absent: { skills: [], references: [] } }
+}
+
+// Why a previous source cannot run a case (skip) or cannot pass it (expected red); empty when neither applies.
+export function previousSourceGaps(routingCase: RoutingCase, absent: ValidatedSuite["absent"]): { skip: string[]; expected_red: string[] } {
+  const skip = [routingCase.primary_skill, ...routingCase.expected_modifier_skills]
+    .filter(skill => absent.skills.includes(skill))
+    .map(skill => `skill ${skill} is absent from this source`)
+  const expected_red = routingCase.expected_references
+    .filter(reference => absent.references.includes(reference))
+    .map(reference => `reference ${reference} is absent from this source`)
+  return { skip, expected_red }
 }
 
 function selectCases(fixture: RoutingFixture, caseId?: string): RoutingCase[] {
@@ -787,59 +872,64 @@ export function parseLiveResult(
   output: string,
   fixture: RoutingFixture,
   resultSchema: unknown,
+  label = "codex exec",
 ): RoutingResult {
   let value: unknown
   try {
     value = JSON.parse(output.trim())
   } catch {
-    throw new Error(`codex exec did not return JSON: ${output.trim().slice(0, 500)}`)
+    throw new Error(`${label} did not return JSON: ${output.trim().slice(0, 500)}`)
   }
-  if (!isRecord(value)) throw new Error("codex exec result must be a JSON object")
+  if (!isRecord(value)) throw new Error(`${label} result must be a JSON object`)
   if (!sameMembers(Object.keys(value), [...RESULT_KEYS])) {
-    throw new Error(`codex exec result must contain exactly ${RESULT_KEYS.join(", ")}`)
+    throw new Error(`${label} result must contain exactly ${RESULT_KEYS.join(", ")}`)
   }
   const knownSkills = new Set(fixture.engineering_skills)
   if (typeof value.primary_skill !== "string" || !(knownSkills.has(value.primary_skill) || value.primary_skill === "none")) {
-    throw new Error("codex exec result primary_skill must name a known skill or none")
+    throw new Error(`${label} result primary_skill must name a known skill or none`)
   }
   for (const key of ["modifier_skills", "references", "actions"] as const) {
     if (!Array.isArray(value[key]) || !value[key].every((item) => typeof item === "string")) {
-      throw new Error(`codex exec result ${key} must be a string array`)
+      throw new Error(`${label} result ${key} must be a string array`)
     }
-    if (!isUnique(value[key])) throw new Error(`codex exec result ${key} must not contain duplicates`)
+    if (!isUnique(value[key])) throw new Error(`${label} result ${key} must not contain duplicates`)
   }
   if (value.primary_skill === "none" && ((value.modifier_skills as string[]).length || (value.references as string[]).length)) throw new Error("none route must not select modifiers or references")
+  const hostSkills = new Set(fixture.host_skills)
   for (const skill of value.modifier_skills as string[]) {
-    if (!knownSkills.has(skill)) throw new Error(`codex exec result references unknown skill ${skill}`)
-    if (skill === value.primary_skill) throw new Error("codex exec result repeats primary skill as modifier")
+    if (!knownSkills.has(skill) && !hostSkills.has(skill)) throw new Error(`${label} result references unknown skill ${skill}`)
+    if (skill === value.primary_skill) throw new Error(`${label} result repeats primary skill as modifier`)
   }
   const knownReferences = new Set(fixture.skill_references)
   for (const reference of value.references as string[]) {
-    if (!knownReferences.has(reference)) throw new Error(`codex exec result references unknown reference ${reference}`)
+    if (!knownReferences.has(reference)) throw new Error(`${label} result references unknown reference ${reference}`)
   }
   const knownActions = new Set(enumValues(resultSchema, "actions"))
   for (const action of value.actions as string[]) {
-    if (!knownActions.has(action)) throw new Error(`codex exec result references unknown action ${action}`)
+    if (!knownActions.has(action)) throw new Error(`${label} result references unknown action ${action}`)
   }
   for (const key of EXPECTATION_KEYS) {
     if (typeof value[key] !== "string" || !enumValues(resultSchema, key).includes(value[key])) {
-      throw new Error(`codex exec result ${key} has invalid value ${String(value[key])}`)
+      throw new Error(`${label} result ${key} has invalid value ${String(value[key])}`)
     }
   }
   return value as unknown as RoutingResult
 }
 
-export function compareResult(routingCase: RoutingCase, result: RoutingResult): string[] {
+// Modifiers and references are unordered sets: neither the prompt nor the schema gives their order meaning.
+export function compareResult(routingCase: RoutingCase, result: RoutingResult, hostSkills: readonly string[] = []): string[] {
   const failures: string[] = []
   if (result.primary_skill !== routingCase.primary_skill) {
     failures.push(`primary_skill: expected ${routingCase.primary_skill}, got ${result.primary_skill}`)
   }
-  if (!sameOrder(result.modifier_skills, routingCase.expected_modifier_skills)) {
+  const modifiers = result.modifier_skills.filter(skill => !hostSkills.includes(skill))
+  if (!sameMembers(modifiers, routingCase.expected_modifier_skills)) {
     failures.push(
-      `modifier_skills: expected ${routingCase.expected_modifier_skills.join(",")}, got ${result.modifier_skills.join(",")}`,
+      `modifier_skills: expected ${routingCase.expected_modifier_skills.join(",")}, got ${modifiers.join(",")}`,
     )
   }
-  if (!sameOrder(result.references, routingCase.expected_references)) {
+  const optionalReferences = routingCase.optional_references ?? []
+  if (!sameMembers(result.references.filter(reference => !optionalReferences.includes(reference)), routingCase.expected_references)) {
     failures.push(
       `references: expected ${routingCase.expected_references.join(",")}, got ${result.references.join(",")}`,
     )
@@ -884,6 +974,132 @@ export function codexExecArgs(repoRoot: string, prompt: string, model = LIVE_MOD
     prompt,
   ]
   return SETSID ? [SETSID, ...args] : args
+}
+
+export type ClaudeExecOptions = {
+  model?: string
+  effort?: string
+  // JSON Schema text for --json-schema; structured output arrives as result.structured_output.
+  schema: string
+  // Source host instructions appended to the default system prompt, mirroring codex loading AGENTS.md from --cd.
+  instructions: string
+  // Readable roots; the process runs from an empty cwd so no project instruction file loads.
+  addDirs: string[]
+}
+
+// The prompt travels on stdin: `--tools` and `--add-dir` are variadic and would swallow a trailing
+// positional prompt. `--setting-sources project` with an empty cwd skips user settings, CLAUDE.md
+// and AGENTS.md discovery, user skills, agents, and hooks; `--disable-slash-commands` hides every
+// skill because the prompt supplies the source catalog.
+export function claudeExecArgs({ model = CLAUDE_LIVE_MODEL, effort = LIVE_REASONING_EFFORT, schema, instructions, addDirs }: ClaudeExecOptions): string[] {
+  validateModelOptions(model, effort, "claude")
+  const args = [
+    "claude",
+    "-p",
+    "--output-format",
+    "json",
+    "--verbose",
+    "--no-session-persistence",
+    "--setting-sources",
+    "project",
+    "--strict-mcp-config",
+    "--disable-slash-commands",
+    "--permission-mode",
+    "dontAsk",
+    "--tools",
+    CLAUDE_READ_ONLY_TOOLS,
+    ...addDirs.flatMap(dir => ["--add-dir", dir]),
+    "--model",
+    model,
+    "--effort",
+    effort,
+    "--json-schema",
+    schema,
+    "--append-system-prompt",
+    instructions,
+  ]
+  return SETSID ? [SETSID, ...args] : args
+}
+
+const CLAUDE_SESSION_ENV = /^(?:CLAUDECODE|CLAUDE_CODE_(?:SESSION_ID|SESSION_ATTENDED|CHILD_SESSION|ENTRYPOINT|EXECPATH|MESSAGING_SOCKET|MESSAGING_TOKEN)|CLAUDE_PID|CLAUDE_EFFORT|CLAUDE_AGENT_SDK_VERSION|AI_AGENT)$/
+
+// Drops the parent session's coupling variables so a nested run starts as an independent session,
+// keeps ANTHROPIC_* auth (user settings.json env is not loaded), and disables auto memory, which
+// setting sources do not control.
+export function claudeEnv(base: Record<string, string | undefined> = process.env): Record<string, string> {
+  const env: Record<string, string> = {}
+  for (const [key, value] of Object.entries(base)) {
+    if (value !== undefined && !CLAUDE_SESSION_ENV.test(key)) env[key] = value
+  }
+  env.CLAUDE_CODE_DISABLE_AUTO_MEMORY = "1"
+  return env
+}
+
+// Claude Code reads host instructions from CLAUDE.md, so the harness supplies the source tree's
+// generated claude/CLAUDE.md, falling back to AGENTS.md for sources that predate host generation.
+export async function sourceInstructions(sourceRoot: string): Promise<{ path: string; contents: string }> {
+  for (const relative of ["claude/CLAUDE.md", "AGENTS.md"]) {
+    const path = join(sourceRoot, relative)
+    try {
+      return { path, contents: await readFile(path, "utf8") }
+    } catch (error) {
+      if (!isRecord(error) || error.code !== "ENOENT") throw error
+    }
+  }
+  throw new Error(`${sourceRoot} has neither claude/CLAUDE.md nor AGENTS.md`)
+}
+
+// Claude Code validates --json-schema with a default-draft validator that rejects the 2020-12 `$schema`
+// meta-schema URI, so the claude harness sends the same schema without that key.
+export function claudeJsonSchema(schemaText: string): string {
+  const { $schema: _metaSchema, ...schema } = JSON.parse(schemaText) as Record<string, unknown>
+  return JSON.stringify(schema)
+}
+
+export const CLAUDE_ISOLATION =
+  "empty cwd + setting-sources=project; --add-dir exposes only a temp copy of the source skills (without evals), agents, AGENTS.md, and claude/CLAUDE.md; user settings/CLAUDE.md/skills/agents/hooks, project instruction files, MCP, slash commands, and auto memory excluded; ~/.claude.json, managed policy, and builtin plugins still load"
+
+// Non-secret record of where a nested claude run sends requests and where its credentials come from.
+// "env" means the inherited environment carries an Anthropic credential; "config" means claude falls
+// back to its own stored login. Never records credential values.
+export function claudeRoutingMarker(env: Record<string, string | undefined> = process.env): { anthropic_base_url_host: string | null; auth_source: "env" | "config" } {
+  let host: string | null = null
+  if (env.ANTHROPIC_BASE_URL) {
+    try {
+      host = new URL(env.ANTHROPIC_BASE_URL).host
+    } catch {
+      host = "<unparseable>"
+    }
+  }
+  return { anthropic_base_url_host: host, auth_source: env.ANTHROPIC_AUTH_TOKEN || env.ANTHROPIC_API_KEY ? "env" : "config" }
+}
+
+const STAGED_SOURCE_FILES = ["AGENTS.md", "claude/CLAUDE.md"]
+
+// Copies what the claude harness may read into `root`: skills without the eval cases and judge,
+// agent profiles, and the host instruction files. The model never sees the source tree itself.
+export async function stageClaudeSource(sourceRoot: string, root: string): Promise<string> {
+  const skillsRoot = join(sourceRoot, "skills")
+  await cp(skillsRoot, join(root, "skills"), { recursive: true, filter: source => source !== join(skillsRoot, "evals") })
+  if (await exists(join(sourceRoot, "agents"))) await cp(join(sourceRoot, "agents"), join(root, "agents"), { recursive: true })
+  for (const file of STAGED_SOURCE_FILES) {
+    if (!(await exists(join(sourceRoot, file)))) continue
+    await mkdir(dirname(join(root, file)), { recursive: true })
+    await cp(join(sourceRoot, file), join(root, file))
+  }
+  return join(root, "skills")
+}
+
+export async function withEmptyCwd<T>(run: (cwd: string) => Promise<T>, prefix = "claude-eval-cwd-"): Promise<T> {
+  const cwd = await mkdtemp(join(tmpdir(), prefix))
+  const cleanup = () => rm(cwd, { recursive: true, force: true })
+  shutdownCleanups.add(cleanup)
+  try {
+    return await run(cwd)
+  } finally {
+    shutdownCleanups.delete(cleanup)
+    await cleanup()
+  }
 }
 
 type EvalSubprocess = ReturnType<typeof Bun.spawn>
@@ -990,7 +1206,9 @@ async function runLiveCase(
   model: string,
   effort: string,
   variant: CatalogVariant,
+  harness: Harness,
 ) {
+  if (harness === "claude") return runClaudeLiveCase(routingCase, fixture, resultSchema, skillsRoot, model, effort, variant)
   const repoRoot = dirname(skillsRoot)
   const prompt = await buildLivePrompt(routingCase, fixture, skillsRoot, variant)
   const args = codexExecArgs(repoRoot, prompt, model, effort)
@@ -1002,10 +1220,50 @@ async function runLiveCase(
   trace.elapsed_ms = Math.round(performance.now() - started)
   try {
     const result = parseLiveResult(trace.messages.at(-1)!, fixture, resultSchema)
-    return { result, failures: compareResult(routingCase, result), trace, prompt_hash: sha256(prompt) }
+    return { result, failures: compareResult(routingCase, result, fixture.host_skills), trace, prompt_hash: sha256(prompt) }
   } catch (error) {
     return { result: null, failures: [error instanceof Error ? error.message : String(error)], trace, prompt_hash: sha256(prompt) }
   }
+}
+
+export async function runClaudeLiveCase(
+  routingCase: RoutingCase,
+  fixture: RoutingFixture,
+  resultSchema: unknown,
+  skillsRoot: string,
+  model: string,
+  effort: string,
+  variant: CatalogVariant,
+) {
+  const repoRoot = dirname(skillsRoot)
+  const [instructions, schema] = await Promise.all([sourceInstructions(repoRoot), readFile(RESULT_SCHEMA_PATH, "utf8")])
+  return withEmptyCwd(async stageRoot => {
+    const stagedSkillsRoot = await stageClaudeSource(repoRoot, stageRoot)
+    const prompt = await buildLivePrompt(routingCase, fixture, stagedSkillsRoot, variant)
+    const args = claudeExecArgs({ model, effort, schema: claudeJsonSchema(schema), instructions: instructions.contents, addDirs: [stageRoot] })
+    const started = performance.now()
+    const { stdout, stderr, exitCode } = await withEmptyCwd(cwd => {
+      const child = Bun.spawn({ cmd: args, cwd, env: claudeEnv(), stdin: new Blob([prompt]), stdout: "pipe", stderr: "pipe" })
+      return collectSubprocess(child, `claude -p for ${routingCase.id}`, CLAUDE_LIVE_TIMEOUT_MS, SETSID !== null && args[0] === SETSID)
+    })
+    if (exitCode !== 0) throw new Error(`claude -p failed for ${routingCase.id} (${exitCode}): ${stderr.trim() || stdout.trim().slice(0, 500)}`)
+    const trace = parseClaudeTrace(stdout)
+    trace.elapsed_ms = Math.round(performance.now() - started)
+    // The staged root differs per run; hash the prompt with it replaced so equal inputs hash equally.
+    const evidence = { trace, prompt_hash: sha256(prompt.replaceAll(stageRoot, "<STAGED_SOURCE>")), instructions_file: instructions.path, instructions_hash: sha256(instructions.contents) }
+    try {
+      const result = parseLiveResult(trace.messages.at(-1)!, fixture, resultSchema, "claude -p")
+      return { result, failures: compareResult(routingCase, result, fixture.host_skills), ...evidence }
+    } catch (error) {
+      return { result: null, failures: [error instanceof Error ? error.message : String(error)], ...evidence }
+    }
+  }, "claude-eval-source-")
+}
+
+export function dryRunCommand(options: Pick<CliOptions, "harness" | "model" | "effort">, sourceRoot: string): string[] {
+  return options.harness === "claude"
+    ? claudeExecArgs({ model: options.model, effort: options.effort, schema: `<${RESULT_SCHEMA_PATH}>`, instructions: "<SOURCE_INSTRUCTIONS>", addDirs: ["<STAGED_SOURCE>"] })
+    : codexExecArgs(sourceRoot, "<ROUTING_EVAL_PROMPT>", options.model, options.effort)
 }
 
 async function main(): Promise<void> {
@@ -1017,27 +1275,37 @@ async function main(): Promise<void> {
   const harness_hash = await harnessHash()
   const suites = await Promise.all(sources.map(async source => ({
     ...source,
-    ...await validateFixture(source.skillsRoot, { allowMissingFixtureReferences: source.label === "previous" }),
+    ...await validateFixture(source.skillsRoot, { previous: source.label === "previous" }),
     ...await sourceProvenance(source.root, source.skillsRoot),
   })))
   if (options.mode === "validate") {
     if (!options.quiet) for (const suite of suites) console.log(`Routing eval fixture is valid (${suite.label}): ${suite.fixture.cases.length} cases, ${suite.fixture.engineering_skills.length} skills; positive and near-negative invocation coverage complete`)
     return
   }
-  if (options.mode === "live" && !Bun.which("codex")) throw new Error("live mode requires the codex executable on PATH")
+  if (options.mode === "live" && !Bun.which(options.harness)) throw new Error(`live mode requires the ${options.harness} executable on PATH`)
   let failed = false
-  // Pair each case across sources to keep fixtures, settings, and catalog variant identical.
-  for (const routingCase of selectCases(suites[0]!.fixture, options.caseId)) {
+  // Pair each case across sources to keep fixtures, settings, and catalog variant identical. Cases come
+  // from the candidate fixture, which is the only one validated case by case.
+  for (const routingCase of selectCases(suites.at(-1)!.fixture, options.caseId)) {
     for (const suite of suites) {
-      const provenance = { case: routingCase.id, source: suite.label, source_root: suite.root, skills_root: suite.skillsRoot, source_hash: suite.source_hash, harness_hash, fixture_hash: sha256(JSON.stringify(routingCase)), model: options.model, reasoning_effort: options.effort, catalog_variant: options.catalogVariant, host_native_discovery: "unisolated" }
+      const routing = options.harness === "claude" ? { host_native_discovery: CLAUDE_ISOLATION, claude_routing: claudeRoutingMarker() } : { host_native_discovery: "unisolated" }
+      const provenance = { case: routingCase.id, source: suite.label, source_root: suite.root, skills_root: suite.skillsRoot, source_hash: suite.source_hash, harness_hash, fixture_hash: sha256(JSON.stringify(routingCase)), harness: options.harness, model: options.model, reasoning_effort: options.effort, catalog_variant: options.catalogVariant, ...routing }
+      const gaps = previousSourceGaps(routingCase, suite.absent)
+      if (gaps.skip.length) {
+        console.log(JSON.stringify({ ...provenance, skipped: gaps.skip }))
+        continue
+      }
+      const expectation = gaps.expected_red.length ? { expected_red: gaps.expected_red } : {}
       if (options.mode === "dry-run") {
-        console.log(JSON.stringify({ ...provenance, external_call: false, would_execute: codexExecArgs(suite.root, "<ROUTING_EVAL_PROMPT>", options.model, options.effort), contract: routingCase }))
+        const stdin = options.harness === "claude" ? { cwd: "<EMPTY_TEMP_DIR>", stdin: "<ROUTING_EVAL_PROMPT>", instructions_file: (await sourceInstructions(suite.root)).path } : {}
+        console.log(JSON.stringify({ ...provenance, ...expectation, external_call: false, would_execute: dryRunCommand(options, suite.root), ...stdin, contract: routingCase }))
         continue
       }
       try {
-        const result = await runLiveCase(routingCase, suite.fixture, suite.resultSchema, suite.skillsRoot, options.model, options.effort, options.catalogVariant)
-        console.log(JSON.stringify({ ...provenance, ...result }))
-        if (result.failures.length) failed = true
+        const result = await runLiveCase(routingCase, suite.fixture, suite.resultSchema, suite.skillsRoot, options.model, options.effort, options.catalogVariant, options.harness)
+        console.log(JSON.stringify({ ...provenance, ...expectation, ...result }))
+        // An expected-red previous result documents the gap the candidate closes; it does not fail the run.
+        if (result.failures.length && !gaps.expected_red.length) failed = true
       } catch (error) {
         failed = true
         console.log(JSON.stringify({ ...provenance, error: error instanceof Error ? error.message : String(error) }))

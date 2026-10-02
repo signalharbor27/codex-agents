@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { chmod, cp, mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises"
+import { chmod, cp, mkdir, mkdtemp, readdir, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -7,6 +7,18 @@ import {
   collectSubprocess,
   terminateSubprocess,
   codexExecArgs,
+  claudeExecArgs,
+  claudeEnv,
+  claudeJsonSchema,
+  claudeRoutingMarker,
+  previousSourceGaps,
+  runClaudeLiveCase,
+  stageClaudeSource,
+  dryRunCommand,
+  sourceInstructions,
+  withEmptyCwd,
+  CLAUDE_LIVE_MODEL,
+  LIVE_MODEL,
   parseArgs,
   validateCase,
   compareResult,
@@ -29,7 +41,8 @@ import {
   type RoutingFixture,
   type RoutingResult,
 } from "./run-routing-evals.ts"
-import { sourceProvenance } from "./eval-evidence.ts"
+import { parseClaudeTrace, sourceProvenance } from "./eval-evidence.ts"
+import { withFakeClaude } from "./fake-claude.ts"
 
 const fixture = (await Bun.file(`${import.meta.dir}/routing-cases.json`).json()) as RoutingFixture
 const resultSchema: unknown = await Bun.file(`${import.meta.dir}/routing-result.schema.json`).json()
@@ -188,6 +201,34 @@ describe("skill invocation policy", () => {
     ])
   })
 
+  test("Claude disable-model-invocation must agree with the Codex invocation policy in both directions", async () => {
+    const root = await mkdtemp(join(tmpdir(), "skill-parity-"))
+    const frontmatter = (extra: string) => `---\nname: example\n${extra}description: "Use when evaluating the example."\n---\n\n# Example\n`
+    const policy = (allow: boolean) => `policy:\n  allow_implicit_invocation: ${allow}\n`
+    try {
+      await mkdir(join(root, "example/agents"), { recursive: true })
+      const skill = join(root, "example/SKILL.md"), yaml = join(root, "example/agents/openai.yaml")
+      await writeFile(skill, frontmatter("disable-model-invocation: true\n"))
+      await writeFile(yaml, policy(false))
+      expect(await validateSkillEntrypoints(root, ["example"])).toEqual({ errors: [], explicitOnlySkills: new Set(["example"]) })
+      await writeFile(skill, frontmatter(""))
+      expect((await validateSkillEntrypoints(root, ["example"])).errors).toEqual([`${skill} must set disable-model-invocation: true because agents/openai.yaml disallows implicit invocation`])
+      await writeFile(skill, frontmatter("disable-model-invocation: true\n"))
+      await writeFile(yaml, policy(true))
+      expect((await validateSkillEntrypoints(root, ["example"])).errors).toEqual([`${skill} sets disable-model-invocation but agents/openai.yaml allows implicit invocation`])
+      await rm(yaml)
+      expect((await validateSkillEntrypoints(root, ["example"])).errors).toEqual([`${skill} sets disable-model-invocation but agents/openai.yaml allows implicit invocation`])
+    } finally { await rm(root, { recursive: true, force: true }) }
+  })
+
+  test("frontmatter accepts only a true disable-model-invocation as an extra key", () => {
+    const parse = (extra: string) => parseSkillFrontmatter(`---\nname: example\ndescription: "Use when x."\n${extra}---\n`)
+    expect(parse("").disableModelInvocation).toBe(false)
+    expect(parse("disable-model-invocation: true\n").disableModelInvocation).toBe(true)
+    expect(() => parse("disable-model-invocation: false\n")).toThrow("must be true when present")
+    expect(() => parse("user-invocable: false\n")).toThrow("plus optional disable-model-invocation")
+  })
+
   test("labels explicit-only skills in the live catalog", () => {
     expect(formatSkillCatalogLine("grill-me", "Explicit wrapper.", { allowImplicitInvocation: false }))
       .toBe("- grill-me [explicit-only; exact $grill-me invocation required]: Explicit wrapper.")
@@ -220,7 +261,7 @@ test("JSON loading distinguishes a missing file from invalid content", async () 
 
 test("fixture validation rejects unknown top-level fields", () => {
   expect(validateFixtureTopLevel({ ...fixture, unexpected: true })).toEqual([
-    "routing fixture must contain exactly version, engineering_skills, explicit_only_skills, skill_references, invocation_coverage, cases",
+    "routing fixture must contain exactly version, engineering_skills, explicit_only_skills, host_skills, skill_references, invocation_coverage, cases",
   ])
 })
 
@@ -396,7 +437,7 @@ describe("progressive review contract", () => {
     ])
     const delegated = entry("independent-review-tracks")
     expect(compareResult(delegated, { ...resultFor(delegated), references: [] })).toEqual([
-      "references: expected review-and-simplify-changes/references/delegated-review.md, got ",
+      "references: expected review-and-simplify-changes/references/coding-standards.md,review-and-simplify-changes/references/delegated-review.md, got ",
     ])
   })
 
@@ -408,7 +449,18 @@ describe("progressive review contract", () => {
     expect(validate({ ...routingCase, forbidden_actions: ["review-entire-intended-diff", "review-entire-intended-diff"] })).toContain("cases[0].forbidden_actions must not contain duplicates")
     expect(validate({ ...routingCase, forbidden_actions: ["unknown-review-action"] })).toContain("cases[0] references unknown action unknown-review-action")
     expect(validate({ ...routingCase, forbidden_actions: ["review-delta-since-last-snapshot"] })).toContain("cases[0] both requires and forbids action review-delta-since-last-snapshot")
-    expect(validate({ ...routingCase, unexpected: true }).some(error => error.includes("optional forbidden_actions only"))).toBe(true)
+    expect(validate({ ...routingCase, unexpected: true }).some(error => error.includes("optional forbidden_actions, optional_references only"))).toBe(true)
+  })
+
+  test("optional references are known, unique, and disjoint from expected references", () => {
+    const routingCase = entry("follow-up-review-delta")
+    const merge = "describe-pr/references/merge-danger.md"
+    expect(validate({ ...routingCase, optional_references: [merge] })).toEqual([])
+    expect(validate({ ...routingCase, optional_references: merge })).toContain("cases[0].optional_references must be a string array")
+    expect(validate({ ...routingCase, optional_references: [merge, merge] })).toContain("cases[0].optional_references must not contain duplicates")
+    expect(validate({ ...routingCase, optional_references: ["skill/references/invented.md"] })).toContain("cases[0] references unknown reference skill/references/invented.md")
+    const expected = routingCase.expected_references[0]!
+    expect(validate({ ...routingCase, optional_references: [expected] })).toContain(`cases[0] both expects and optionally accepts reference ${expected}`)
   })
 })
 
@@ -438,16 +490,18 @@ describe("independent review role selection", () => {
         ...Object.fromEntries(Object.entries(entry.expectations).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
       } as RoutingResult
       expect(compareResult(entry, result)).toEqual([])
-      const reviewRole = entry.required_actions.includes("delegate-oracle-review") ? "delegate-oracle-review" : "delegate-reviewer-review"
+      const reviewRole = entry.required_actions.includes("delegate-reviewer-review") ? "delegate-reviewer-review" : "delegate-oracle-review"
       for (const action of [reviewRole, "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]) {
         expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
-        const incomplete = { ...entry, required_actions: entry.required_actions.filter(value => value !== action) }
+        // Dropping the review role drops every independent reviewer, including an added oracle.
+        const dropped = action === reviewRole ? ["delegate-reviewer-review", "delegate-oracle-review"] : [action]
+        const incomplete = { ...entry, required_actions: entry.required_actions.filter(value => !dropped.includes(value)) }
         expect(validateCase(incomplete, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema)).toContain(action === reviewRole
           ? "cases[0] substantive review must require independent reviewer dispatch"
           : `cases[0] substantive review must require ${action}`)
       }
       expect(compareResult(entry, { ...result, actions: [...result.actions, "keep-coupled-review-local"] })).toEqual(["forbidden action keep-coupled-review-local"])
-      if (reviewRole === "delegate-reviewer-review") expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
+      if (entry.forbidden_actions?.includes("delegate-oracle-review")) expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
     }
   })
 
@@ -532,7 +586,7 @@ describe("independent review role selection", () => {
     for (const id of ["delegated-mechanical-review-evidence", "delegated-review-command-evidence"]) {
       const entry = fixture.cases.find(candidate => candidate.id === id)!
       const result = resultFor(entry)
-      for (const action of ["delegate-independent-tracks", "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration"]) {
+      for (const action of ["delegate-independent-tracks", "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration", "run-codex-review"]) {
         expect(compareResult(entry, { ...result, actions: [...result.actions, action] })).toEqual([`forbidden action ${action}`])
       }
     }
@@ -564,16 +618,14 @@ describe("independent review role selection", () => {
     }
   })
 
-  test("concrete risk alone selects reviewer and preserves read-only review", () => {
-    for (const id of ["reviewer-tenant-boundary-review", "reviewer-charge-retry-review", "reviewer-mixed-version-migration-review"]) {
+  test("one-way-door and hot-path reviews add oracle and codex review to the reviewer and stay read-only", () => {
+    for (const id of ["reviewer-tenant-boundary-review", "reviewer-charge-retry-review", "reviewer-mixed-version-migration-review", "hot-path-one-way-review"]) {
       const entry = fixture.cases.find(candidate => candidate.id === id)!
       const result = resultFor(entry)
       expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
-      expect(compareResult(entry, result)).toEqual([])
-      expect(compareResult(entry, { ...result, actions: result.actions.filter(action => action !== "delegate-reviewer-review") })).toEqual([
-        "missing required action delegate-reviewer-review",
-      ])
-      expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
+      for (const action of ["delegate-reviewer-review", "delegate-oracle-review", "run-codex-review"]) {
+        expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
+      }
       expect(compareResult(entry, { ...result, mutation: "requested-repo-writes" })).toEqual(["mutation: expected none, got requested-repo-writes"])
     }
   })
@@ -626,10 +678,10 @@ describe("independent review role selection", () => {
 })
 
 describe("source agent catalog", () => {
-  test("accepts the seven source roles including reviewer and Oracle", async () => {
+  test("accepts the eight source roles including reviewer, refiner, and Oracle", async () => {
     const catalog = await agentCatalog(join(import.meta.dir, "../.."))
     expect([...catalog.matchAll(/^- ([a-z_]+):/gm)].map(match => match[1])).toEqual([
-      "explorer", "fast_reviewer", "implementer", "librarian", "oracle", "reviewer", "verifier",
+      "explorer", "fast_reviewer", "implementer", "librarian", "oracle", "refiner", "reviewer", "verifier",
     ])
   })
 
@@ -831,7 +883,7 @@ describe("previous source reference validation", () => {
         expect(records.map(record => record.source)).toEqual(["previous", "candidate"])
         expect(records[0].contract).toEqual(records[1].contract)
         expect(records[0].fixture_hash).toBe(records[1].fixture_hash)
-        if (caseId === "independent-review-tracks") expect(records[0].contract.expected_references).toEqual([reference])
+        if (caseId === "independent-review-tracks") expect(records[0].contract.expected_references).toContain(reference)
       }
     })
   })
@@ -878,3 +930,339 @@ test("SIGKILL reaping has a separate scheduling allowance from TERM grace", asyn
   expect(signals).toEqual(["SIGTERM", "SIGKILL"])
   expect(child.exitCode).toBe(137)
 })
+
+describe("claude harness", () => {
+  test("defaults to codex and keeps codex defaults unchanged", () => {
+    const options = parseArgs(["dry-run"])
+    expect(options.harness).toBe("codex")
+    expect(options.model).toBe(LIVE_MODEL)
+    expect(dryRunCommand(options, "/tmp/source")).toContain("exec")
+  })
+
+  test("selects the claude default model unless --model overrides it, in any flag order", () => {
+    expect(parseArgs(["dry-run", "--harness", "claude"]).model).toBe(CLAUDE_LIVE_MODEL)
+    expect(parseArgs(["dry-run", "--model", "claude-sonnet-5", "--harness", "claude"]).model).toBe("claude-sonnet-5")
+    expect(parseArgs(["live", "--harness", "claude", "--case", "describe-pr", "--allow-live"]).harness).toBe("claude")
+  })
+
+  test("rejects unknown harnesses and efforts claude does not accept", () => {
+    expect(() => parseArgs(["dry-run", "--harness", "amp"])).toThrow("invalid harness")
+    expect(() => parseArgs(["dry-run", "--harness", "claude", "--effort", "ultra"])).toThrow("invalid reasoning effort for claude")
+    expect(parseArgs(["dry-run", "--effort", "ultra"]).effort).toBe("ultra")
+    expect(() => parseArgs(["live", "--harness", "claude", "--case", "describe-pr"])).toThrow("--allow-live")
+  })
+
+  test("builds a print-mode command with read-only tools, isolation flags, and structured output", () => {
+    const args = claudeExecArgs({ model: "claude-opus-5-5", effort: "high", schema: "{\"type\":\"object\"}", instructions: "# Source", addDirs: ["/src"] })
+    const at = (flag: string) => args[args.indexOf(flag) + 1]
+    expect(args.slice(args.indexOf("claude"), args.indexOf("claude") + 2)).toEqual(["claude", "-p"])
+    expect(at("--output-format")).toBe("json")
+    expect(at("--tools")).toBe("Read,Grep,Glob")
+    expect(at("--setting-sources")).toBe("project")
+    expect(at("--permission-mode")).toBe("dontAsk")
+    expect(at("--model")).toBe("claude-opus-5-5")
+    expect(at("--effort")).toBe("high")
+    expect(at("--json-schema")).toBe("{\"type\":\"object\"}")
+    expect(at("--append-system-prompt")).toBe("# Source")
+    expect(at("--add-dir")).toBe("/src")
+    for (const flag of ["--no-session-persistence", "--strict-mcp-config", "--disable-slash-commands", "--verbose"]) expect(args).toContain(flag)
+    for (const unsafe of ["--dangerously-skip-permissions", "bypassPermissions", "Bash", "Edit", "Write"]) expect(args.join(" ")).not.toContain(unsafe)
+    // The prompt is sent on stdin, so the variadic --tools flag cannot swallow it.
+    expect(args.at(-1)).toBe("# Source")
+  })
+
+  test("sends the routing schema without the 2020-12 meta-schema key and otherwise unchanged", async () => {
+    const text = await Bun.file(`${import.meta.dir}/routing-result.schema.json`).text()
+    const { $schema: _meta, ...rest } = JSON.parse(text)
+    expect(JSON.parse(claudeJsonSchema(text))).toEqual(rest)
+    expect(claudeJsonSchema(text)).not.toContain("$schema")
+  })
+
+  test("rejects model and effort injection in the command", () => {
+    expect(() => claudeExecArgs({ model: "opus --dangerously-skip-permissions", schema: "{}", instructions: "", addDirs: [] })).toThrow("invalid model")
+    expect(() => claudeExecArgs({ effort: "ultra", schema: "{}", instructions: "", addDirs: [] })).toThrow("invalid reasoning effort")
+  })
+
+  test("drops parent session coupling, keeps auth, and disables auto memory", () => {
+    const env = claudeEnv({ CLAUDECODE: "1", CLAUDE_CODE_SESSION_ID: "x", CLAUDE_CODE_MESSAGING_TOKEN: "t", CLAUDE_PID: "1", AI_AGENT: "a", ANTHROPIC_BASE_URL: "http://127.0.0.1:1", ANTHROPIC_AUTH_TOKEN: "k", CLAUDE_CONFIG_DIR: "/c", PATH: "/bin" })
+    expect(env).toEqual({ ANTHROPIC_BASE_URL: "http://127.0.0.1:1", ANTHROPIC_AUTH_TOKEN: "k", CLAUDE_CONFIG_DIR: "/c", PATH: "/bin", CLAUDE_CODE_DISABLE_AUTO_MEMORY: "1" })
+  })
+
+  test("dry-run shows placeholders instead of embedding the schema, instructions, or source path", () => {
+    const args = dryRunCommand(parseArgs(["dry-run", "--harness", "claude"]), "/tmp/source")
+    expect(args.join(" ")).toContain("<SOURCE_INSTRUCTIONS>")
+    expect(args.filter((_, index) => args[index - 1] === "--add-dir")).toEqual(["<STAGED_SOURCE>"])
+    expect(args[args.indexOf("--json-schema") + 1]).toEndWith("routing-result.schema.json>")
+  })
+
+  test("runs in a fresh empty cwd that is removed afterwards, even on failure", async () => {
+    let seen = ""
+    await expect(withEmptyCwd(async cwd => {
+      seen = cwd
+      expect(await readdir(cwd)).toEqual([])
+      throw new Error("boom")
+    })).rejects.toThrow("boom")
+    expect(await Bun.file(seen).exists()).toBe(false)
+    await expect(readdir(seen)).rejects.toThrow()
+  })
+
+  test("source instructions prefer generated claude/CLAUDE.md and fall back to AGENTS.md", async () => {
+    const root = await mkdtemp(join(tmpdir(), "claude-instructions-"))
+    try {
+      await writeFile(join(root, "AGENTS.md"), "agents")
+      expect(await sourceInstructions(root)).toEqual({ path: join(root, "AGENTS.md"), contents: "agents" })
+      await mkdir(join(root, "claude"))
+      await writeFile(join(root, "claude/CLAUDE.md"), "claude")
+      expect((await sourceInstructions(root)).contents).toBe("claude")
+      await rm(join(root, "AGENTS.md"))
+      await rm(join(root, "claude/CLAUDE.md"))
+      await expect(sourceInstructions(root)).rejects.toThrow("neither")
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe("claude trace parsing", () => {
+  const verbose = [
+    { type: "system", subtype: "init", model: "claude-opus-5-5", tools: ["Read", "Grep", "Glob"], skills: [], mcp_servers: [], agents: [], permissionMode: "dontAsk" },
+    { type: "assistant", message: { content: [{ type: "tool_use", id: "t1", name: "Read", input: { file_path: "/s/SKILL.md" } }] } },
+    { type: "user", message: { content: [{ type: "tool_result", tool_use_id: "t1", content: [{ type: "text", text: "body" }] }] } },
+    { type: "result", subtype: "success", is_error: false, result: "", structured_output: validResult, usage: { input_tokens: 10, output_tokens: 5 }, duration_ms: 1200, num_turns: 2, total_cost_usd: 0.1 },
+  ]
+
+  test("returns structured output, tool evidence, usage, and init isolation evidence", () => {
+    const trace = parseClaudeTrace(JSON.stringify(verbose))
+    expect(parseLiveResult(trace.messages.at(-1)!, fixture, resultSchema, "claude -p")).toEqual(validResult)
+    expect(trace.commands).toEqual([{ command: 'Read {"file_path":"/s/SKILL.md"}', output: "body", exitCode: 0 }])
+    expect(trace.usage).toEqual({ input_tokens: 10, output_tokens: 5 })
+    expect(trace.init?.tools).toEqual(["Read", "Grep", "Glob"])
+    expect(trace.result_meta?.num_turns).toBe(2)
+  })
+
+  test("accepts a single non-verbose result object with text output", () => {
+    const trace = parseClaudeTrace(JSON.stringify({ type: "result", subtype: "success", is_error: false, result: JSON.stringify(validResult) }))
+    expect(JSON.parse(trace.messages[0]!)).toEqual(validResult)
+    expect(trace.init).toBeNull()
+  })
+
+  test("rejects errors, missing results, empty output, and non-JSON", () => {
+    expect(() => parseClaudeTrace("oops")).toThrow("did not return JSON")
+    expect(() => parseClaudeTrace(JSON.stringify([verbose[0]]))).toThrow("lacks a result")
+    expect(() => parseClaudeTrace(JSON.stringify({ type: "result", subtype: "error_max_turns", is_error: true }))).toThrow("model execution failed")
+    expect(() => parseClaudeTrace(JSON.stringify({ type: "result", subtype: "success", is_error: false, result: "" }))).toThrow("no structured output")
+  })
+})
+
+describe("retro-week contracts", () => {
+  const entry = (id: string) => fixture.cases.find(candidate => candidate.id === id)!
+  const resultFor = (routingCase: RoutingCase): RoutingResult => ({
+    primary_skill: routingCase.primary_skill,
+    modifier_skills: [...routingCase.expected_modifier_skills],
+    references: [...routingCase.expected_references],
+    actions: [...routingCase.required_actions],
+    ...Object.fromEntries(Object.entries(routingCase.expectations).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
+  } as RoutingResult)
+  const validate = (value: RoutingCase) => validateCase(value, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(fixture.explicit_only_skills), resultSchema)
+
+  test("clear Standards findings must go to the refiner, then a non-author delta review, not a full repeat", () => {
+    const routingCase = entry("refiner-clear-standards-findings")
+    const withoutRefiner = { ...resultFor(routingCase), actions: routingCase.required_actions.filter(action => action !== "dispatch-refiner-for-clear-standards-fixes") }
+    expect(compareResult(routingCase, withoutRefiner)).toEqual(["missing required action dispatch-refiner-for-clear-standards-fixes"])
+    const withoutDelta = { ...resultFor(routingCase), actions: routingCase.required_actions.filter(action => action !== "delta-review-by-non-author") }
+    expect(compareResult(routingCase, withoutDelta)).toEqual(["missing required action delta-review-by-non-author"])
+    const fullRepeat = { ...resultFor(routingCase), actions: [...routingCase.required_actions, "review-entire-intended-diff"] }
+    expect(compareResult(routingCase, fullRepeat)).toEqual(["forbidden action review-entire-intended-diff"])
+  })
+
+  test("judgement-only findings and read-only reviews never dispatch the refiner", () => {
+    for (const id of ["review-judgement-only-findings", "broad-read-only-review", "hot-path-one-way-review"]) {
+      const routingCase = entry(id)
+      expect(compareResult(routingCase, { ...resultFor(routingCase), actions: [...routingCase.required_actions, "dispatch-refiner-for-clear-standards-fixes"] }))
+        .toEqual(["forbidden action dispatch-refiner-for-clear-standards-fixes"])
+    }
+  })
+
+  test("describe-pr classifies merge danger, flags a destructive migration one-way, and keeps a copy change two-way", () => {
+    for (const id of ["describe-pr", "describe-pr-one-way-migration", "describe-pr-copy-two-way"]) {
+      const routingCase = entry(id)
+      const unclassified = { ...resultFor(routingCase), actions: routingCase.required_actions.filter(action => action !== "classify-merge-danger") }
+      expect(compareResult(routingCase, unclassified)).toEqual(["missing required action classify-merge-danger"])
+    }
+    const oneWay = entry("describe-pr-one-way-migration")
+    expect(compareResult(oneWay, { ...resultFor(oneWay), actions: oneWay.required_actions.filter(action => action !== "mark-one-way-door") }))
+      .toEqual(["missing required action mark-one-way-door"])
+    const copyOnly = entry("describe-pr-copy-two-way")
+    expect(compareResult(copyOnly, { ...resultFor(copyOnly), actions: [...copyOnly.required_actions, "mark-one-way-door"] }))
+      .toEqual(["forbidden action mark-one-way-door"])
+  })
+
+  test("merged cleanup runs without asking, and an open integration choice never auto-cleans", () => {
+    const routingCase = entry("merged-cleanup-no-question")
+    expect(compareResult(routingCase, { ...resultFor(routingCase), question: "required-before-unapproved-action" })).toEqual([
+      "question: expected none or only-if-blocked, got required-before-unapproved-action",
+    ])
+    expect(compareResult(routingCase, { ...resultFor(routingCase), actions: [...routingCase.required_actions, "require-explicit-branch-integration-choice"] }))
+      .toEqual(["forbidden action require-explicit-branch-integration-choice"])
+    const choice = entry("finish-branch")
+    expect(compareResult(choice, { ...resultFor(choice), actions: [...choice.required_actions, "run-merged-cleanup-without-asking"] }))
+      .toEqual(["forbidden action run-merged-cleanup-without-asking"])
+  })
+
+  test("retro is explicit-only: the implicit question cannot select it", () => {
+    expect(validate(entry("retro-explicit-weekly"))).toEqual([])
+    const implicit = { ...entry("retro-implicit-session-question"), primary_skill: "retro" }
+    expect(validate(implicit)).toContain("cases[0] selects explicit-only skill retro without exact $retro invocation")
+  })
+})
+
+describe("result comparison", () => {
+  const routingCase = fixture.cases.find(candidate => candidate.id === "reviewer-mixed-version-migration-review")!
+  const result = (overrides: Partial<RoutingResult>): RoutingResult => ({
+    primary_skill: routingCase.primary_skill,
+    modifier_skills: [...routingCase.expected_modifier_skills],
+    references: [...routingCase.expected_references],
+    actions: [...routingCase.required_actions],
+    first_action: "pin-review-scope",
+    mutation: "none",
+    question: "only-if-blocked",
+    stop: "findings",
+    ...overrides,
+  })
+
+  test("treats references and modifiers as sets: order is free, a missing or extra member fails", () => {
+    expect(compareResult(routingCase, result({ references: [...routingCase.expected_references].reverse() }))).toEqual([])
+    expect(compareResult(routingCase, result({ references: routingCase.expected_references.slice(1) }))[0]).toStartWith("references: expected ")
+    expect(compareResult(routingCase, result({ references: [...routingCase.expected_references, "engineering/references/security.md"] }))[0]).toStartWith("references: expected ")
+    const optional = { ...routingCase, optional_references: ["describe-pr/references/merge-danger.md"] }
+    expect(compareResult(optional, result({ references: [...routingCase.expected_references, "describe-pr/references/merge-danger.md"] }))).toEqual([])
+    expect(compareResult(optional, result({}))).toEqual([])
+    expect(compareResult(optional, result({ references: [...routingCase.expected_references, "engineering/references/security.md"] }))[0]).toStartWith("references: expected ")
+    expect(compareResult(optional, result({ references: [...routingCase.expected_references.slice(1), "describe-pr/references/merge-danger.md"] }))[0]).toStartWith("references: expected ")
+    expect(compareResult(routingCase, result({ modifier_skills: ["designing-data-intensive-systems", "effect-ts"] }))).toEqual([
+      "modifier_skills: expected designing-data-intensive-systems, got designing-data-intensive-systems,effect-ts",
+    ])
+  })
+
+  test("reports a wrong primary skill, a missing action, and a wrong expectation together", () => {
+    expect(compareResult(routingCase, result({ primary_skill: "engineering", actions: routingCase.required_actions.slice(1), stop: "plan" }))).toEqual([
+      "primary_skill: expected review-and-simplify-changes, got engineering",
+      `missing required action ${routingCase.required_actions[0]}`,
+      "stop: expected findings, got plan",
+    ])
+  })
+
+  test("host skills parse as modifiers and are ignored by comparison, so naming them neither fails nor is required", () => {
+    const describePr = fixture.cases.find(candidate => candidate.id === "describe-pr")!
+    const named = { ...resultFor(describePr), modifier_skills: ["humanizer", "show-me"] }
+    expect(parseLiveResult(JSON.stringify(named), fixture, resultSchema)).toEqual(named)
+    expect(compareResult(describePr, named, fixture.host_skills)).toEqual([])
+    expect(compareResult(describePr, resultFor(describePr), fixture.host_skills)).toEqual([])
+    expect(compareResult(describePr, { ...named, modifier_skills: ["humanizer", "effect-ts"] }, fixture.host_skills)).toEqual(["modifier_skills: expected , got effect-ts"])
+    expect(() => parseLiveResult(JSON.stringify({ ...named, modifier_skills: ["copywriting"] }), fixture, resultSchema)).toThrow("unknown skill copywriting")
+    const expectsHost = { ...describePr, expected_modifier_skills: ["humanizer"] }
+    expect(validateCase(expectsHost, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema, new Set(fixture.host_skills)))
+      .toContain("cases[0] expects host skill humanizer; host skills are ignored by comparison")
+  })
+
+  function resultFor(entry: RoutingCase): RoutingResult {
+    return {
+      primary_skill: entry.primary_skill,
+      modifier_skills: [...entry.expected_modifier_skills],
+      references: [...entry.expected_references],
+      actions: [...entry.required_actions],
+      ...Object.fromEntries(Object.entries(entry.expectations).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
+    } as RoutingResult
+  }
+})
+
+describe("previous source gaps", () => {
+  const candidateRoot = join(import.meta.dir, "../..")
+
+  test("skips a case whose primary or modifier skill is absent and marks a missing reference expected red", () => {
+    const routingCase = fixture.cases.find(candidate => candidate.id === "reviewer-mixed-version-migration-review")!
+    expect(previousSourceGaps(routingCase, { skills: [], references: [] })).toEqual({ skip: [], expected_red: [] })
+    expect(previousSourceGaps(routingCase, { skills: ["designing-data-intensive-systems"], references: [] }).skip).toEqual(["skill designing-data-intensive-systems is absent from this source"])
+    expect(previousSourceGaps(routingCase, { skills: [], references: ["designing-data-intensive-systems/TRANSACTIONS.md"] })).toEqual({
+      skip: [],
+      expected_red: ["reference designing-data-intensive-systems/TRANSACTIONS.md is absent from this source"],
+    })
+  })
+
+  test("a paired dry-run against a source without a fixture skill skips only that skill's cases", async () => {
+    const root = await mkdtemp(join(tmpdir(), "routing-previous-skill-"))
+    try {
+      await cp(join(candidateRoot, "skills"), join(root, "skills"), { recursive: true })
+      await cp(join(candidateRoot, "AGENTS.md"), join(root, "AGENTS.md"))
+      await rm(join(root, "skills/retro"), { recursive: true })
+      const run = (caseId: string) => collectSubprocess(Bun.spawn({
+        cmd: ["bun", join(import.meta.dir, "run-routing-evals.ts"), "dry-run", "--case", caseId, "--previous-source-root", root],
+        stdout: "pipe", stderr: "pipe",
+      }), "previous skill dry-run", 10_000)
+      const skipped = await run("retro-explicit-weekly")
+      expect(skipped.exitCode).toBe(0)
+      const [previous, candidate] = skipped.stdout.trim().split("\n").map(line => JSON.parse(line))
+      expect(previous.skipped).toEqual(["skill retro is absent from this source"])
+      expect(candidate.skipped).toBeUndefined()
+      expect(candidate.contract.primary_skill).toBe("retro")
+      const kept = (await run("retro-implicit-session-question")).stdout.trim().split("\n").map(line => JSON.parse(line))
+      expect(kept.map(record => [record.source, record.skipped])).toEqual([["previous", undefined], ["candidate", undefined]])
+    } finally { await rm(root, { recursive: true, force: true }) }
+  })
+})
+
+describe("claude harness wiring", () => {
+  const sourceRoot = join(import.meta.dir, "../..")
+
+  test("stages skills without evals plus agents and host instruction files", async () => {
+    await withEmptyCwd(async root => {
+      const skillsRoot = await stageClaudeSource(sourceRoot, root)
+      expect(skillsRoot).toBe(join(root, "skills"))
+      expect(await Bun.file(join(skillsRoot, "review-and-simplify-changes/SKILL.md")).exists()).toBe(true)
+      expect(await Bun.file(join(skillsRoot, "evals/routing-cases.json")).exists()).toBe(false)
+      expect(await Bun.file(join(root, "agents/reviewer.toml")).exists()).toBe(true)
+      expect(await Bun.file(join(root, "AGENTS.md")).exists()).toBe(true)
+      expect((await readdir(root)).sort()).toEqual(["AGENTS.md", "agents", "claude", "skills"])
+    })
+  })
+
+  test("records the base URL host and credential source without values", () => {
+    expect(claudeRoutingMarker({ ANTHROPIC_BASE_URL: "http://127.0.0.1:18317/v1", ANTHROPIC_AUTH_TOKEN: "secret" })).toEqual({ anthropic_base_url_host: "127.0.0.1:18317", auth_source: "env" })
+    expect(claudeRoutingMarker({ ANTHROPIC_API_KEY: "secret" })).toEqual({ anthropic_base_url_host: null, auth_source: "env" })
+    expect(claudeRoutingMarker({})).toEqual({ anthropic_base_url_host: null, auth_source: "config" })
+    expect(JSON.stringify(claudeRoutingMarker({ ANTHROPIC_BASE_URL: "https://u:p@proxy.example/x", ANTHROPIC_AUTH_TOKEN: "secret" }))).not.toMatch(/secret|u:p/)
+  })
+
+  test("a fake claude on PATH receives the prompt on stdin, an empty cwd, the staged source, and a scrubbed env", async () => {
+    const routingCase = fixture.cases.find(candidate => candidate.id === "describe-pr")!
+    const response = { ...resultForCase(routingCase), modifier_skills: ["humanizer"] }
+    await withFakeClaude(response, async log => {
+      const outcome = await runClaudeLiveCase(routingCase, fixture, resultSchema, join(sourceRoot, "skills"), "claude-opus-5-5", "high", "full")
+      expect(outcome.failures).toEqual([])
+      const seen = await log()
+      expect(seen.stdin).toContain(routingCase.prompt)
+      expect(seen.cwdEntries).toEqual([])
+      expect(seen.cwd).not.toBe(seen.addDirs[0])
+      expect(seen.addDirs).toHaveLength(1)
+      expect(seen.stdin).toContain(join(seen.addDirs[0]!, "skills/describe-pr/SKILL.md"))
+      expect(seen.stdin).not.toContain(sourceRoot)
+      expect(seen.files.some(file => file.endsWith("/skills/describe-pr/SKILL.md"))).toBe(true)
+      expect(seen.files.filter(file => file.includes("/skills/evals/"))).toEqual([])
+      expect(seen.argv.slice(0, 2)).toEqual(["-p", "--output-format"])
+      expect(seen.env.CLAUDECODE).toBeUndefined()
+      expect(seen.env.CLAUDE_CODE_SESSION_ID).toBeUndefined()
+      expect(seen.env.CLAUDE_CODE_DISABLE_AUTO_MEMORY).toBe("1")
+      expect(seen.env.FAKE_PASSTHROUGH).toBe("kept")
+    })
+  })
+})
+
+function resultForCase(entry: RoutingCase): RoutingResult {
+  return {
+    primary_skill: entry.primary_skill,
+    modifier_skills: [...entry.expected_modifier_skills],
+    references: [...entry.expected_references],
+    actions: [...entry.required_actions],
+    ...Object.fromEntries(Object.entries(entry.expectations).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
+  } as RoutingResult
+}

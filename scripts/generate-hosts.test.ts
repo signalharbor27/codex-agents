@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { cpSync, existsSync, symlinkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { mergeSettings, renderAgents, renderInstructions, settingsChanges, settingsDrift, skillsLockSource } from "./generate-hosts.ts"
+import { hookFiles, mergeSettings, renderAgents, renderInstructions, settingsChanges, settingsDrift, skillsLockSource } from "./generate-hosts.ts"
 import type { ClaudeRole } from "../claude/roles.ts"
 
 const repoRoot = join(import.meta.dir, "..")
@@ -162,6 +162,8 @@ describe("generator subprocess", () => {
     mkdirSync(join(home, ".claude/agents"), { recursive: true })
     mkdirSync(join(home, ".claude/output-styles"), { recursive: true })
     writeFileSync(join(home, ".claude/agents/old.md"), "old agent")
+    mkdirSync(join(home, ".claude/hooks"), { recursive: true })
+    writeFileSync(join(home, ".claude/hooks/mine.sh"), "keep")
     writeFileSync(join(home, ".claude/CLAUDE.md"), "old instructions")
     symlinkSync(join(root, "elsewhere.md"), join(home, ".claude/output-styles/q.md"))
     const fragment = JSON.parse(readFileSync(join(repo, "claude/settings.fragment.json"), "utf8"))
@@ -190,7 +192,7 @@ describe("generator subprocess", () => {
       [".claude/CLAUDE.md", join(repo, "claude/CLAUDE.md")],
       [".claude/agents", join(repo, "claude/agents")],
       [".claude/output-styles/q.md", join(repo, "claude/output-styles/q.md")],
-      [".claude/hooks/reply-guard.ts", join(repo, "claude/hooks/reply-guard.ts")],
+      ...hookFiles(repo).map(f => [`.claude/hooks/${f}`, join(repo, "claude/hooks", f)]),
       [".claude/skills/review-agent", join(home, ".codex/skills/.system/review-agent")],
     ]) {
       expect(lstatSync(join(home, link!)).isSymbolicLink()).toBe(true)
@@ -199,7 +201,9 @@ describe("generator subprocess", () => {
     expect(installed.stdout).toContain(`replaced link: ${join(home, ".claude/output-styles/q.md")} (was -> ${join(root, "elsewhere.md")})`)
     expect(installed.stdout).toContain(`settings: permissions.deny removed: SendMessage\nsettings: permissions.deny added: ${fragment.permissions.deny[0]}\n`)
     expect(installed.stdout).toContain("settings: permissions.allow added: ")
-    expect(installed.stdout).toContain("settings: hooks changed: Stop, UserPromptSubmit\n")
+    expect(installed.stdout).toContain("settings: hooks changed: PreToolUse, Stop, UserPromptSubmit\n")
+    // Hooks and their shared module are linked, test files are not, and unrelated hooks stay.
+    expect(readdirSync(join(home, ".claude/hooks")).sort()).toEqual(["destructive-guard.ts", "mine.sh", "reply-guard.ts", "review-gate.ts", "shell.ts"])
     expect(installed.stdout).toContain("settings: replaced theme\n")
     expect(installed.stdout).not.toContain("replaced mine")
     const backupDir = join(home, ".claude/backups")
@@ -231,9 +235,11 @@ describe("generator subprocess", () => {
     expect(rerun.stdout).toBe("install complete\n")
 
     rmSync(join(home, ".claude/hooks/reply-guard.ts"))
+    rmSync(join(home, ".claude/hooks/destructive-guard.ts"))
     const noHook = await run(repo, "--check-installed", "--home", home)
     expect(noHook.stderr).toContain(`link: ${join(home, ".claude/hooks/reply-guard.ts")} should point to`)
     expect(noHook.stderr).toContain(`hook: Stop script is missing: ${join(home, ".claude/hooks/reply-guard.ts")}`)
+    expect(noHook.stderr).toContain(`hook: PreToolUse script is missing: ${join(home, ".claude/hooks/destructive-guard.ts")}`)
     for (const output of [installed, check, rerun, noHook]) expect(output.stdout + output.stderr).not.toContain(secret)
   }))
 
@@ -316,6 +322,15 @@ describe("generator subprocess", () => {
     const withEnv = await run(repo, "--install", "--home", home)
     expect(withEnv.exitCode).toBe(1)
     expect(withEnv.stderr).toContain("must not contain env")
+    expect(readdirSync(join(home, ".claude")).sort()).toEqual(["CLAUDE.md", "settings.json"])
+
+    const fragment = JSON.parse(readFileSync(fragmentPath, "utf8"))
+    delete fragment.env
+    fragment.hooks.PreToolUse[0].hooks.push({ type: "command", command: 'bun "$HOME/.claude/hooks/ghost.ts"' })
+    writeFileSync(fragmentPath, JSON.stringify(fragment))
+    const unknownHook = await run(repo, "--install", "--home", home)
+    expect(unknownHook.exitCode).toBe(1)
+    expect(unknownHook.stderr).toContain("PreToolUse hook ghost.ts has no claude/hooks/ghost.ts")
     expect(readdirSync(join(home, ".claude")).sort()).toEqual(["CLAUDE.md", "settings.json"])
   }))
 

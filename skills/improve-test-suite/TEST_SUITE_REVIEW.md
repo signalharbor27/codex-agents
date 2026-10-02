@@ -22,12 +22,9 @@ Use this rubric to review a test suite and produce a practical cleanup and impro
 
 ## Weak tests
 
-- mock internal collaborators and assert call choreography
-- verify private methods or internal data shape
-- bypass the interface to prove side effects through incidental implementation details
+- lie in one of the ways the test-lie catalog in [coding-standards.md](../review-and-simplify-changes/references/coding-standards.md) names: tautological, structure-sensitive, can't-fail, or private-path
 - duplicate broader coverage without adding new signal
 - are so slow or flaky that teams stop trusting them
-- break on harmless refactors even when behavior is unchanged
 
 ## Useful review questions
 
@@ -48,8 +45,7 @@ Keep tests that:
 
 Remove, demote, or rewrite tests that:
 
-- only prove internal call order or mock choreography
-- inspect storage or internals instead of interface behavior
+- lie per the test-lie catalog
 - duplicate broader trustworthy coverage without new signal
 - add maintenance cost without protecting a meaningful risk
 

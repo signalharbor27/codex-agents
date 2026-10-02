@@ -21,8 +21,6 @@ Choose the lowest layer that observes the real risk. Add a higher layer only for
 - Stub: fixed response when only downstream handling matters.
 - Mock: last resort for an understood external interaction whose call contract is the claim.
 
-Do not mock the unit’s own collaborators merely to assert implementation choreography.
-
 ## Cases and oracles
 
 Partition inputs and state transitions; test boundaries and representative invalid states. For policy matrices, use decision tables. For combinatorial inputs, add pairwise or property coverage only when interactions are plausible.

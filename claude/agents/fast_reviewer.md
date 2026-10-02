@@ -1,7 +1,7 @@
 ---
 name: fast_reviewer
 description: "Use when a review needs a bounded check for unused code, dependency cycles, stale comments, or stubs. Excludes behavioral or architectural judgment."
-model: claude-opus-5-5
+model: claude-sonnet-5-5
 effort: low
 disallowedTools: Edit, Write, NotebookEdit, Agent
 color: yellow

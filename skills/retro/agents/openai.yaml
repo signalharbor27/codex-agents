@@ -1,0 +1,5 @@
+interface:
+  display_name: "Retro"
+  short_description: "Turn agent sessions and PR reviews into environment fixes"
+policy:
+  allow_implicit_invocation: false

@@ -12,7 +12,7 @@ npx skills add https://github.com/signalharbor27/codex-agents.git \
   review-and-simplify-changes receiving-code-review improve-codebase-architecture \
   improve-test-suite using-git-worktrees finishing-a-development-branch \
   describe-pr grill-me effect-ts writing-rust designing-data-intensive-systems \
-  writing-skills project-verification codebase-investigation --copy --yes
+  writing-skills project-verification codebase-investigation retro --copy --yes
 ```
 
 The installer copies skills. After updates, reinstall the selected skills and compare them with the source. Keep sibling skills together when their references depend on one another. The evaluation harness stays in this repository.
@@ -66,6 +66,7 @@ Start a new task after installation. Check both the exposed roles and an actual 
 - `reviewer`: `gpt-6.1-sol` / `xhigh`, independent correctness and simplification review.
 - `oracle`: `gpt-6-astra` / `xhigh`, explicit user requests or concrete blockers that remain after investigation or ordinary review.
 - `fast_reviewer`: `gpt-6.1-sol` / `low`, bounded checks for unused code, dependency cycles, stale comments, and stubs.
+- `refiner`: `gpt-6.1-sol` / `high`, applies clear Standards fixes reported by independent review, in its own context; a different reviewer delta-reviews its edits.
 
 Use custom roles with explicit `fork_turns="none"` and a brief containing the goal, file ownership, contracts, acceptance criteria, and required evidence. Full-history forks inherit the parent role in hosts that expose that option. Generic agents inherit parent settings. See [Codex subagent settings](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents).
 
@@ -88,12 +89,15 @@ Skills load when their invocation conditions match the task. They can also be re
 - `using-git-worktrees` and `finishing-a-development-branch`: workspace isolation and requested branch integration or cleanup.
 - `describe-pr`: PR descriptions based on the final diff and verification.
 - `writing-skills`: skill descriptions, instructions, references, and evaluations.
+- `retro` (user-invoked only): turns agent sessions and PR reviews into ranked environment fixes (checks, standards, pointers, access, pruning).
 
 Start with the relevant entrypoint, such as [engineering/SKILL.md](skills/engineering/SKILL.md). It links to detailed guidance for the task. Substantial engineering starts with a working path through the system, then continues through the remaining vertical slices.
 
 ### Review before completion
 
-Every implementation handoff or intended commit requires independent subagent review through `review-and-simplify-changes`, including small changes. The reviewer checks correctness and simplification; other roles provide focused evidence as needed. Defect reviewers use the `review-agent` skill. On the first full pass, the main agent also runs `codex review` as a supplementary check.
+Every implementation handoff or intended commit requires independent subagent review through `review-and-simplify-changes`, including small changes. Reviewers apply the review-only [coding standards](skills/review-and-simplify-changes/references/coding-standards.md) (module design, test lies, comments); a repo-root `CODING_STANDARDS.md` extends or overrides them, and implementer briefs leave them out. The review lane scales reviewers to the diff's risk. Default and separable lanes run `codex review` on the first full pass; research or prototype work and mechanical deltas skip it. One-way doors (the triggers in [merge-danger.md](skills/describe-pr/references/merge-danger.md)) and hot paths add `oracle`. Reviewers classify Merge danger independently; the more severe value of each wins (one-way over two-way; localized < service < customers < data) and goes into the review record. Clear Standards fixes go to `refiner`, and judgement calls stay with the main agent.
+
+`describe-pr` ends every PR body with a Merge danger footer (`Door: one-way|two-way`, `Blast radius: localized|service|customers|data`). Agents merge without asking only under a standing grant from Q that names the repo (project instructions or a memory entry quoting Q), when the footer and the review record both say two-way and localized, and checks and reviews pass on the current head. Everything else, including every one-way door, goes to Q. When Q says the work is merged, `skills/finishing-a-development-branch/scripts/cleanup-merged.sh [--dry-run] <branch>` removes the agent-owned worktree, deletes the branch and its stale remote ref, and fast-forwards a clean main checkout. It needs `wt` and `jq`, runs only hooks with persisted Worktrunk approvals, and refuses dirty, untracked, unmerged, or host-owned workspaces (any worktree other than the one `wt list` reports at the branch's template path). A branch with no worktree is deleted only after the merge proof.
 
 Review the full intended diff first. After fixes, review the changed portions and affected contracts, retaining earlier evidence where it still applies. Check the integrated result before declaring completion. The main agent coordinates this loop; its own review cannot satisfy the independent-review requirement.
 
@@ -105,11 +109,17 @@ Claude Code runs from the same checkout. From the main checkout (install refuses
 bun scripts/generate-hosts.ts --install
 ```
 
-This links `~/.claude/CLAUDE.md`, `~/.claude/agents`, the `Q` output style, and the reply-guard hook to `claude/`, and links Codex's built-in `review-agent` skill into `~/.claude/skills`. It also writes each key of [claude/settings.fragment.json](claude/settings.fragment.json) into `~/.claude/settings.json`, replacing that key's installed value and listing the permission rules and hooks it removes. Keys the fragment doesn't name, including `env`, stay as they are, so tokens stay out of the repository. Replaced files go to `~/.claude/backups/`.
+This links `~/.claude/CLAUDE.md`, `~/.claude/agents`, the `Q` output style, and each non-test `claude/hooks/*.ts` file to `claude/`, and links Codex's built-in `review-agent` skill into `~/.claude/skills`. It also writes each key of [claude/settings.fragment.json](claude/settings.fragment.json) into `~/.claude/settings.json`, replacing that key's installed value and listing the permission rules and hooks it removes. Keys the fragment doesn't name, including `env`, stay as they are, so tokens stay out of the repository. Replaced files go to `~/.claude/backups/`.
 
 The generator writes `AGENTS.md`, `claude/CLAUDE.md`, `claude/agents/*.md`, and `claude/output-styles/q.md`. Everything else under `claude/` is source.
 
-[claude/roles.ts](claude/roles.ts) sets each Claude agent's model, effort, tools, and preloaded skills. The `Q` output style puts the reply rules from `instructions/response-style.md` into Claude's system prompt. The [reply-guard hook](claude/hooks/reply-guard.ts) stops a reply that ends by offering to continue, and reminds Claude of the word budget after a long reply.
+[claude/roles.ts](claude/roles.ts) sets each Claude agent's model, effort, tools, and preloaded skills. The `Q` output style puts the reply rules from `instructions/response-style.md` into Claude's system prompt. Hooks:
+
+- [reply-guard](claude/hooks/reply-guard.ts) stops a reply that ends by offering to continue, and reminds Claude of the word budget after a long reply.
+- [review-gate](claude/hooks/review-gate.ts) denies `gh pr ready`, non-draft `gh pr create`/`gh pr new`, non-draft `gh api` PR creation, and the GraphQL ready-for-review mutation until three things hold: a review record for the current commit's tree has no open findings, the reviewed commit is pushed when the branch has an upstream, and the command names the current branch or its PR. Commit the reviewed snapshot unchanged, then write the record from the reviewed checkout with `review-and-simplify-changes/scripts/record-review.sh <base-ref> --reviewed <rev> --reviewers <role,...> --open-findings <n> [--door … --blast-radius …] [--copy-humanized]`, where `<rev>` is that commit's full commit or tree sha (40 or 64 hex; refs and short shas are rejected); records live in `<git-common-dir>/agent-review/`. Draft PRs pass; `AGENT_REVIEW_GATE=off` in Claude's environment disables it.
+- [destructive-guard](claude/hooks/destructive-guard.ts) blocks Redis FLUSHALL/FLUSHDB everywhere; Discord permission and role writes; GitHub branch-protection and collaborator writes; SQL DROP DATABASE/DROP SCHEMA/TRUNCATE and `dropdb` outside a scratch container; and `rm -r` except of paths strictly inside a scratch container, a git work tree, or a temp directory. A `docker exec` or `podman exec` target is a scratch container when the same command starts it with a label key ending `.worktree`, or its `docker inspect` labels include such a key; `docker compose exec` always counts as non-local. Start Claude Code with `AGENT_DESTRUCTIVE_OK=1` to allow them deliberately.
+
+`--install` refuses a fragment hook that has no source file.
 
 `bun scripts/generate-hosts.ts --check-installed` reports broken links, settings drift, and installed skill copies that differ from `skills/`.
 
@@ -128,6 +138,8 @@ wt remove my-task --no-delete-branch --foreground
 
 ## Checks
 
+Enable the pre-commit check once per clone with `git config core.hooksPath .githooks`; it runs the generator `--check` and the skill surface check. It deliberately omits `--check-installed`, which reads host state and fails in linked worktrees.
+
 The local suite validates skill metadata, references, agent profiles, and evaluation fixtures. Dry runs prepare routing cases without model calls.
 
 ```bash
@@ -137,7 +149,7 @@ bun test skills/evals scripts claude
 bun skills/evals/run-routing-evals.ts dry-run
 ```
 
-Live evaluations require `--allow-live` and an explicit case or `--all`. Their default is GPT-6 Astra at `high`, separate from the main chat setting. Routing evaluations test skill selection; execution evaluations inspect edits and tool activity. Neither static checks nor a successful agent launch establishes code quality. See [the eval README](skills/evals/README.md) for live commands, comparisons, and limits.
+Live evaluations require `--allow-live` and an explicit case or `--all`. Their default is GPT-6 Astra at `high`, separate from the main chat setting; `--harness claude` runs routing cases through Claude Code, and `run-standards-evals.ts` checks that review flags planted standards violations. Routing evaluations test skill selection; execution evaluations inspect edits and tool activity. Neither static checks nor a successful agent launch establishes code quality. See [the eval README](skills/evals/README.md) for live commands, comparisons, and limits.
 
 ## Optional skill and sources
 
