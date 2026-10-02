@@ -30,14 +30,13 @@ Diagnose structural problems in a codebase or subsystem, then turn the evidence 
 1. Pin the review boundary and read-only authority. Inspect runtime entrypoints, owners, seams, build and test shape, domain terms, existing decisions, and named problems. For a post-code review, limit findings to the original diff and its direct effects; list broader or pre-existing issues separately.
 2. For standalone audits, keep small or tightly coupled scope local and delegate material independent questions to read-only subagents. Within `review-and-simplify-changes`, independent reviewers perform the assigned checks and return findings without further delegation. The main agent owns synthesis and decisions.
 3. Find the highest-cost structural problems using the judgment rules below. Support each finding with a trace from a real entrypoint through ownership, interfaces, effects, and proof where relevant. Do not inventory every possible cleanup.
-4. Classify supported findings as pre-existing debt, current regression, preventable by `engineering`, `debugging`, or `test-design`, or a repo-doc candidate. Write a dependency-ordered plan sized to them. Use phases only when dependencies or rollout need them. If no finding is supported, report no actionable findings and any coverage limits.
+4. Classify supported findings as pre-existing debt, current regression, preventable by `engineering`, `debugging`, or `test-design`, preventable at review by a coding standard or deterministic check, or a repo-doc candidate. Write a dependency-ordered plan sized to them. Use phases only when dependencies or rollout need them. If no finding is supported, report no actionable findings and any coverage limits.
 5. Pressure-test material choices. Handle one unresolved approval inline; do not reopen settled decisions. Load the grilling reference only for an interactive interview or several interdependent consequential user-owned choices. Keep the plan in chat unless a durable target-repository file is already or explicitly authorized.
 
 ## Judgment rules
 
 - Preserve existing guarantees and constraints unless evidence shows they are part of the problem.
-- Compare simpler, deeper modules with clearer interfaces. Use module/interface/seam/depth/leverage/locality vocabulary and the deletion test from the engineering references below.
-- Treat a one-adapter seam as hypothetical unless it hides real external complexity, policy variation, or a second adapter such as tests.
+- Compare simpler, deeper modules with clearer interfaces. Use module/interface/seam/depth/leverage/locality vocabulary from the engineering references below and the diff-level flags (deletion test, hypothetical seam) from the coding standards.
 - Judge agent-friendliness by local reasoning and bounded evidence handoff, with domain ownership, explicit effects, and trustworthy proof seams.
 - Recommend terms in `CONTEXT.md` or tradeoffs in ADRs only when they will guide future work; write them only within existing or explicit authority.
 
@@ -51,6 +50,7 @@ Diagnose structural problems in a codebase or subsystem, then turn the evidence 
 ## Reference Routing
 
 - Read [AGENT_FRIENDLY_REVIEW.md](AGENT_FRIENDLY_REVIEW.md) when navigation, local reasoning, delegation, or proof friction needs a structured review.
+- Read [../review-and-simplify-changes/references/coding-standards.md](../review-and-simplify-changes/references/coding-standards.md) when judging module depth, seams, tests, or comments, or when a finding was preventable at review and needs a proposed standard or check; it owns the diff-level rules.
 - Read [../engineering/references/boundary-design.md](../engineering/references/boundary-design.md) when judging domain ownership, caller knowledge, or interface depth.
 - Read [../engineering/references/state-and-effects.md](../engineering/references/state-and-effects.md) when important side effects, retries, recovery, or partial failure are present.
 - Read [../engineering/references/proof.md](../engineering/references/proof.md) when the trustworthy proof seam is unclear or a recommendation changes verification shape.

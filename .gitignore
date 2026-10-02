@@ -3,3 +3,5 @@
 skills.zip
 *.bak
 *.backup-*
+.bun/
+__pycache__/

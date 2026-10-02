@@ -1,12 +1,14 @@
 # Skill evals
 
-The validator checks inventory, invocation metadata, frontmatter, description and line limits, local links, one-level references, agent profile names/descriptions, and fixture/schema contracts. Prose and headings may change without breaking static checks. The 45 original routing cases remain; a no-applicable-skill case adds `primary_skill: "none"`. Each of the 17 skill descriptions has positive and near-negative coverage mapped to cases in `invocation_coverage`.
+The validator checks inventory, invocation metadata, frontmatter, description and line limits, local links, one-level references, agent profile names/descriptions, and fixture/schema contracts. Prose and headings may change without breaking static checks. The fixture has 78 routing cases, including `primary_skill: "none"` routes. Each of the 18 skill descriptions has positive and near-negative coverage mapped to cases in `invocation_coverage`. A skill is explicit-only when its `agents/openai.yaml` sets `allow_implicit_invocation: false`; its `SKILL.md` must then set `disable-model-invocation: true` (the Claude Code equivalent), and the validator rejects a mismatch in either direction.
 
 ```bash
 bash skills/evals/check-skill-surface.sh
 TMPDIR=/tmp bun test skills/evals scripts claude
 bun skills/evals/run-routing-evals.ts dry-run --case no-applicable-skill
 bun skills/evals/run-execution-evals.ts dry-run --all
+bun skills/evals/run-routing-evals.ts dry-run --case describe-pr --harness claude
+bun skills/evals/run-standards-evals.ts dry-run --all
 ```
 
 Dry-run prints commands, settings, source hashes, and expected scope without model calls. The Bun runners have no package dependencies. The Python fixture uses Python's standard library.
@@ -19,7 +21,7 @@ Both runners default to `gpt-6-astra` at `high`. Live calls require permission, 
 
 `--source-root` selects a tree containing `AGENTS.md` and `skills/`. Add `--previous-source-root` to run each selected case against both trees with the same runner, fixtures, model, effort, and catalog variant. The earlier tree does not need the new runner. Source order is previous then candidate; these are paired observations, without randomized order or statistical claims.
 
-Routing comparisons allow fixture references absent from the previous source. Candidate references and each source's own Markdown links remain strict. Both sources keep the same expected references; a previous model result that omits an expected reference fails classification instead of blocking setup.
+Routing cases come from the candidate fixture, which is validated case by case; the previous source needs only a valid skill surface and its own Markdown links. When the previous source lacks a case's primary or modifier skill, its record carries `skipped` with the reason and makes no call. When it lacks an expected reference, the case still runs with the same contract and its record carries `expected_red`; that failure documents the gap and does not fail the run. Candidate references remain strict. Prove a pairing without model calls with a dry-run against an export of the older commit, for example `git archive <rev> | tar -x -C /tmp/prev` and `--previous-source-root /tmp/prev`.
 
 Routing prompts include names, descriptions, and paths from each source's `agents/*.toml`, excluding `registry.toml`. Profiles are parsed with `Bun.TOML.parse`; the same file reader supplies their source hashes, including symlinked profile contents. It does not traverse profile subdirectories. Sources without an `agents/` directory get an explicit empty catalog; malformed profiles and other read errors fail setup. Synthetic skill-catalog variants leave the agent descriptions intact.
 
@@ -35,11 +37,44 @@ bun skills/evals/run-execution-evals.ts live --case python-native-check --allow-
 
 JSONL output records source, harness, fixture, and prompt hashes; model and effort; elapsed time; provider token usage when available; assistant messages; command evidence; and failures. No price estimate is invented. Review command evidence for skill/reference reads: it is not a complete filesystem audit. Host-native skill discovery remains unisolated; `--ignore-user-config` does not prove that ambient global skills were hidden. Both sides use the same host, with explicit source catalog paths. These results measure the supplied catalog and instructions under that host environment.
 
+## Claude Code harness
+
+`run-routing-evals.ts --harness claude` runs the same prompt, catalog, result schema, parser, and comparison through `claude -p` (default `claude-opus-5-5` at `high`; efforts `low` to `max`). Codex stays the default, with unchanged behavior. The prompt goes on stdin. Tools are limited to `Read,Grep,Glob` in `dontAsk` mode with no session persistence. The source's generated `claude/CLAUDE.md` (or `AGENTS.md` when absent) is appended to the system prompt, the counterpart of Codex loading `AGENTS.md` from `--cd`. Claude Code rejects the 2020-12 `$schema` key, so the harness sends the schema without it.
+
+Isolation: each case copies the source's `skills/` (without `evals/`), `agents/`, `AGENTS.md`, and `claude/CLAUDE.md` into a temporary directory, and the catalog paths point into that copy. The process runs from a separate empty temporary cwd with `--add-dir <copy>`, `--setting-sources project`, `--strict-mcp-config`, `--disable-slash-commands`, and `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`, so the model cannot read the routing cases or schema it is judged against. Those flags exclude user and project settings files, `~/.claude/CLAUDE.md`, user and project skills, agents, hooks, MCP servers, project instruction files, and auto memory. Claude Code still reads `~/.claude.json` and managed policy and loads its builtin plugins.
+
+Environment: the child gets the runner's own environment minus parent-session variables (`CLAUDECODE`, `CLAUDE_CODE_SESSION_ID`, messaging tokens, and similar), plus `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1`. Inside a Claude Code session that environment already holds the session's `ANTHROPIC_BASE_URL` and credential, so the child routes the same way. Outside one, export `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` (or `ANTHROPIC_API_KEY`), or rely on claude's stored login. Each record's `claude_routing` gives the base URL host (no path or credentials) and `auth_source`: `env` when the environment carries a credential, `config` otherwise.
+
+Each JSONL record has `harness`, `host_native_discovery` (the isolation summary), the instructions file and hash, the session init (model, tools, skills, agents, MCP servers, plugins) as isolation evidence, tool calls as command evidence, token usage, and Claude's reported duration, turns, and `total_cost_usd`. The prompt hash replaces the temporary copy's path with a placeholder, so equal inputs hash equally.
+
+```bash
+bun skills/evals/run-routing-evals.ts live --case describe-pr --harness claude --allow-live
+```
+
+## Standards review
+
+[run-standards-evals.ts](run-standards-evals.ts) checks whether a review applies the coding standards. Each case in [standards-cases.ts](standards-cases.ts) is a small TypeScript git repository: `before` is committed and `after` is left as the uncommitted diff. Five cases each plant one defect class from the 2026-10-02 retro (a tautological constant test, a test that asserts source text order, a test named for malformed input that mocks its own `readFileSync` to return valid JSON, restating and change-log comments, and a shallow module whose callers orchestrate its pass-through functions). A clean control holds a small deep module with behavior tests through its public interface.
+
+Live mode runs `claude -p` from the fixture with the same flags, environment, and read-only tools as the routing harness, the diff in the prompt, and the reviewer instructions appended. The model never sees the source tree: each case copies `coding-standards.md`, every doc it names in backticks (`engineering/references/boundary-design.md`, `engineering/references/proof.md`, `test-design/references/test-selection.md`, `review-and-simplify-changes/SKILL.md`), and `agents/reviewer.toml` into a temporary directory, and `--add-dir` exposes only that copy and the fixture. A source whose standards name a missing doc fails setup. Fixture directories use the neutral prefix `standards-fixture-`, and neither paths, file names, nor the prompt name the case or its planted category. The reviewer returns `{findings:[{file, category, summary}]}`; the prompt and schema list every allowed category id. Records carry `host_native_discovery` with the standards isolation summary, `claude_routing`, the staged doc list, and hashes of the standards, reviewer instructions, diff, and prompt.
+
+The judge passes a defect case when each plant has a finding in one of its accepted files, under its category or a listed alternative, whose summary names one of the plant's evidence tokens (for example `MAX_NICKNAME_LENGTH` or `32`, `readFileSync`, or `malformed`). A located finding without a token counts as missing with reason `no-evidence`. Findings that match no plant are `extra`, whatever their category, and more than one fails the case; the defect fixtures carry no secondary defects, so a correct review has nothing else to report. The control, a small `LruCache` class with behaviour tests through its public methods, passes only with zero findings. Fixtures and doc copies are removed after each case.
+
+```bash
+bun skills/evals/run-standards-evals.ts dry-run --all
+bun skills/evals/run-standards-evals.ts live --case clean-control --case slop-comment --allow-live
+```
+
+The evidence token shows the reviewer located the defect, not that its diagnosis is right. Read the summaries before treating a pass as a correct diagnosis.
+
 ## Routing
 
-Routing live mode classifies tasks in a read-only sandbox. The prompt specifies the classification task and result format; skill instructions supply execution policies. It compares the primary skill, exact modifiers and references, required actions, optional forbidden actions, mutation authority, question boundary, and stop condition against [routing-cases.json](routing-cases.json). [routing-result.schema.json](routing-result.schema.json) defines the output. Classification does not prove execution.
+Routing live mode classifies tasks in a read-only sandbox. The prompt specifies the classification task and result format; skill instructions supply execution policies. It compares the primary skill, modifiers and references as unordered sets (neither the prompt nor the schema gives their order meaning), required actions, optional forbidden actions, mutation authority, question boundary, and stop condition against [routing-cases.json](routing-cases.json). [routing-result.schema.json](routing-result.schema.json) defines the output. Classification does not prove execution.
 
 Reference output uses exact paths relative to the supplied skills root, beginning with the owning skill folder. Root Markdown files, `references/` paths, and nested reference folders preserve their filename case. The validated fixture allowlist still rejects unknown or invented references.
+
+`host_skills` lists skills the host supplies outside this tree (`humanizer`, `show-me`, `review-agent`). A result may name them as modifiers, for example when `describe-pr` applies `humanizer`; the parser accepts them and the comparison ignores them, so naming one neither fails nor is required. Cases may not expect them.
+
+A case may list `optional_references`: references a correct route may load but need not. Every first-pass review case lists `describe-pr/references/merge-danger.md` this way, one-way and hot-path cases included: the skill has reviewers classify Merge danger against it, and the main agent may pick the one-way or hot-path lane from the task alone, so the skill text supports loading it without requiring it. The comparison ignores them; any other extra or missing reference still fails. Read-only review cases accept question `none` or `only-if-blocked`, since a findings-only review has no decision to block on.
 
 Required actions use exact matching. `keep-coupled-review-local` remains a known action so fixtures can reject main-agent review explicitly; it cannot satisfy reviewer selection.
 
@@ -50,21 +85,25 @@ Progressive review cases cover:
 - `follow-up-review-missing-snapshot`: recover coverage or review the full identifiable intended diff. The fixture makes recovery unavailable, so an assumed delta is insufficient.
 - `combined-slice-review`: inspect previously unreviewed wiring before relying on completed slice reviews.
 
-Every substantive pass requires independent `reviewer` coverage, including Standards, Intent, and simplification. Reserve `oracle` for an explicit user request or a concrete blocker that remains after investigation or ordinary review. The main agent orchestrates, judges findings, applies fixes, verifies, and owns completion; its own inspection cannot supply review coverage. Children stay nonrecursive. A reviewer may take fix follow-ups when it did not author the fixes.
+Every substantive pass requires independent `reviewer` coverage, including Standards, Intent, and simplification. A first full pass in the default or separable lane also requires `run-codex-review`, which restores the base setup's behaviour; follow-up delta cases (`follow-up-review-delta`, `oracle-unresolved-review-dispute`, and the refiner and judgement cases) forbid it. The one-way-door or hot-path lane adds `oracle`; otherwise reserve `oracle` for an explicit user request or a concrete blocker that remains after investigation or ordinary review. The main agent orchestrates, judges findings, applies fixes, verifies, and owns completion; its own inspection cannot supply review coverage. Children stay nonrecursive. A reviewer may take fix follow-ups when it did not author the fixes.
 
 `forbidden_actions` applies only where the case excludes an action. New evidence can justify reopening earlier scope; the follow-up case states that no such evidence exists. Review cases load `review-and-simplify-changes/references/delegated-review.md` before assigning tracks. These classifications do not prove review depth, defect detection, or use of a host-provided `review-agent`.
 
-Tenant access, charge retries, and mixed-version migrations retain risk-specific coverage with `reviewer`; risk alone does not select `oracle`. The migration case requires the data-systems modifier and its foundations/transactions references because backfill, overlapping writers, and rollback affect durable data. `oracle-unresolved-review-dispute` tests escalation after ordinary reviewers investigate a concrete disagreement; it also requires a delta pass and forbids an unnecessary full repeat.
+Tenant access, charge retries, and mixed-version migrations are one-way doors, and `hot-path-one-way-review` changes realtime fan-out latency: each requires `reviewer` plus `oracle` and `run-codex-review`, and stays read-only. The migration case requires the data-systems modifier and its foundations/transactions references because backfill, overlapping writers, and rollback affect durable data. `oracle-unresolved-review-dispute` tests escalation after ordinary reviewers investigate a concrete disagreement; it also requires a delta pass and forbids an unnecessary full repeat.
 
 - `billing-copy-independent-review` and `small-coupled-review`: one independent reviewer covers the coupled scope, even without a risk trigger.
 - `independent-review-tracks`: assign material tracks and dispatch them in parallel when capacity is available. Topics do not imply a fixed agent count.
 - `review-no-independent-capacity`: report blocked coverage, without main-agent fallback, claimed completion, or unnecessary questions.
+- `refiner-clear-standards-findings`: send `fix: clear` Standards findings (inlining a pass-through module and rewriting a private-call test through the public API, neither mechanical) to the refiner, then a full read-only `reviewer` delta review by a non-author.
+- `review-judgement-only-findings`: the main agent decides each `fix: judgement` finding, and any resulting edit gets a non-author delta review. It expects the boundary-design reference because the open judgement concerns inlining a shallow module. It, `broad-read-only-review`, and `hot-path-one-way-review` forbid the refiner dispatch.
+- `describe-pr-one-way-migration` requires `mark-one-way-door`; `describe-pr-copy-two-way` forbids it. `merged-cleanup-no-question` runs cleanup without asking; `finish-branch` forbids that, requires the integration choice, and accepts mutation `after-user-choice`.
+- `retro-explicit-weekly` expects `writing-skills/SESSION-LESSONS.md`, which the retro skill reads first, and accepts pinning the window (`pin-review-scope`) as the first action. Its mutation is `requested-plan-file` because the skill writes `<out>/RETRO.md`; the retro stays read-only for the code it analyses, so it neither requires nor forbids `keep-task-read-only`.
 
 Role boundaries also cover ordinary delegated work:
 
 - `delegated-substantive-defect-review`: select `reviewer` and the available host `review-agent`, assign Standards, Intent, and simplification to independent reviewers, and keep the outer loop with the main agent.
-- `delegated-mechanical-review-evidence`: select `fast_reviewer` for bounded symbol/import evidence.
-- `delegated-review-command-evidence`: select `verifier` for actual command results.
+- `delegated-mechanical-review-evidence`: select `fast_reviewer` for bounded symbol/import evidence; it forbids `run-codex-review`.
+- `delegated-review-command-evidence`: select `verifier` for actual command results; it forbids `run-codex-review`.
 - `oracle-design-advice` explicitly requests Oracle. `oracle-stalled-debugging-advice` presents an unexplained crash after investigation. Both consult `oracle` without invoking defect review when there is no implementation diff.
 
 Action IDs record those role and skill choices; no host skill is added to the repository skill inventory. The fixtures state that `review-agent` is available where that condition matters. The tests classify the requested behavior without spawning agents or proving host skill invocation.

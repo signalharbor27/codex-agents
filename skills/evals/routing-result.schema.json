@@ -34,7 +34,7 @@
     },
     "actions": {
       "type": "array",
-      "description": "Role actions select source profiles: delegate-reviewer-review selects reviewer for ordinary independent substantive review; delegate-oracle-review and consult-oracle select oracle only for explicit requests or a concrete blocker remaining after investigation or ordinary review; delegate-fast-review selects fast_reviewer; delegate-command-verification selects verifier. delegate-standards-intent-simplification assigns those checks to independent reviewers within the requested scope. delegate-one-coupled-review groups coupled topics with one independent reviewer. delegate-independent-tracks assigns bounded material review tracks; dispatch-independent-tracks-in-parallel starts separable tracks together when capacity is available. use-built-in-review-agent applies the host-provided defect-review skill. keep-reviewers-nonrecursive prevents children from spawning agents or invoking the outer review gate. retain-main-review-ownership keeps orchestration, finding judgment, fixes, verification, and completion with the main agent, whose own inspection cannot supply review coverage. report-blocked-review-coverage reports unavailable independent coverage without claiming completion. keep-coupled-review-local means review performed by the main agent without independent reviewer coverage.",
+      "description": "Role actions select source profiles: delegate-reviewer-review selects reviewer for ordinary independent substantive review; delegate-oracle-review and consult-oracle select oracle for an explicit request, a one-way-door or hot-path review lane, or a concrete blocker remaining after investigation or ordinary review; run-codex-review has the main agent run codex review on the first full pass; delegate-fast-review selects fast_reviewer; delegate-command-verification selects verifier. select-minimum-useful-reviewers picks the smallest reviewer set the review lane allows for any substantive pass, including a delta pass; account-for-all-review-topics accounts for every checklist topic as covered or not material; confirm-final-review-coverage confirms that every required track returned before completion. delegate-standards-intent-simplification assigns those checks to independent reviewers within the requested scope, including a delta reviewer's scope. delegate-one-coupled-review groups coupled topics with one independent reviewer. delegate-independent-tracks assigns bounded material review tracks; dispatch-independent-tracks-in-parallel starts separable tracks together when capacity is available. use-built-in-review-agent applies the host-provided defect-review skill. keep-reviewers-nonrecursive prevents children from spawning agents or invoking the outer review gate. retain-main-review-ownership keeps orchestration, finding judgment, fixes, verification, and completion with the main agent, whose own inspection cannot supply review coverage. report-blocked-review-coverage reports unavailable independent coverage without claiming completion. keep-coupled-review-local means review performed by the main agent without independent reviewer coverage. dispatch-refiner-for-clear-standards-fixes sends behavior-preserving Standards findings tagged fix: clear to the refiner role; delta-review-by-non-author has a read-only reviewer that did not write the edits review them.",
       "items": {
         "type": "string",
         "enum": [
@@ -104,7 +104,15 @@
           "validate-skill-surface",
           "verify-before-completion",
           "verify-branch-state",
-          "verify-feedback-against-code"
+          "verify-feedback-against-code",
+          "classify-merge-danger",
+          "cite-session-evidence-per-candidate",
+          "delta-review-by-non-author",
+          "dispatch-refiner-for-clear-standards-fixes",
+          "mark-one-way-door",
+          "pin-retro-window-and-sources",
+          "run-merged-cleanup-without-asking",
+          "run-codex-review"
         ]
       }
     },

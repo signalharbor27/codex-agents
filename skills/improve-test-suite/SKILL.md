@@ -28,7 +28,7 @@ Diagnose weak, redundant, brittle, or low-signal tests across a repository or su
 1. Pin the repository or subsystem boundary and read-only authority. Inspect suite layers, runtime, reliability, doubles, and named pain points. For a post-code review, limit findings to the original diff and its direct effects; list broader or pre-existing issues separately.
 2. For standalone audits, keep small or tightly coupled scope local and delegate material independent subsystem or test-layer questions to read-only subagents. Within `review-and-simplify-changes`, independent reviewers perform the assigned checks and return findings without further delegation. The main agent owns synthesis and decisions.
 3. Find the highest-cost problems: brittle internals, duplicate coverage, mock theater, slow low-signal flows, and missing seam-level proof. Compare boundary-focused tests through public interfaces. Before recommending removal, inventory incident and contract provenance and address the risk each test covers.
-4. Classify findings as pre-existing test debt, current regression, preventable by `engineering`, `debugging`, or `test-design`, or a repo-doc candidate. Plan supported changes to keep, remove, rewrite, or add tests, naming the behavior or cost and verification for each. Use phases only when dependencies or rollout need them. If no finding is supported, report no actionable findings and any coverage limits.
+4. Classify findings as pre-existing test debt, current regression, preventable by `engineering`, `debugging`, or `test-design`, preventable at review by a coding standard or deterministic check, or a repo-doc candidate. Plan supported changes to keep, remove, rewrite, or add tests, naming the behavior or cost and verification for each. Use phases only when dependencies or rollout need them. If no finding is supported, report no actionable findings and any coverage limits.
 5. Pressure-test material tradeoffs, especially removal of broad suites or end-to-end coverage. Handle one unresolved approval inline; do not reopen settled decisions. Load the grilling reference only for an interactive interview or several interdependent consequential user-owned choices. Keep the plan in chat unless a durable target-repository file is already or explicitly authorized.
 
 ## Output contract
@@ -41,7 +41,7 @@ Diagnose weak, redundant, brittle, or low-signal tests across a repository or su
 ## Reference Routing
 
 - Read [../engineering/references/proof.md](../engineering/references/proof.md) when assessing fixture realism, assertion strength, or whether passing tests can detect material defects.
-
+- Read [../review-and-simplify-changes/references/coding-standards.md](../review-and-simplify-changes/references/coding-standards.md) when judging whether a test lies, reviewing a diff's tests, or when a finding was preventable at review and needs a proposed standard or check; it owns the test-lie catalog.
 - Read [TEST_SUITE_REVIEW.md](TEST_SUITE_REVIEW.md) when judging test quality, removal risk, or replacement coverage.
 - Read [../grill-me/references/frontier.md](../grill-me/references/frontier.md) only for an interactive interview over several interdependent consequential user-owned decisions; retain this skill as primary.
 - Read [../engineering/references/durable-plan.md](../engineering/references/durable-plan.md) only after a durable target-repo plan file is explicitly authorized.

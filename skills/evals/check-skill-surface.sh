@@ -43,11 +43,11 @@ reject_matches() {
 
 stale_prompt_pattern='GPT-5\.5|gpt-5\.5|currently means GPT-5\.6|For GPT-5\.6, start|Amp GPT|Context7|140-320|software-engineering-flow|writing-software|testing-software|systematic-debugging|verification-before-completion'
 reject_matches "$stale_prompt_pattern" "found stale model, tool, path, or retired skill vocabulary in active guidance" \
-  "$ROOT" "$REPO_ROOT/AGENTS.md" "$REPO_ROOT/README.md" --glob '*.md' --glob '!evals/**'
+  "$ROOT" "$REPO_ROOT/AGENTS.md" "$REPO_ROOT/README.md" --glob '*.md' --glob '!**/evals/**'
 
 legacy_host_pattern='Claude|Anthropic|CLAUDE\.md|superpowers:|TodoWrite|Task tool|Task\('
 reject_matches "$legacy_host_pattern" "found legacy host vocabulary in active skills" \
-  "$ROOT" --glob '*.md' --glob '!evals/**'
+  "$ROOT" --glob '*.md' --glob '!**/evals/**'
 
 stacked_eval_pattern='mandatory_router|secondary_skills|expected_sequence'
 reject_matches "$stacked_eval_pattern" "found retired stacked-routing vocabulary in eval contracts" \

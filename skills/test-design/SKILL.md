@@ -39,14 +39,13 @@ Keep routine implementation proof in `engineering`. Use this skill when the test
 - Read [references/test-selection.md](references/test-selection.md) when the proof layer, doubles, oracle, or case matrix is consequential.
 - Read [references/tdd.md](references/tdd.md) only for explicit TDD or a behavior change where a cheap trustworthy failing test is the chosen development loop.
 - Read [references/browser-e2e.md](references/browser-e2e.md) for browser flows, selectors, visual evidence, or Playwright-style end-to-end work.
+- Read [../review-and-simplify-changes/references/coding-standards.md](../review-and-simplify-changes/references/coding-standards.md) when checking whether existing or new tests could pass while the behavior is broken; its test-lie catalog owns those flags.
 - Read [engineering/references/legacy-change.md](../engineering/references/legacy-change.md) for characterization seams in poorly understood code.
 
 ## Failure modes
 
 - More tests without more trust
-- Assertions coupled to private helpers, call order, or internal data shape
-- Expected values copied from production logic
-- Mocking away the boundary that fails in production
+- Tests that lie: tautological, structure-sensitive, can't-fail, or private-path
 - Broad E2E flows for behavior a cheaper seam can prove
 - Screenshot commands, typechecks, or coverage percentages treated as behavior proof
 - Test suites that grow while obsolete or subsumed tests remain

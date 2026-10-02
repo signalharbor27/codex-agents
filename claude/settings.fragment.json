@@ -46,6 +46,21 @@
   },
   "outputStyle": "Q",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$HOME/.claude/hooks/destructive-guard.ts\""
+          },
+          {
+            "type": "command",
+            "command": "bun \"$HOME/.claude/hooks/review-gate.ts\""
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
