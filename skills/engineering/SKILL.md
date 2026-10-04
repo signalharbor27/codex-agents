@@ -40,6 +40,7 @@ Build the smallest production-complete change that delivers the requested outcom
 
 - Read [../grill-me/references/frontier.md](../grill-me/references/frontier.md) when several coupled user-owned choices materially affect the deliverable, acceptance criteria, or costly commitments, even when implementation could proceed.
 - Read [references/feature-shape.md](references/feature-shape.md) for greenfield work, a new integration, or planning multiple slices and their parallel implementation.
+- Read [references/feature-shape.md#draft-the-contract-with-architects](references/feature-shape.md#draft-the-contract-with-architects) before implementing a one-way or cross-boundary change whose shape is not settled; skip it for well-defined slices.
 - Read [references/boundary-design.md](references/boundary-design.md) when callers, ownership, trust boundaries, invariant-bearing types, module/API shape, or a proposed abstraction is consequential.
 - Read [references/typescript-contracts.md](references/typescript-contracts.md) when TypeScript schema ownership, inference, semantic IDs, assertions, or exhaustiveness affect the contract; follow repository and `effect-ts` conventions.
 - Read [../codebase-investigation/references/historical-evidence.md](../codebase-investigation/references/historical-evidence.md) when a change depends on why existing behavior was introduced or retained.
@@ -49,6 +50,7 @@ Build the smallest production-complete change that delivers the requested outcom
 - Read [references/security.md](references/security.md) for auth, permissions, secrets, attacker-controlled input, abuse, replay, or sensitive data.
 - Read [references/performance-and-capacity.md](references/performance-and-capacity.md) for hot paths, latency/throughput targets, resource limits, or capacity work.
 - Read [references/proof.md](references/proof.md) only when the trustworthy proof is not obvious or the change has material failure modes.
+- Read [references/external-skills.md](references/external-skills.md) when a pressure it lists applies, to find the installed external principle or workflow skill to read by path.
 - Read [references/durable-plan.md](references/durable-plan.md) only after the user requests or authorizes an in-repo plan that must survive sessions or agents, including discovery work whose route is not yet execution-ready.
 
 ## Failure modes

@@ -586,7 +586,7 @@ describe("independent review role selection", () => {
     for (const id of ["delegated-mechanical-review-evidence", "delegated-review-command-evidence"]) {
       const entry = fixture.cases.find(candidate => candidate.id === id)!
       const result = resultFor(entry)
-      for (const action of ["delegate-independent-tracks", "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration", "run-codex-review"]) {
+      for (const action of ["delegate-independent-tracks", "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration", "delegate-design-reviewer-review"]) {
         expect(compareResult(entry, { ...result, actions: [...result.actions, action] })).toEqual([`forbidden action ${action}`])
       }
     }
@@ -618,12 +618,12 @@ describe("independent review role selection", () => {
     }
   })
 
-  test("one-way-door and hot-path reviews add oracle and codex review to the reviewer and stay read-only", () => {
+  test("one-way-door and hot-path reviews add the oracle panel, judge, blast-radius pass, and design reviewer, and stay read-only", () => {
     for (const id of ["reviewer-tenant-boundary-review", "reviewer-charge-retry-review", "reviewer-mixed-version-migration-review", "hot-path-one-way-review"]) {
       const entry = fixture.cases.find(candidate => candidate.id === id)!
       const result = resultFor(entry)
       expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toEqual(result)
-      for (const action of ["delegate-reviewer-review", "delegate-oracle-review", "run-codex-review"]) {
+      for (const action of ["delegate-reviewer-review", "delegate-oracle-review", "reconcile-oracle-with-judge", "run-blast-radius-pass", "delegate-design-reviewer-review"]) {
         expect(compareResult(entry, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([`missing required action ${action}`])
       }
       expect(compareResult(entry, { ...result, mutation: "requested-repo-writes" })).toEqual(["mutation: expected none, got requested-repo-writes"])
@@ -678,10 +678,10 @@ describe("independent review role selection", () => {
 })
 
 describe("source agent catalog", () => {
-  test("accepts the eight source roles including reviewer, refiner, and Oracle", async () => {
+  test("lists every source role once across Codex profiles and Claude agents", async () => {
     const catalog = await agentCatalog(join(import.meta.dir, "../.."))
     expect([...catalog.matchAll(/^- ([a-z_]+):/gm)].map(match => match[1])).toEqual([
-      "explorer", "fast_reviewer", "implementer", "librarian", "oracle", "refiner", "reviewer", "verifier",
+      "architect", "design_reviewer", "explorer", "fast_reviewer", "implementer", "judge", "librarian", "oracle", "refiner", "reviewer", "verifier",
     ])
   })
 
@@ -709,6 +709,8 @@ describe("source agent catalog", () => {
       const roots = [join(root, "previous"), join(root, "candidate")]
       for (const source of roots) {
         await mkdir(join(source, "agents"), { recursive: true })
+        await mkdir(join(source, "claude/agents"), { recursive: true })
+        await writeFile(join(source, "claude/agents/design_reviewer.md"), '---\nname: design_reviewer\ndescription: "Previous design trigger."\n---\nBody.\n')
         await symlink(join(import.meta.dir, ".."), join(source, "skills"))
         await writeFile(join(source, "AGENTS.md"), "# Source instructions\n")
         await writeFile(join(source, "agents/registry.toml"), "[agents]\nmax_depth = 2\n")
@@ -726,6 +728,13 @@ describe("source agent catalog", () => {
       expect(candidate).not.toContain("Previous review trigger.")
       expect(candidate).not.toContain("max_depth")
       expect((await sourceProvenance(roots[0]!)).source_hash).not.toBe((await sourceProvenance(roots[1]!)).source_hash)
+      expect(previous).toContain("design_reviewer: Previous design trigger.")
+      const beforeClaudeEdit = (await sourceProvenance(roots[1]!)).source_hash
+      await writeFile(join(roots[1]!, "claude/agents/design_reviewer.md"), '---\nname: design_reviewer\ndescription: "Candidate design trigger."\n---\nBody.\n')
+      const catalog = await agentCatalog(roots[1]!)
+      expect(catalog).toContain("design_reviewer: Candidate design trigger.")
+      expect(catalog).not.toContain("Previous design trigger.")
+      expect((await sourceProvenance(roots[1]!)).source_hash).not.toBe(beforeClaudeEdit)
     } finally { await rm(root, { recursive: true, force: true }) }
   })
 

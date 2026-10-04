@@ -25,6 +25,7 @@ Create a worktree only when isolation materially reduces interference or branch 
 
 1. Inspect the current branch, worktrees, dirty state, and untracked work. Use isolation when it solves a current interference or branch-state problem; otherwise stay in the existing workspace.
 2. Use Worktrunk (`wt`) for agent-created workspaces. Its user configuration owns the destination; inspect `wt config show` and `wt list` before choosing a new branch. Reuse an already isolated host- or app-created task workspace instead of creating another inside it.
+   T3 Code binds each thread to one workspace: start a thread in its own worktree with `t3_thread_launch` and a `workspaceStrategy`, or move the current thread with `t3_worktree_handoff`. Never ask a thread to `git worktree add` or `cd` elsewhere to rebind itself; its binding stays put. A T3-created worktree is app-created, so T3 owns its cleanup and Worktrunk hooks never ran there: run the repo's setup explicitly in it, or have the T3 project's setup script, which runs on worktree creation, invoke that setup.
 3. Infer routine branch and base choices from the task and repo conventions. Repo guidance or project `wt` hooks own setup; run a documented repo bootstrap in the new workspace rather than recreating it by hand. An authorized task permits needed reversible isolation. Preserve existing branches, dirty files, and untracked work; do not switch, reset, clean, or overwrite them without authority.
 4. Run `wt switch --create <branch> --base <base> --no-cd --format json` for noninteractive creation. Use the returned absolute `path` as the working directory in subsequent tool calls; a subprocess cannot change later tool calls' directories. For interactive shells, `wt switch --create <branch> --base <base>` switches directories through shell integration. Prefer persisted approvals: hooks already approved in `approvals.toml` run without prompting. Noninteractive runs stop on unapproved project hooks; list them with `wt config approvals list` and read each command, and only then rerun with `--yes`, which approves that run only. Persisting a new approval with `wt config approvals add` needs authority.
 5. Pre-start hooks finish before `wt switch` returns; if setup runs in post-start, confirm it finished (`wt config state logs`) before relying on it. Verify selected env files are ignored and present without printing their contents. Keep mutable dependency trees and generated clients independent; check symlinks before copying them. Use the repo's dependency reconciliation command for the new branch's manifests/lockfile. Copying env files does not isolate databases or ports; configure those before running services or database writes.
@@ -40,7 +41,7 @@ Host- or app-created workspaces retain their creator's cleanup ownership. Keep a
 
 ## Reference Routing
 
-- Read [references/worktrunk.md](references/worktrunk.md) when Worktrunk is missing, remote env/dependency setup is needed, or host or app workspace ownership is unclear.
+- Read [references/worktrunk.md](references/worktrunk.md) when Worktrunk is missing, remote env/dependency setup is needed, an app-created (Codex or T3) workspace needs setup, or host or app workspace ownership is unclear.
 - Use `engineering` as the next primary skill once the isolated workspace is ready and the real task becomes implementation.
 - Use `finishing-a-development-branch` when the isolated branch is complete and needs an integration decision.
 
@@ -50,5 +51,6 @@ Host- or app-created workspaces retain their creator's cleanup ownership. Keep a
 - Bypassing configured setup hooks or creating nested isolation
 - Ignoring a repo bootstrap script and recreating setup by hand
 - Assuming Worktrunk relocates existing trees or intercepts host or app workspace creation
+- Telling a T3 thread to `git worktree add` or `cd` instead of launching or handing it off with a workspace binding
 - Overwriting existing work or committing setup changes without authority
 - Using broken path expansion or stale runtime-specific paths

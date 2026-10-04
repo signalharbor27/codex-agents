@@ -1,0 +1,23 @@
+---
+description: pstack per-role model choices (overrides skill defaults)
+alwaysApply: true
+---
+# Generated from roles/roles.ts by scripts/generate-hosts.ts. Each value is `<model>-<effort>`;
+# launch it on the provider that runs the model, per Q's global instructions.
+feature, refactoring: claude-opus-5-5-medium
+bug-fix: claude-opus-5-5-medium
+perf-issue: claude-opus-5-5-medium
+hillclimb: claude-opus-5-5-medium
+judgment and prose: claude-opus-5-5-medium
+hardest tasks: claude-opus-5-5-high
+how explorer: gpt-6.1-sol-medium
+how explainer: gpt-6.1-sol-high
+why investigators: gpt-6.1-sol-medium
+why synthesizer: gpt-6.1-sol-high
+reflect tooling: gpt-6.1-sol-medium
+reflect judgment, divergent, synthesizer: gpt-6.1-sol-high
+arena runners: claude-opus-5-5-high, gpt-6-astra-high
+arena cross-judge pool: gpt-6.1-sol-high
+swarm workers: gpt-6.1-sol-medium
+architect runners: claude-opus-5-5-high, gpt-6-astra-high
+interrogate reviewers: gpt-6.1-sol-high, claude-opus-5-5-medium
