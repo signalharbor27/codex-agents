@@ -10,14 +10,14 @@ disable-model-invocation: true
 
 A retrospective turns evidence from past sessions and PR reviews into changes to the agent **environment**: checks, hooks, coding standards, navigation pointers, information access, tooling, and always-loaded instructions. It is not a review of product code. The output is a ranked list of candidate fixes, each with evidence and an owner. Zero lessons is a valid result.
 
-Work is read-only: reading logs and PR data and writing digests and the report outside the repositories. Implementing candidates needs the user's authorization for the specific changes.
+Work is read-only: reading logs and PR data and writing digests and the report outside the repositories. Implementing candidates needs the user's authorization for the specific changes, except in [scheduled mode](#scheduled-mode).
 
 ## Steps
 
 1. Load the `writing-for-agents` skill when available, and read [session lessons](../writing-skills/SESSION-LESSONS.md). Together they decide where a lesson belongs and how it is phrased.
 2. Pin the **window** and **sources** before reading anything. Default: the last 7 days of top-level sessions under `~/.claude/projects` and `~/.codex/sessions`. Use the current session alone when the user says "this session". Include PR reviews in the window's repositories unless the user opts out. State the window, roots, and repositories in one line. Read [sources](references/sources.md) for extractor usage, bounded raw-log reads, and PR review queries.
 3. **Inventory** the environment that owns the fixes: global instructions, project `AGENTS.md` files, memory indexes, the skill catalog, hooks and settings, and each repository's check commands (package scripts, CI workflows, pre-commit). Record the word count of every always-loaded file. Read a destination before you recommend an edit to it.
-4. Extract bounded digests with `scripts/extract.py`. Raw logs are read only through the digests' `L<n>` line pointers. On a shared or production host, run it under `nice -n 19` with the default memory cap.
+4. Extract bounded digests with `scripts/extract.py`. It skips automated rollouts and delegated children (sessions opened by a subagent brief) and lists them in `skipped.tsv`; pass `--include-automated` when delegation itself is under review. Raw logs are read only through the digests' `L<n>` line pointers. On a shared or production host, run it under `nice -n 19` with the default memory cap.
 5. Analyze every digest in the window. When the window holds more than about 15 sessions or 300 KB of digests, fan out read-only analysts over size-balanced batches, using [the analyst brief](references/analyst-brief.md). Personally verify each high-severity claim against its raw-log line.
 6. When code merged in the window:
    - Collect the `## Audit items` sections of PRs merged in the window and list each unresolved item as a candidate, citing the PR.
@@ -30,7 +30,18 @@ Work is read-only: reading logs and PR data and writing digests and the report o
    - the change, and whether it adds or removes always-loaded text (roughly how many words)
 
    Merge duplicates across batches. Two analysts who read the same evidence count as one source. Drop candidates that would change no consequential decision, action, or completion claim; unresolved audit items stay, even when they occur once.
-8. Write `<out>/RETRO.md` with the window, the method, the always-loaded budget, candidates by severity, and a suggested order. Present the candidates to the user by severity. The step is complete when every digest has been read, every audit has returned, and every candidate names its evidence, owner, and load delta.
+8. Rank the candidates, then read the installed `correct` skill's SKILL.md and apply its method to the top recurring mistake classes (two or more sessions): take the highest fix level that works (architecture, then types, then a lint or check whose error names the fix, then a test, then docs) and record why each higher level does not. Every proposed check names a real past mistake (session and `L<n>`, or a commit) it must fail on; whoever implements it shows that failure before the check passes on the fixed code.
+9. Write `<out>/RETRO.md` with the window, the method, the always-loaded budget, candidates by severity, and a suggested order. Present the candidates to the user by severity. The step is complete when every digest has been read, every audit has returned, and every candidate names its evidence, owner, and load delta.
+
+## Scheduled mode
+
+When the run comes from a T3 scheduled task, the schedule authorizes local implementation of the accepted fixes: high- or medium-severity candidates with verified evidence whose owner is in the repository the task names (default: the T3 project's repository). Everything else stays a proposal in the report.
+
+- Create a new local branch in that repository with Worktrunk, following `using-git-worktrees`, and work only there.
+- Implement each accepted fix class per step 8, prove each new check fails on its past mistake, run the repository's checks, and finish `review-and-simplify-changes`; commit each class separately on the branch.
+- Write the ranked report to `RETRO.md` at the workspace root, marking each candidate implemented (with its commit) or proposed.
+- Never push, open a PR, or edit files in any other checkout; digests still go to `<out>`.
+- Hand back the branch, absolute workspace path, report path, and one line per implemented fix for the user's review.
 
 ## Categories, in fix priority
 
@@ -60,6 +71,7 @@ Corrections from the user (repeating, overriding, "I told you") are evidence. Ma
 - Writing a prose rule for a mistake a check could catch
 - Putting coding standards into implementer guidance
 - Inventing lessons to fill the report, or counting repeated analyst claims as independent
-- Editing environment files before the user authorizes the specific change
+- Editing environment files before the user authorizes the specific change, or outside the scheduled-mode branch
+- Proposing a check without the past mistake it must fail on
 
 Source basis: Matt Pocock's `retro` skill (github.com/mattpocock/skills, `skills/engineering/retro`, commit `d81f3a1`, MIT License, Copyright (c) 2026 Matt Pocock). Adapted, not copied: categories reordered by fix priority, multi-session extraction and analyst fan-out added, and evidence, owner, and load-delta required per candidate. The extraction and batching method comes from the user's 2026-10-02 retrospective.

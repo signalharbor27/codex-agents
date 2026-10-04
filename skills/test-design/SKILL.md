@@ -41,6 +41,7 @@ Keep routine implementation proof in `engineering`. Use this skill when the test
 - Read [references/browser-e2e.md](references/browser-e2e.md) for browser flows, selectors, visual evidence, or Playwright-style end-to-end work.
 - Read [../review-and-simplify-changes/references/coding-standards.md](../review-and-simplify-changes/references/coding-standards.md) when checking whether existing or new tests could pass while the behavior is broken; its test-lie catalog owns those flags.
 - Read [engineering/references/legacy-change.md](../engineering/references/legacy-change.md) for characterization seams in poorly understood code.
+- Read the installed `principle-test-behavior-not-implementation` skill when writing, changing, or keeping a test, and `benchmark-checklist` for measured numbers; see [the external skills map](../engineering/references/external-skills.md#testing-and-proof).
 
 ## Failure modes
 

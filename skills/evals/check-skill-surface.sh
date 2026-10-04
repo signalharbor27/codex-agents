@@ -53,10 +53,11 @@ stacked_eval_pattern='mandatory_router|secondary_skills|expected_sequence'
 reject_matches "$stacked_eval_pattern" "found retired stacked-routing vocabulary in eval contracts" \
   "$SCRIPT_DIR" --glob '*.json' --glob '*.ts' --glob '*.md'
 
-# Generated host artifacts (AGENTS.md, claude/) must match instructions/ and agents/.
+# Generated host artifacts (AGENTS.md, agents/, briefs/, claude/, external/pstack-models.mdc) must match instructions/ and roles/.
 bun "$REPO_ROOT/scripts/generate-hosts.ts" --check
 if ((CHECK_INSTALLED)); then
   bun "$REPO_ROOT/scripts/generate-hosts.ts" --check-installed
+  bun "$REPO_ROOT/scripts/external-skills.ts" --check
 fi
 
 echo "skill surface checks passed"

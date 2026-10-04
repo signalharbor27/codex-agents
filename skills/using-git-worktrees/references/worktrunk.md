@@ -23,3 +23,11 @@ For CLI work, create the workspace with Worktrunk and launch Codex there. For a 
 The app's worktree location is controlled by its Settings → Worktrees UI; official docs do not expose a verified remote-only CLI root setting. `.worktreeinclude` automatic app copying is documented for local app worktrees, not remote ones. Do not invent config keys, relocate all of `CODEX_HOME`, or edit session databases to redirect app worktrees.
 
 References: [OpenAI worktrees](https://learn.chatgpt.com/docs/environments/git-worktrees), [local environments](https://learn.chatgpt.com/docs/environments/local-environment), [remote connections](https://learn.chatgpt.com/docs/remote-connections).
+
+## T3 Code integration
+
+T3 creates a worktree when a thread is launched with `t3_thread_launch` and `workspaceStrategy: {type: "worktree", ...}`, or moved with `t3_worktree_handoff`. Neither goes through Worktrunk, so no `wt` hook runs; T3 owns the workspace and its removal, and `wt list` still shows it.
+
+Run the configured Worktrunk creation hooks on that existing worktree with `wt -C <path> hook pre-start`, then `wt -C <path> hook post-start --foreground` so background setup finishes before you rely on it. Preview each with `--dry-run` and list hooks with `wt -C <path> hook show`. Unapproved project hooks stop a noninteractive run; handle them as in the skill's step 4 before adding `--yes`.
+
+For every new T3 worktree, a T3 project script with `runOnWorktreeCreate: true` can run those commands (or the repo's bootstrap) automatically; `t3_worktree_handoff` runs it unless `runSetupScript` is false. Project scripts are shared settings: change them with `t3_project_update` only with authority.

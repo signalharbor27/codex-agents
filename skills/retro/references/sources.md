@@ -14,9 +14,11 @@ nice -n 19 python3 <retro-skill>/scripts/extract.py --since 2026-10-02 --out ~/r
 ```
 
 - `--since` is inclusive and `--until` exclusive, both `YYYY-MM-DD` UTC. Only events inside the window are counted.
-- `--claude-root` and `--codex-root` override the log roots. `--include-automated` keeps `codex_exec` and subagent rollouts, which are skipped by default because they repeat their parent's work.
+- `--claude-root` and `--codex-root` override the log roots. `--include-automated` keeps `codex_exec` rollouts, subagent rollouts, and delegated children, which are skipped by default because they repeat their parent's work.
+- A delegated child is a session stored as top-level whose first user message, read regardless of the window, starts with "You are the `<role>` subagent." or the orchestrator prefix "Act as the <role> sub-agent for this task.". T3 `delegate_task` children appear this way in both log families. Its role (ours when present, else the prefix's) fills the `role` column when included.
+- Every skipped rollout gets a row in `skipped.tsv` (reason `codex_exec`, `subagent`, or `delegated:<role>`, then source and path), and the summary line prints `automated_skipped` and `delegated_skipped`, so nothing leaves the window silently.
 - `--max-mem-mb` caps the address space (default 2048). The script streams line by line, and a week of logs takes seconds.
-- Output: `index.tsv`, with a header and one row per session (id, source, span, size, user messages, tool calls, tool errors, hook hits, interrupts, compactions, cwd, title), plus one `sNNN.md` digest per session. A digest holds header stats, tool, skill, and subagent counts, the user's messages with timestamps, hook and guard blocks, and a sample of tool errors.
+- Output: `index.tsv`, with a header and one row per session (id, source, delegated role, span, size, user messages, tool calls, tool errors, hook hits, interrupts, compactions, cwd, title), plus one `sNNN.md` digest per session. A digest holds header stats, tool, skill, and subagent counts, the user's messages with timestamps, hook and guard blocks, and a sample of tool errors.
 - Tool errors are explicit failures only: `is_error` tool results, nonzero exit codes from tool-output headers or JSON `exit_code` fields, failed exec scripts, and error events. Hook hits are explicit deny or block messages: PreToolUse hook errors, Stop-hook blocks, harness `Blocked:` messages, permission denials, and exec-policy rejections. Reply-guard nudges are counted separately as `hook_nudges`.
 
 ## Reading raw logs
