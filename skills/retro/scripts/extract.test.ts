@@ -168,6 +168,59 @@ describe("retro extract.py", () => {
     expect(sessions["codex:codex-tui"]!.user_msgs).toBe("4")
   })
 
+  test("delegated children are skipped and listed by default, and kept with --include-automated", () => {
+    const dir = mkdtempSync(join(root, "child-"))
+    const say = (minute: number, text: string) => ({ type: "user", timestamp: ts(minute), cwd: "/w", message: { content: text } })
+    jsonl(join(dir, "claude", "-p", "child.jsonl"), [
+      { type: "user", timestamp: "2026-09-25T10:00:00.000Z", message: { content: "Act as the review sub-agent for this task.\n\nYou are the `reviewer` subagent.\nReview the diff." } },
+      say(1, "round 2: recheck the fix"),
+    ])
+    jsonl(join(dir, "claude", "-p", "human.jsonl"), [say(1, "please fix it"), say(2, "You are the `reviewer` subagent. quoted later")])
+    jsonl(join(dir, "codex", "2026", "09", "27", "rollout-child.jsonl"), [
+      meta("codex-tui", "vscode"),
+      { type: "event_msg", timestamp: ts(1), payload: { type: "user_message", message: "# AGENTS.md instructions for /w" } },
+      { type: "event_msg", timestamp: ts(1), payload: { type: "item_completed", item: { type: "UserMessage", content: [{ type: "text", text: "Act as the implementation sub-agent for this task.\n\nShip it." }] } } },
+    ])
+    const extract = (...extra: string[]) => {
+      const out = join(dir, `out${extra.join("")}`)
+      const proc = Bun.spawnSync(["python3", "-B", script, "--since", "2026-09-26", "--out", out, "--claude-root", join(dir, "claude"), "--codex-root", join(dir, "codex"), ...extra])
+      expect(proc.stderr.toString()).toBe("")
+      const table = (name: string) => readFileSync(join(out, name), "utf8").trimEnd().split("\n").slice(1).map(line => line.split("\t"))
+      return { stdout: proc.stdout.toString(), index: table("index.tsv"), skipped: table("skipped.tsv") }
+    }
+    const byDefault = extract()
+    expect(byDefault.stdout).toContain("sessions=1 automated_skipped=0 delegated_skipped=2")
+    expect(byDefault.index.map(row => [row[1], row[2]])).toEqual([["claude", ""]])
+    expect(byDefault.skipped.map(row => row[0]).sort()).toEqual(["delegated:implementation", "delegated:reviewer"])
+    const included = extract("--include-automated")
+    expect(included.stdout).toContain("sessions=3 automated_skipped=0 delegated_skipped=0")
+    expect(included.index.map(row => row[2]).sort()).toEqual(["", "implementation", "reviewer"])
+    expect(included.skipped).toEqual([])
+  })
+
+  test("a Codex child whose brief predates the window is still a delegated child", () => {
+    const sessions = extractOnly(
+      [{ type: "user", timestamp: ts(1), cwd: "/w", message: { content: "human work" } }],
+      [
+        meta("codex-tui", "vscode"),
+        { type: "event_msg", timestamp: "2026-09-25T10:00:00.000Z", payload: { type: "user_message", message: "You are the `verifier` subagent.\nRun the checks." } },
+        { type: "event_msg", timestamp: ts(1), payload: { type: "user_message", message: "round 2: rerun" } },
+      ],
+      "--include-automated",
+    )
+    expect(sessions["codex:codex-tui"]!.role).toBe("verifier")
+  })
+
+  test("either brief line alone marks a delegated child", () => {
+    const sessions = extractOnly(
+      [{ type: "user", timestamp: ts(1), cwd: "/w", message: { content: "Act as the review sub-agent for this task." } }],
+      [meta("codex-tui", "vscode"), { type: "event_msg", timestamp: ts(1), payload: { type: "user_message", message: "You are the `reviewer` subagent." } }],
+      "--include-automated",
+    )
+    expect(sessions.claude!.role).toBe("review")
+    expect(sessions["codex:codex-tui"]!.role).toBe("reviewer")
+  })
+
   test("the session cwd comes only from events inside the window", () => {
     const sessions = extractOnly(
       [

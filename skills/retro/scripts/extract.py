@@ -7,6 +7,12 @@ sessions root, keeps events inside the window, and writes `index.tsv` plus one
 same directory. Python standard library only; streams line by
 line so large logs stay within the memory cap.
 
+A session whose first user message opens with a delegated-child brief ("You
+are the `<role>` subagent." or "Act as the <role> sub-agent for this task.") is
+a delegated child stored as a top-level session; like Codex exec and subagent
+rollouts it is skipped unless `--include-automated` is given, and every skipped
+rollout is listed in `skipped.tsv`.
+
 Errors count only explicit failure signals: `is_error` tool results, nonzero
 exit codes in tool-output headers or executor result envelopes, failed exec
 scripts, and error events. Hook hits count only explicit deny or block messages.
@@ -32,6 +38,8 @@ CLAUDE_HOOK = re.compile(
     r"^(?:(?:PreToolUse|PostToolUse|UserPromptSubmit|Stop|SubagentStop)(?::\S+)? hook\b"
     r"|<tool_use_error>Blocked:|Hook \S+ (?:denied|blocked)|Permission to use \S+ .*has been denied)"
 )
+# Delegated-child briefs: an optional orchestrator prefix, then our role line.
+DELEGATED = re.compile(r"^(?:Act as the ([\w-]+) sub-agent for this task\.\s*)?(?:You are the `([\w-]+)` subagent\.)?")
 CODEX_POLICY_REJECT = re.compile(r"` rejected: ([^\"\\]{1,200})")
 HEADER_EXIT = re.compile(r"^(?:Process exited with code|Exit code:)\s*(-?\d+)\s*$", re.M)
 MAX_USER = 500
@@ -87,6 +95,7 @@ class Session:
         self.nudges = 0
         self.interrupts = 0
         self.compactions = 0
+        self.first_user = None
         self.bytes = os.path.getsize(path)
 
     def seen(self, ts):
@@ -111,6 +120,17 @@ class Session:
             self.user.append((ts, line, trunc(msg)))
         else:
             self.user_dropped += 1
+
+    def note_first_user(self, msg):
+        """Keep the first human-visible user message, read regardless of the window."""
+        msg = (msg or "").strip()
+        if self.first_user is None and msg and not SKIP_USER.match(msg):
+            self.first_user = msg
+
+    def role(self):
+        """Return the delegated child's role, or "" for a top-level session."""
+        match = DELEGATED.match(self.first_user or "")
+        return match.group(2) or match.group(1) or ""
 
     def add_error(self, ts, line, label, text):
         self.nerr += 1
@@ -152,6 +172,10 @@ def parse_claude(path, since, until):
         elif t == "summary" and not s.title:
             s.title = d.get("summary", "")
         last_ts = d.get("timestamp") or last_ts
+        if t == "user" and not any(d.get(flag) for flag in ("isSidechain", "isMeta", "isCompactSummary", "isVisibleInTranscriptOnly")):
+            first = (d.get("message") or {}).get("content")
+            if not (isinstance(first, list) and any(isinstance(x, dict) and x.get("type") == "tool_result" for x in first)):
+                s.note_first_user(text_of(first))
         if not in_window(last_ts, since, until):
             continue
         ts = last_ts
@@ -256,33 +280,37 @@ def codex_exit_codes(output):
 
 
 def parse_codex(path, since, until, include_automated):
+    """Return (session, None), or (None, reason) for a skipped automated rollout."""
     meta = None
     for _, first in iter_jsonl(path):
         meta = first.get("payload") or {}
         break
     if meta is None:
-        return None, False
-    automated = meta.get("originator") == "codex_exec" or not isinstance(meta.get("source"), str)
+        return None, None
+    automated = "codex_exec" if meta.get("originator") == "codex_exec" else "subagent" if not isinstance(meta.get("source"), str) else None
     if automated and not include_automated:
-        return None, True
+        return None, automated
     s = Session("codex:%s" % meta.get("originator"), path)
     meta_cwd = meta.get("cwd", "")
     calls = {}
     for lineno, d in iter_jsonl(path):
         ts = d.get("timestamp")
-        if not in_window(ts, since, until):
-            continue
-        s.seen(ts)
         t = d.get("type")
         p = d.get("payload") or {}
         pt = p.get("type")
+        item = p.get("item") or {}
+        is_user = t == "event_msg" and (pt == "user_message" or (pt == "item_completed" and item.get("type") == "UserMessage"))
+        if is_user:
+            s.note_first_user(p.get("message") or text_of(item.get("content")))
+        if not in_window(ts, since, until):
+            continue
+        s.seen(ts)
         if t == "compacted":
             s.compactions += 1
         if t == "turn_context" and p.get("cwd"):
             s.cwd = p["cwd"]
         if t == "event_msg":
-            item = p.get("item") or {}
-            if pt == "user_message" or (pt == "item_completed" and item.get("type") == "UserMessage"):
+            if is_user:
                 msg = p.get("message") or text_of(item.get("content"))
                 if msg and msg.strip() and not SKIP_USER.match(msg.strip()):
                     s.add_user(ts, lineno, msg, (pt, p.get("turn_id")))
@@ -322,7 +350,7 @@ def parse_codex(path, since, until, include_automated):
                 tail = body.split("\nOutput:", 1)[-1]
                 s.add_error(ts, lineno, "%s exit %d" % (label, codes[0]), tail)
     s.cwd = s.cwd or meta_cwd
-    return s, False
+    return s, None
 
 
 def walk_jsonl(root, top_level_only, since_epoch):
@@ -371,17 +399,19 @@ def write_outputs(sessions, out):
     for name in os.listdir(out):
         if DIGEST_NAME.fullmatch(name):
             os.remove(os.path.join(out, name))
-    columns = ["id", "src", "start", "end", "kb", "user_msgs", "tool_calls", "tool_errors", "hook_hits", "interrupts", "compactions", "cwd", "title"]
+    columns = ["id", "src", "role", "start", "end", "kb", "user_msgs", "tool_calls", "tool_errors", "hook_hits", "interrupts", "compactions", "cwd", "title"]
     with open(os.path.join(out, "index.tsv"), "w") as w:
         w.write("\t".join(columns) + "\n")
         for i, s in enumerate(sessions):
             title = s.title[:60] or (one_line(s.user[0][2], 80) if s.user else "")
-            row = ["s%03d" % i, s.src, (s.start or "")[:16], (s.end or "")[:16], s.bytes // 1000, len(s.user) + s.user_dropped,
+            row = ["s%03d" % i, s.src, s.role(), (s.start or "")[:16], (s.end or "")[:16], s.bytes // 1000, len(s.user) + s.user_dropped,
                    sum(s.tools.values()), s.nerr, s.nhooks, s.interrupts, s.compactions, short_cwd(s.cwd), title.replace("\t", " ")]
             w.write("\t".join(map(str, row)) + "\n")
     for i, s in enumerate(sessions):
         with open(os.path.join(out, "s%03d.md" % i), "w") as w:
             w.write("# s%03d %s %s\n" % (i, s.src, s.title))
+            if s.role():
+                w.write("delegated child: %s\n" % s.role())
             w.write("file: %s\ncwd: %s\nspan: %s → %s\n" % (s.path, s.cwd, s.start, s.end))
             w.write("compactions: %d interrupts: %d tool_errors: %d hook_hits: %d hook_nudges: %d\n" % (s.compactions, s.interrupts, s.nerr, s.nhooks, s.nudges))
             w.write("tools: %s\nskills: %s\nagents: %s\n" % (dict(s.tools.most_common(15)), dict(s.skills), dict(s.agents)))
@@ -404,7 +434,7 @@ def main(argv=None):
     parser.add_argument("--out", required=True, help="digest directory")
     parser.add_argument("--claude-root", default="~/.claude/projects")
     parser.add_argument("--codex-root", default="~/.codex/sessions")
-    parser.add_argument("--include-automated", action="store_true", help="keep codex exec and subagent rollouts")
+    parser.add_argument("--include-automated", action="store_true", help="keep codex exec, subagent, and delegated-child sessions")
     parser.add_argument("--max-mem-mb", type=int, default=2048, help="address-space cap; 0 disables")
     args = parser.parse_args(argv)
     if args.max_mem_mb:
@@ -421,20 +451,28 @@ def main(argv=None):
     except ValueError as err:
         parser.error("--since/--until need YYYY-MM-DD: %s" % err)
     sessions = []
-    skipped = 0
-    for path in walk_jsonl(args.claude_root, True, since_epoch):
-        s = parse_claude(path, args.since, args.until)
-        if s.active():
-            sessions.append(s)
-    for path in walk_jsonl(args.codex_root, False, since_epoch):
-        s, was_automated = parse_codex(path, args.since, args.until, args.include_automated)
-        skipped += was_automated
-        if s is not None and s.active():
+    skipped = []  # (reason, src, path) per rollout left out of the digests
+    parsed = [(parse_claude(path, args.since, args.until), None, path) for path in walk_jsonl(args.claude_root, True, since_epoch)]
+    parsed += [parse_codex(path, args.since, args.until, args.include_automated) + (path,) for path in walk_jsonl(args.codex_root, False, since_epoch)]
+    for s, reason, path in parsed:
+        if reason:
+            skipped.append((reason, "codex", path))
+            continue
+        if s is None or not s.active():
+            continue
+        if s.role() and not args.include_automated:
+            skipped.append(("delegated:" + s.role(), s.src, s.path))
+        else:
             sessions.append(s)
     sessions.sort(key=lambda s: s.start or "")
-    write_outputs(sessions, os.path.expanduser(args.out))
-    print("sessions=%d automated_skipped=%d errors=%d hook_hits=%d out=%s" % (
-        len(sessions), skipped, sum(s.nerr for s in sessions), sum(s.nhooks for s in sessions), args.out))
+    out = os.path.expanduser(args.out)
+    write_outputs(sessions, out)
+    with open(os.path.join(out, "skipped.tsv"), "w") as w:
+        w.write("reason\tsrc\tpath\n")
+        w.write("".join("%s\t%s\t%s\n" % row for row in skipped))
+    automated = sum(not reason.startswith("delegated:") for reason, _, _ in skipped)
+    print("sessions=%d automated_skipped=%d delegated_skipped=%d errors=%d hook_hits=%d out=%s" % (
+        len(sessions), automated, len(skipped) - automated, sum(s.nerr for s in sessions), sum(s.nhooks for s in sessions), args.out))
     return 0
 
 

@@ -6,6 +6,8 @@ Read this before assigning review tracks. Independent subagents perform review a
 
 - The main agent runs `review-and-simplify-changes`, assigns each material check, collects reviewer results, resolves findings, and coordinates authorized fixes and verification. Every initial, fix, and integration review requires independent subagent coverage.
 - Use `reviewer` for delegated correctness, contract, Standards/Intent, or architectural judgment. For defect review, give it the host's `review-agent` skill as described below.
+- Use `design_reviewer` on the first full pass for the second model family's review of abstractions, boundaries, interface depth, and simplification; it still reports correctness defects. It does not review fix or delta passes.
+- Use `oracle` (both seats) and `judge` when the lane or a stuck review calls for them, as described below.
 - Use `fast_reviewer` for bounded mechanical evidence such as unused code, dependency cycles, or stale comments. It does not substitute for substantive review.
 - Use `refiner` only to apply accepted `fix: clear` Standards findings of either origin. It never reviews, and its edits always get a delta review from a different read-only reviewer.
 - Use `verifier` for command-backed acceptance evidence. A passing command does not close source-review findings or uncovered requirements; honor the task's mutation limits when choosing checks.
@@ -19,17 +21,21 @@ For each substantive review, assign correctness, simplification, and Standards/I
 - Destructive migrations, data recovery, rollback guarantees, or compatibility while old and new versions coexist.
 - A material correctness dispute that remains unresolved after ordinary review despite concrete competing evidence.
 
-For the large-change lane, brief one `reviewer` per audit skill (`improve-codebase-architecture`, `improve-test-suite`) with its host path, the touched subsystems as the boundary, read-only authority, and the Standards scope and tags. Each returns supported findings, not a plan, and does not delegate.
+For the large-change lane, brief one `design_reviewer` for `improve-codebase-architecture` and one `reviewer` for `improve-test-suite`, each with the skill's host path, the touched subsystems as the boundary, read-only authority, and the Standards scope and tags. Each returns supported findings, not a plan, and does not delegate.
 
 Choose risk tracks from changed behavior and contracts. Directory names or display wording alone do not create financial or security review work. Low-risk changes still need an independent reviewer. A task explicitly limited to mechanical evidence or command execution uses its corresponding role and does not establish substantive review coverage.
 
-On follow-ups, send fixes and affected contracts back to the selected reviewer; preserve valid earlier coverage. Use a fresh or bounded brief when spawning a custom role so its model and effort settings apply. If the named role is unavailable, use an independent read-only agent with equivalent capability and effort and disclose the fallback; do not automatically upgrade to Oracle. Report blocked coverage if no suitable reviewer is available; main-agent review cannot close it. Reviewers do not dispatch further agents.
+On follow-ups, send fixes and affected contracts back to the selected `reviewer`; preserve valid earlier coverage. Launch each role as its brief (`~/.agents/briefs/<role>.md`) describes, with a fresh or bounded assignment, so its model family and effort apply. If the named role is unavailable, use an independent read-only agent with equivalent capability and effort and disclose the fallback; do not automatically upgrade to Oracle. Report blocked coverage if no suitable reviewer is available; main-agent review cannot close it. Reviewers do not dispatch further agents.
 
-Use `oracle` when the lane in `SKILL.md` calls for it, when the user explicitly requests it, or when investigation or ordinary review remains stuck on a concrete blocker. For a stuck review, include the unresolved question, attempted checks, and conflicting evidence. Size or complexity alone does not require an Oracle.
+Use `oracle` when the lane in `SKILL.md` calls for it, when the user explicitly requests it, or when investigation or ordinary review remains stuck on a concrete blocker. Launch both seats in parallel with the same assignment; neither sees the other's answer. For a stuck review, include the unresolved question, attempted checks, and conflicting evidence. Size or complexity alone does not require an Oracle. A `judge` reconciles the two answers whenever they disagree and always on a one-way door: it checks each disputed or single-seat claim against repository evidence and returns it as accepted, rejected, or unproven. The main agent still judges the results as findings.
 
-## Run `codex review`
+## Run the `design_reviewer` pass
 
-When the lane in `SKILL.md` calls for it, the main agent runs `codex review` on the first full pass alongside the subagent reviewers, using the target closest to the intended diff. Pass exactly one target: `--uncommitted` (staged, unstaged, and untracked, including unrelated WIP), `--base <branch>` (tracked changes since the merge base, committed or not; omits untracked files), or `--commit <sha>` (one commit). Targets reject a prompt argument, so Intent and Standards coverage stays with the subagents. Ignore findings outside the intended diff and judge the rest with the subagent findings. It supplements subagent review and cannot replace it; if it fails or cannot cover the diff, report that. Delegated reviewers do not run it.
+When the lane in `SKILL.md` calls for it, launch one `design_reviewer` on the first full pass alongside the `reviewer` subagents, with the same pinned snapshot, Intent digest, both Standards paths, and the `review-agent` path. Assign it abstractions, boundaries, interface depth, duplicated knowledge, needless layers, and simplification; it reports any correctness defect it finds as well. It supplements the `reviewer` coverage and cannot replace it; if it fails, report the lost coverage. Delta and fix passes go to `reviewer` only.
+
+## Run the blast-radius pass
+
+On a one-way door or hot path, brief the one-way `reviewer` (or a separate `reviewer`) to follow the installed `blast-radius` skill's SKILL.md: name the one fact the change is safe because of, then prove it, by running code where possible and otherwise by tracing every caller, writer, and deploy state it depends on. An unproven safety fact is an open finding.
 
 ## Dispatch
 

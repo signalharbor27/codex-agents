@@ -600,7 +600,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-design-reviewer-review"],
       "forbidden_actions": ["delegate-oracle-review", "keep-coupled-review-local"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -616,7 +616,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-standards-and-intent-separate", "trace-each-material-intent-requirement", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-standards-and-intent-separate", "trace-each-material-intent-requirement", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-design-reviewer-review"],
       "forbidden_actions": ["delegate-oracle-review", "keep-coupled-review-local"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -632,7 +632,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "apply-post-implementation-review", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-entire-intended-diff", "record-review-snapshot", "confirm-final-review-coverage", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "apply-post-implementation-review", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-entire-intended-diff", "record-review-snapshot", "confirm-final-review-coverage", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-design-reviewer-review"],
       "forbidden_actions": ["delegate-oracle-review", "keep-coupled-review-local"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -648,7 +648,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "apply-post-implementation-review", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-entire-intended-diff", "record-review-snapshot", "confirm-final-review-coverage", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "apply-post-implementation-review", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-entire-intended-diff", "record-review-snapshot", "confirm-final-review-coverage", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-design-reviewer-review"],
       "forbidden_actions": ["delegate-oracle-review", "keep-coupled-review-local"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -664,7 +664,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-delta-since-last-snapshot", "trace-affected-contracts", "carry-unresolved-findings-forward", "retain-main-review-ownership", "confirm-final-review-coverage", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive"],
-      "forbidden_actions": ["delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review"],
+      "forbidden_actions": ["delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "requested-repo-writes",
@@ -711,7 +711,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-task-read-only", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-task-read-only", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-design-reviewer-review"],
       "forbidden_actions": ["delegate-oracle-review", "keep-coupled-review-local", "dispatch-refiner-for-clear-standards-fixes"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -727,7 +727,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-task-read-only", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-one-coupled-review", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-task-read-only", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-one-coupled-review", "delegate-design-reviewer-review"],
       "forbidden_actions": ["delegate-oracle-review", "keep-coupled-review-local", "delegate-independent-tracks", "dispatch-independent-tracks-in-parallel"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -758,7 +758,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md", "engineering/references/security.md"],
       "optional_references": ["describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-reviewer-review", "trace-affected-contracts", "keep-task-read-only", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-oracle-review", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-reviewer-review", "trace-affected-contracts", "keep-task-read-only", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-oracle-review", "delegate-design-reviewer-review", "reconcile-oracle-with-judge", "run-blast-radius-pass"],
       "forbidden_actions": ["keep-coupled-review-local"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -774,7 +774,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md", "engineering/references/state-and-effects.md"],
       "optional_references": ["describe-pr/references/merge-danger.md", "engineering/references/proof.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-reviewer-review", "trace-affected-contracts", "keep-task-read-only", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-oracle-review", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-reviewer-review", "trace-affected-contracts", "keep-task-read-only", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-oracle-review", "delegate-design-reviewer-review", "reconcile-oracle-with-judge", "run-blast-radius-pass"],
       "forbidden_actions": ["keep-coupled-review-local"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -790,7 +790,7 @@
       "expected_modifier_skills": ["designing-data-intensive-systems"],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md", "engineering/references/compatibility-and-delivery.md", "engineering/references/state-and-effects.md", "designing-data-intensive-systems/FOUNDATIONS.md", "designing-data-intensive-systems/TRANSACTIONS.md"],
       "optional_references": ["describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-reviewer-review", "trace-affected-contracts", "keep-task-read-only", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-oracle-review", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-reviewer-review", "trace-affected-contracts", "keep-task-read-only", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-oracle-review", "delegate-design-reviewer-review", "reconcile-oracle-with-judge", "run-blast-radius-pass"],
       "forbidden_actions": ["keep-coupled-review-local"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -806,7 +806,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-oracle-review", "review-delta-since-last-snapshot", "trace-affected-contracts", "carry-unresolved-findings-forward", "keep-task-read-only", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"],
-      "forbidden_actions": ["review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review"],
+      "forbidden_actions": ["review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "none",
@@ -821,7 +821,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-task-read-only", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-one-coupled-review", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-task-read-only", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-one-coupled-review", "delegate-design-reviewer-review"],
       "forbidden_actions": ["delegate-oracle-review", "keep-coupled-review-local", "delegate-independent-tracks", "dispatch-independent-tracks-in-parallel"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -837,7 +837,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-reviewer-review", "use-built-in-review-agent", "retain-main-review-ownership", "keep-standards-and-intent-separate", "trace-each-material-intent-requirement", "keep-task-read-only", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-reviewer-review", "use-built-in-review-agent", "retain-main-review-ownership", "keep-standards-and-intent-separate", "trace-each-material-intent-requirement", "keep-task-read-only", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "delegate-design-reviewer-review"],
       "forbidden_actions": ["delegate-oracle-review", "delegate-fast-review", "delegate-command-verification", "keep-coupled-review-local"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -853,7 +853,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["delegate-fast-review", "keep-task-read-only"],
-      "forbidden_actions": ["delegate-oracle-review", "delegate-reviewer-review", "consult-oracle", "delegate-command-verification", "use-built-in-review-agent", "delegate-independent-tracks", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration", "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local", "run-codex-review"],
+      "forbidden_actions": ["delegate-oracle-review", "delegate-reviewer-review", "consult-oracle", "delegate-command-verification", "use-built-in-review-agent", "delegate-independent-tracks", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration", "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local", "delegate-design-reviewer-review"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "none",
@@ -868,7 +868,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
       "required_actions": ["delegate-command-verification", "do-not-invent-verification", "retain-main-review-ownership", "keep-task-read-only"],
-      "forbidden_actions": ["delegate-oracle-review", "delegate-reviewer-review", "consult-oracle", "delegate-fast-review", "use-built-in-review-agent", "delegate-independent-tracks", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration", "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local", "run-codex-review"],
+      "forbidden_actions": ["delegate-oracle-review", "delegate-reviewer-review", "consult-oracle", "delegate-fast-review", "use-built-in-review-agent", "delegate-independent-tracks", "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration", "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local", "delegate-design-reviewer-review"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "none",
@@ -913,7 +913,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["describe-pr/references/merge-danger.md", "engineering/references/compatibility-and-delivery.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-independent-tracks", "keep-task-read-only", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "dispatch-independent-tracks-in-parallel", "run-codex-review"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-independent-tracks", "keep-task-read-only", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "dispatch-independent-tracks-in-parallel", "delegate-design-reviewer-review"],
       "forbidden_actions": ["delegate-oracle-review", "keep-coupled-review-local", "delegate-one-coupled-review"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -1143,7 +1143,7 @@
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["engineering/references/boundary-design.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "dispatch-refiner-for-clear-standards-fixes", "review-delta-since-last-snapshot", "delta-review-by-non-author", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "confirm-final-review-coverage", "verify-before-completion"],
-      "forbidden_actions": ["delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review"],
+      "forbidden_actions": ["delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "requested-repo-writes",
@@ -1244,7 +1244,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md", "engineering/references/boundary-design.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "review-delta-since-last-snapshot", "delta-review-by-non-author"],
-      "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review"],
+      "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": ["requested-repo-writes", "none"],
@@ -1259,7 +1259,7 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-task-read-only", "delegate-reviewer-review", "delegate-oracle-review", "run-codex-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-task-read-only", "delegate-reviewer-review", "delegate-oracle-review", "delegate-design-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "reconcile-oracle-with-judge", "run-blast-radius-pass"],
       "forbidden_actions": ["keep-coupled-review-local", "dispatch-refiner-for-clear-standards-fixes"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -1276,7 +1276,7 @@
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["engineering/references/boundary-design.md", "engineering/references/proof.md"],
       "required_actions": ["select-minimum-useful-reviewers", "account-for-all-review-topics", "dispatch-refiner-for-clear-standards-fixes", "review-delta-since-last-snapshot", "delta-review-by-non-author", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "confirm-final-review-coverage", "verify-before-completion"],
-      "forbidden_actions": ["delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review", "list-audit-item-without-fixing", "run-large-change-audits"],
+      "forbidden_actions": ["delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "list-audit-item-without-fixing", "run-large-change-audits"],
       "expectations": {
         "first_action": ["pin-review-scope", "evaluate-feedback"],
         "mutation": "requested-repo-writes",
@@ -1292,7 +1292,7 @@
       "optional_modifier_skills": ["improve-codebase-architecture", "improve-test-suite"],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["describe-pr/references/merge-danger.md", "engineering/references/boundary-design.md", "engineering/references/proof.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-entire-intended-diff", "record-review-snapshot", "confirm-final-review-coverage", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "run-codex-review", "run-large-change-audits"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-entire-intended-diff", "record-review-snapshot", "confirm-final-review-coverage", "verify-before-completion", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "delegate-design-reviewer-review", "run-large-change-audits"],
       "forbidden_actions": ["delegate-oracle-review", "keep-coupled-review-local"],
       "expectations": {
         "first_action": "pin-review-scope",
@@ -1309,7 +1309,7 @@
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["engineering/references/boundary-design.md"],
       "required_actions": ["select-minimum-useful-reviewers", "account-for-all-review-topics", "list-audit-item-without-fixing", "review-delta-since-last-snapshot", "delta-review-by-non-author", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"],
-      "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review", "run-large-change-audits"],
+      "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "run-large-change-audits"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": ["none", "requested-repo-writes"],
@@ -1325,7 +1325,7 @@
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["engineering/references/proof.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "list-audit-item-without-fixing", "review-delta-since-last-snapshot", "delta-review-by-non-author", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"],
-      "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review", "run-large-change-audits"],
+      "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "run-large-change-audits"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": ["none", "requested-repo-writes"],
@@ -1341,7 +1341,7 @@
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["engineering/references/boundary-design.md", "describe-pr/references/merge-danger.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "carry-unresolved-findings-forward", "review-delta-since-last-snapshot", "delta-review-by-non-author"],
-      "forbidden_actions": ["list-audit-item-without-fixing", "dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "run-codex-review", "run-large-change-audits"],
+      "forbidden_actions": ["list-audit-item-without-fixing", "dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "run-large-change-audits"],
       "expectations": {
         "first_action": ["pin-review-scope", "evaluate-feedback"],
         "mutation": ["none", "requested-repo-writes", "after-user-choice"],
