@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test"
 import { cpSync, existsSync, symlinkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { hookFiles, mergeSettings, renderAgents, renderInstructions, settingsChanges, settingsDrift, skillsLockSource } from "./generate-hosts.ts"
-import type { ClaudeRole } from "../claude/roles.ts"
+import { buildArtifacts, delegateModes, hookFiles, renderPstackModels, mergeSettings, renderBriefs, renderClaudeAgents, renderCodexProfiles, renderInstructions, renderRoleTable, settingsChanges, settingsDrift, skillsLockSource } from "./generate-hosts.ts"
+import { roles as registry, toolNotes, type Role } from "../roles/roles.ts"
 
 const repoRoot = join(import.meta.dir, "..")
 const includes: Record<string, string> = { "style.md": "<!-- style note -->\n- short replies\n", "nested.md": "<!-- include:style.md -->\n" }
@@ -43,23 +43,79 @@ describe("instruction rendering", () => {
   })
 })
 
-describe("agent rendering", () => {
-  const role: ClaudeRole = { model: "m", effort: "low", color: "red", disallowedTools: "Agent", skills: ["engineering"], toolNotes: ["grep_app"] }
-  const toml = (name: string) => ({ filename: `${name}.toml`, contents: `name = "${name}"\ndescription = "Use \\"quoted\\" text"\ndeveloper_instructions = """\nUse grep_app.\n"""\n` })
+describe("role rendering", () => {
+  const role: Role = {
+    description: 'Use "quoted" text',
+    seats: [{ provider: "claude", model: "opus", effort: "medium" }, { provider: "codex", model: "sol", effort: "high" }],
+    authority: "read-only",
+    skills: ["review-agent"],
+    toolNotes: ["grep_app"],
+    color: "red",
+  }
+  const instructions = new Map([["a", "Use grep_app.\n"]])
 
-  test("renders frontmatter, skills, and tool notes", () => {
-    const agent = renderAgents([toml("a")], { a: role }).get("a")!
-    expect(agent).toStartWith('---\nname: a\ndescription: "Use \\"quoted\\" text"\nmodel: m\neffort: low\ndisallowedTools: Agent\ncolor: red\nskills:\n  - engineering\n---\nUse grep_app.\n\ngrep_app search ignores case')
-    expect(renderAgents([toml("a")], { a: { ...role, skills: [] } }).get("a")).not.toContain("skills:")
+  test("renders a Claude agent for the Claude seat with preloaded skills and tool notes", () => {
+    const agent = renderClaudeAgents({ a: role }, instructions).get("a")!
+    expect(agent).toStartWith('---\nname: a\ndescription: "Use \\"quoted\\" text"\nmodel: opus\neffort: medium\ndisallowedTools: Edit, Write, NotebookEdit, Agent\ncolor: red\nskills:\n  - review-agent\n---\nUse grep_app.\n\ngrep_app search ignores case')
+    expect(renderClaudeAgents({ a: { ...role, authority: "write", skills: [], toolNotes: [] } }, instructions).get("a")).toEndWith("disallowedTools: Agent\ncolor: red\n---\nUse grep_app.\n")
   })
 
-  test("appends only the tool notes the role lists, whatever the instructions mention", () => {
-    expect(renderAgents([toml("a")], { a: { ...role, toolNotes: [] } }).get("a")).toEndWith("---\nUse grep_app.\n")
+  test("renders a Codex profile for the Codex seat that names its skills", () => {
+    const profile = Bun.TOML.parse(renderCodexProfiles({ a: role }, instructions).get("a")!) as Record<string, string>
+    expect(profile).toEqual({
+      name: "a",
+      description: 'Use "quoted" text',
+      model: "sol",
+      model_reasoning_effort: "high",
+      sandbox_mode: "read-only",
+      developer_instructions: `Use grep_app.\n\nLoad these skills before work: \`review-agent\`.\n\n${toolNotes.grep_app}\n`,
+    })
+    expect(renderCodexProfiles({ a: { ...role, seats: [role.seats[0]!] } }, instructions).size).toBe(0)
+    const verbatim = 'Keep \\q, \\n, \\u1234, and "quotes" verbatim.\n'
+    const parsed = Bun.TOML.parse(renderCodexProfiles({ a: { ...role, skills: [], toolNotes: [] } }, new Map([["a", verbatim]])).get("a")!) as Record<string, string>
+    expect(parsed.developer_instructions).toBe(verbatim)
   })
 
-  test("fails on a TOML without a role and a role without a TOML", () => {
-    expect(() => renderAgents([toml("a"), toml("b")], { a: role })).toThrow("no Claude role for b")
-    expect(() => renderAgents([toml("a")], { a: role, b: role })).toThrow("no agents/*.toml for b")
+  test("briefs name a delegate_task target per seat and never ask Q to approve", () => {
+    const brief = renderBriefs({ a: role }, instructions).get("a")!
+    expect(brief).toContain('`{"providerInstanceId":"claudeAgent","model":"opus","options":{"effort":"medium"}}`')
+    expect(brief).toContain('`{"providerInstanceId":"codex","model":"sol","options":{"reasoningEffort":"high"}}`')
+    expect(brief).toContain('`runtimeMode: "full-access"` and `interactionMode: "plan"`')
+    expect(brief).toEndWith(`---\n\nYou are the \`a\` subagent. Use "quoted" text\n\nUse grep_app.\n\nLoad these skills before work: \`review-agent\`.\n\n${toolNotes.grep_app}\n`)
+    expect(renderRoleTable({ a: role })).toBe("- `a` (read-only): opus at medium + sol at high. Brief: `~/.agents/briefs/a.md`.\n")
+  })
+
+  test("every registry role runs delegated children with full access, and read-only roles in plan mode", () => {
+    const artifacts = buildArtifacts(repoRoot)
+    for (const [name, r] of Object.entries(registry)) {
+      const interactionMode = r.authority === "read-only" ? "plan" : "default"
+      expect(delegateModes(r), name).toEqual({ runtimeMode: "full-access", interactionMode })
+      const brief = artifacts.get(`briefs/${name}.md`)!
+      expect(brief, name).toContain(`\`runtimeMode: "full-access"\` and \`interactionMode: "${interactionMode}"\``)
+      for (const mode of ["approval-required", "auto-accept-edits"]) expect(brief, name).not.toContain(mode)
+    }
+  })
+
+  test("fails on a role without instructions, instructions without a role, and two seats on one provider", () => {
+    expect(() => renderBriefs({ a: role, b: role }, instructions)).toThrow("no roles/b.md for b")
+    expect(() => renderBriefs({}, instructions)).toThrow("no role in roles/roles.ts for a.md")
+    expect(() => renderBriefs({ a: { ...role, seats: [role.seats[1]!, role.seats[1]!] } }, instructions)).toThrow("a has two codex seats")
+    expect(() => renderBriefs({ a: role }, new Map([["a", "say '''"]]))).toThrow("must not contain '''")
+  })
+
+  test("pstack model lines name each mapped seat as <model>-<effort>", () => {
+    const rule = renderPstackModels(registry)
+    expect(rule).toStartWith("---\ndescription: pstack per-role model choices (overrides skill defaults)\nalwaysApply: true\n---\n")
+    expect(rule).toContain("\narena runners: claude-opus-5-5-high, gpt-6-astra-high\n")
+    expect(rule).toContain("\ninterrogate reviewers: gpt-6.1-sol-high, claude-opus-5-5-medium\n")
+    expect(rule).toContain("\nfeature, refactoring: claude-opus-5-5-medium\n")
+  })
+
+  test("the checked-in role table includes every registry role", () => {
+    for (const path of ["AGENTS.md", "claude/CLAUDE.md"]) {
+      const checkedIn = readFileSync(join(repoRoot, path), "utf8")
+      for (const line of renderRoleTable(registry).trimEnd().split("\n")) expect(checkedIn, path).toContain(`${line}\n`)
+    }
   })
 })
 
@@ -89,7 +145,7 @@ describe("settings merge", () => {
 function copyRepo() {
   const root = mkdtempSync(join(tmpdir(), "generate-hosts-"))
   const repo = join(root, "repo")
-  for (const path of ["scripts/generate-hosts.ts", "claude/roles.ts", "claude/settings.fragment.json", "claude/hooks", "instructions", "agents"]) {
+  for (const path of ["scripts/generate-hosts.ts", "scripts/external-skills.ts", "roles", "claude/settings.fragment.json", "claude/hooks", "instructions"]) {
     cpSync(join(repoRoot, path), join(repo, path), { recursive: true })
   }
   git(repo, "init", "-q")
@@ -129,8 +185,7 @@ describe("generator subprocess", () => {
     expect((await run(repo)).exitCode).toBe(0)
     expect(await run(repo, "--check")).toMatchObject({ exitCode: 0, stdout: "host artifacts are current\n" })
     const agents = readdirSync(join(repo, "claude/agents"))
-    expect(agents.sort()).toEqual(readdirSync(join(repo, "agents")).map(f => f.replace(".toml", ".md")).sort())
-    for (const path of ["AGENTS.md", "claude/CLAUDE.md", "claude/output-styles/q.md", `claude/agents/${agents[0]}`]) {
+    for (const path of ["AGENTS.md", "claude/CLAUDE.md", "claude/output-styles/q.md", `claude/agents/${agents[0]}`, "agents/reviewer.toml", "briefs/reviewer.md"]) {
       const file = join(repo, path)
       const original = readFileSync(file, "utf8")
       writeFileSync(file, original + "hand edit\n")
@@ -142,16 +197,23 @@ describe("generator subprocess", () => {
     rmSync(join(repo, "claude/CLAUDE.md"))
     writeFileSync(join(repo, "claude/agents/extra.md"), "x")
     writeFileSync(join(repo, "claude/output-styles/old.md"), "x")
+    writeFileSync(join(repo, "agents/retired.toml"), "x")
+    writeFileSync(join(repo, "briefs/retired.md"), "x")
     mkdirSync(join(repo, "claude/agents/nested"))
     const result = await run(repo, "--check")
     expect(result.stderr).toContain("missing: claude/CLAUDE.md")
     expect(result.stderr).toContain("unexpected: claude/agents/extra.md")
     expect(result.stderr).toContain("unexpected: claude/output-styles/old.md")
+    expect(result.stderr).toContain("unexpected: agents/retired.toml")
+    expect(result.stderr).toContain("unexpected: briefs/retired.md")
     expect(result.stderr).toContain("unexpected: claude/agents/nested/")
     const regenerated = await run(repo)
     expect(regenerated.exitCode).toBe(0)
     expect(regenerated.stdout).toContain("unexpected directory left in place; remove it by hand: claude/agents/nested/")
-    expect(existsSync(join(repo, "claude/output-styles/old.md"))).toBe(false)
+    for (const path of ["claude/agents/extra.md", "claude/output-styles/old.md", "agents/retired.toml", "briefs/retired.md"]) {
+      expect(regenerated.stdout).toContain(`removed: ${path}`)
+      expect(existsSync(join(repo, path)), path).toBe(false)
+    }
     rmSync(join(repo, "claude/agents/nested"), { recursive: true })
     expect((await run(repo, "--check")).exitCode).toBe(0)
   }))
@@ -191,6 +253,8 @@ describe("generator subprocess", () => {
     for (const [link, target] of [
       [".claude/CLAUDE.md", join(repo, "claude/CLAUDE.md")],
       [".claude/agents", join(repo, "claude/agents")],
+      [".agents/briefs", join(repo, "briefs")],
+      [".cursor/rules/pstack-models.mdc", join(repo, "external/pstack-models.mdc")],
       [".claude/output-styles/q.md", join(repo, "claude/output-styles/q.md")],
       ...hookFiles(repo).map(f => [`.claude/hooks/${f}`, join(repo, "claude/hooks", f)]),
       [".claude/skills/review-agent", join(home, ".codex/skills/.system/review-agent")],
@@ -355,6 +419,6 @@ describe("generator subprocess", () => {
         expect(result.stderr).toContain("HOME is empty or unset; pass --home DIR")
       }
     }
-    expect(readdirSync(repo).sort()).toEqual([".git", "AGENTS.md", "agents", "claude", "instructions", "scripts"])
+    expect(readdirSync(repo).sort()).toEqual([".git", "AGENTS.md", "agents", "briefs", "claude", "external", "instructions", "roles", "scripts"])
   }))
 })

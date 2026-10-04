@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
 // Builds the Codex and Claude Code instruction surfaces from one source:
-//   bun scripts/generate-hosts.ts                      write AGENTS.md and claude/ artifacts
+//   bun scripts/generate-hosts.ts                      write AGENTS.md, agents/, briefs/, and claude/ artifacts
 //   bun scripts/generate-hosts.ts --check              fail when an artifact is stale or missing
-//   bun scripts/generate-hosts.ts --install [--home D] link artifacts into D/.claude, merge settings
+//   bun scripts/generate-hosts.ts --install [--home D] link artifacts into D/.claude and D/.agents, merge settings
 //   bun scripts/generate-hosts.ts --check-installed [--home D]  verify the live install, read-only
 import { spawnSync } from "node:child_process"
 import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync, realpathSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs"
 import { basename, dirname, join, resolve } from "node:path"
-import { roles as claudeRoles, toolNotes, type ClaudeRole } from "../claude/roles.ts"
+import { readLock, resolvePaths } from "./external-skills.ts"
+import { roles as registry, toolNotes, type Provider, type Role, type Seat } from "../roles/roles.ts"
 
 export type Host = "codex" | "claude"
 type Json = Record<string, unknown>
@@ -53,40 +54,186 @@ export function renderInstructions(source: string, host: Host, readInclude: (nam
     .trim() + "\n"
 }
 
-export function renderAgents(profiles: { filename: string; contents: string }[], roles: Record<string, ClaudeRole>): Map<string, string> {
+/** Renders one host's view of a role's instructions: the role's markdown, the skills it loads unless preloaded, and its tool notes. */
+const roleBody = (role: Role, instructions: string, preloaded: boolean) =>
+  instructions.trim() +
+  (role.skills.length && !preloaded ? `\n\nLoad these skills before work: ${role.skills.map(skill => `\`${skill}\``).join(", ")}.` : "") +
+  role.toolNotes.map(tool => `\n\n${toolNotes[tool]}`).join("")
+
+const readOnlyTools = "Edit, Write, NotebookEdit, Agent"
+const providerInstance: Record<Provider, string> = { codex: "codex", claude: "claudeAgent" }
+const effortOption: Record<Provider, string> = { codex: "reasoningEffort", claude: "effort" }
+
+/** The delegate_task target for one seat, as T3's orchestrator_capabilities names providers and options. */
+export const seatTarget = (seat: Seat) => ({ providerInstanceId: providerInstance[seat.provider], model: seat.model, options: { [effortOption[seat.provider]]: seat.effort } })
+
+/** Read-only roles run delegated children in plan mode; every child runs with full access so nothing waits on Q's approval. */
+export const delegateModes = (role: Role) => ({ runtimeMode: "full-access", interactionMode: role.authority === "read-only" ? "plan" : "default" })
+
+function seatFor(name: string, role: Role, provider: Provider): Seat | undefined {
+  const seats = role.seats.filter(seat => seat.provider === provider)
+  if (seats.length > 1) throw new Error(`roles/roles.ts: ${name} has two ${provider} seats`)
+  return seats[0]
+}
+
+function checkRoles(roles: Record<string, Role>, instructions: Map<string, string>) {
+  for (const [name, role] of Object.entries(roles)) {
+    if (!role.seats.length) throw new Error(`roles/roles.ts: ${name} has no seats`)
+    for (const provider of ["codex", "claude"] as const) seatFor(name, role, provider)
+    const body = instructions.get(name)
+    if (!body?.trim()) throw new Error(`roles/roles.ts: no roles/${name}.md for ${name}`)
+    if (body.includes("'''")) throw new Error(`roles/${name}.md must not contain '''`)
+  }
+  const orphans = [...instructions.keys()].filter(name => !roles[name])
+  if (orphans.length) throw new Error(`roles/: no role in roles/roles.ts for ${orphans.map(name => `${name}.md`).join(", ")}`)
+}
+
+/** Native Codex profiles, one per role with a Codex seat. */
+export function renderCodexProfiles(roles: Record<string, Role>, instructions: Map<string, string>): Map<string, string> {
+  checkRoles(roles, instructions)
+  const profiles = new Map<string, string>()
+  for (const [name, role] of Object.entries(roles)) {
+    const seat = seatFor(name, role, "codex")
+    if (!seat) continue
+    profiles.set(name, [
+      "# Generated from roles/ by scripts/generate-hosts.ts. Edit the source, then regenerate.",
+      `name = ${JSON.stringify(name)}`,
+      `description = ${JSON.stringify(role.description)}`,
+      `model = ${JSON.stringify(seat.model)}`,
+      `model_reasoning_effort = ${JSON.stringify(seat.effort)}`,
+      `sandbox_mode = ${JSON.stringify(role.authority === "read-only" ? "read-only" : "workspace-write")}`,
+      // A literal string keeps backslashes in instructions verbatim; checkRoles rejects ''' inside them.
+      `developer_instructions = '''\n${roleBody(role, instructions.get(name)!, false)}\n'''`,
+      "",
+    ].join("\n"))
+  }
+  return profiles
+}
+
+/** Native Claude agents, one per role with a Claude seat. */
+export function renderClaudeAgents(roles: Record<string, Role>, instructions: Map<string, string>): Map<string, string> {
+  checkRoles(roles, instructions)
   const agents = new Map<string, string>()
-  for (const { filename, contents } of profiles) {
-    const a = Bun.TOML.parse(contents) as Record<string, string>
-    const role = roles[a.name!]
-    if (!role) throw new Error(`agents/${filename}: no Claude role for ${a.name} in claude/roles.ts`)
+  for (const [name, role] of Object.entries(roles)) {
+    const seat = seatFor(name, role, "claude")
+    if (!seat) continue
     const fm = [
       "---",
-      `name: ${a.name}`,
-      `description: ${JSON.stringify(a.description)}`,
-      `model: ${role.model}`,
-      `effort: ${role.effort}`,
-      `disallowedTools: ${role.disallowedTools}`,
+      `name: ${name}`,
+      `description: ${JSON.stringify(role.description)}`,
+      `model: ${seat.model}`,
+      `effort: ${seat.effort}`,
+      `disallowedTools: ${role.authority === "write" ? "Agent" : readOnlyTools}`,
       `color: ${role.color}`,
       ...(role.skills.length ? ["skills:", ...role.skills.map(skill => `  - ${skill}`)] : []),
       "---",
       "",
     ]
-    const instructions = a.developer_instructions!.trim()
-    const notes = role.toolNotes.map(tool => `\n\n${toolNotes[tool]}`).join("")
-    agents.set(a.name!, fm.join("\n") + instructions + notes + "\n")
+    agents.set(name, fm.join("\n") + roleBody(role, instructions.get(name)!, true) + "\n")
   }
-  const orphans = Object.keys(roles).filter(name => !agents.has(name))
-  if (orphans.length) throw new Error(`claude/roles.ts: no agents/*.toml for ${orphans.join(", ")}`)
   return agents
 }
 
+const seatLabel = (seat: Seat) => `${seat.model} at ${seat.effort}`
+const hostName: Record<Provider, string> = { codex: "Codex", claude: "Claude Code" }
+const otherHost = (provider: Provider) => hostName[provider === "codex" ? "claude" : "codex"]
+
+/** T3 delegation briefs: how to launch each seat, then the instructions a delegated child starts with. */
+export function renderBriefs(roles: Record<string, Role>, instructions: Map<string, string>): Map<string, string> {
+  checkRoles(roles, instructions)
+  const briefs = new Map<string, string>()
+  for (const [name, role] of Object.entries(roles)) {
+    const modes = delegateModes(role)
+    const seats = role.seats.map(seat =>
+      `- ${seatLabel(seat)}: the native \`${name}\` agent in ${hostName[seat.provider]}; from ${otherHost(seat.provider)}, \`delegate_task\` with target \`${JSON.stringify(seatTarget(seat))}\`.`)
+    briefs.set(name, [
+      "<!-- Generated from roles/ by scripts/generate-hosts.ts. Edit the source, then regenerate. -->",
+      `# ${name}`,
+      "",
+      role.seats.length > 1 ? "Launch both seats in parallel with the same assignment; a `judge` reconciles them." : "Launch this seat:",
+      ...seats,
+      "",
+      `Every \`delegate_task\` call passes \`runtimeMode: "${modes.runtimeMode}"\` and \`interactionMode: "${modes.interactionMode}"\`.`,
+      "A delegated child starts with everything below the line, followed by the assignment.",
+      "",
+      "---",
+      "",
+      `You are the \`${name}\` subagent. ${role.description}`,
+      "",
+      roleBody(role, instructions.get(name)!, false),
+      "",
+    ].join("\n"))
+  }
+  return briefs
+}
+
+/** Where --install links the briefs, so both hosts read them at one path. */
+export const briefsHome = "~/.agents/briefs"
+
+/** How each provider's seats are launched, included into AGENTS.md and CLAUDE.md as `<!-- include:providers.md -->`. */
+export function renderProviderTable(): string {
+  return (["claude", "codex"] as const).map(provider => {
+    const prefix = provider === "claude" ? "claude-*" : "gpt-*"
+    return `- \`${prefix}\` models run natively in ${hostName[provider]}; from ${otherHost(provider)}, \`delegate_task\` uses provider instance \`${providerInstance[provider]}\` and effort option \`${effortOption[provider]}\`.`
+  }).join("\n") + "\n"
+}
+
+/** The role table included into AGENTS.md and CLAUDE.md as `<!-- include:roles.md -->`. */
+export function renderRoleTable(roles: Record<string, Role>): string {
+  return Object.entries(roles).map(([name, role]) => {
+    const seats = role.seats.map(seatLabel).join(" + ")
+    return `- \`${name}\` (${role.authority}): ${seats}. Brief: \`${briefsHome}/${name}.md\`.`
+  }).join("\n") + "\n"
+}
+
+/** pstack's per-role model lines, mapped onto our roles' seats. A slug is `<model>-<effort>`; global instructions say how to split it. */
+const pstackLines: [line: string, seats: (roles: Record<string, Role>) => Seat[]][] = [
+  ["feature, refactoring", r => r.implementer!.seats],
+  ["bug-fix", r => r.implementer!.seats],
+  ["perf-issue", r => r.implementer!.seats],
+  ["hillclimb", r => r.implementer!.seats],
+  ["judgment and prose", r => r.implementer!.seats],
+  ["hardest tasks", r => r.architect!.seats.filter(seat => seat.provider === "claude")],
+  ["how explorer", r => r.explorer!.seats],
+  ["how explainer", r => r.judge!.seats],
+  ["why investigators", r => r.explorer!.seats],
+  ["why synthesizer", r => r.judge!.seats],
+  ["reflect tooling", r => r.explorer!.seats],
+  ["reflect judgment, divergent, synthesizer", r => r.judge!.seats],
+  ["arena runners", r => r.architect!.seats],
+  ["arena cross-judge pool", r => r.judge!.seats],
+  ["swarm workers", r => r.explorer!.seats],
+  ["architect runners", r => r.architect!.seats],
+  ["interrogate reviewers", r => [...r.reviewer!.seats, ...r.design_reviewer!.seats]],
+]
+
+/** The model rule pstack's skills read from ~/.cursor/rules/pstack-models.mdc, generated so they run on our seats. */
+export function renderPstackModels(roles: Record<string, Role>): string {
+  return [
+    "---",
+    "description: pstack per-role model choices (overrides skill defaults)",
+    "alwaysApply: true",
+    "---",
+    "# Generated from roles/roles.ts by scripts/generate-hosts.ts. Each value is `<model>-<effort>`;",
+    "# launch it on the provider that runs the model, per Q's global instructions.",
+    ...pstackLines.map(([line, seats]) => `${line}: ${seats(roles).map(seat => `${seat.model}-${seat.effort}`).join(", ")}`),
+    "",
+  ].join("\n")
+}
+
+function readRoleInstructions(repo: string): Map<string, string> {
+  const dir = join(repo, "roles")
+  return new Map(readdirSync(dir).filter(f => f.endsWith(".md")).sort()
+    .map(f => [f.slice(0, -".md".length), readFileSync(join(dir, f), "utf8")]))
+}
+
 /** Every generated artifact, keyed by repo-relative path. */
-export function buildArtifacts(repo: string, roles = claudeRoles): Map<string, string> {
+export function buildArtifacts(repo: string, roles = registry): Map<string, string> {
   const dir = join(repo, "instructions")
-  const readInclude = (name: string) => readFileSync(join(dir, name), "utf8")
+  const roleInstructions = readRoleInstructions(repo)
+  const generated: Record<string, () => string> = { "roles.md": () => renderRoleTable(roles), "providers.md": renderProviderTable }
+  const readInclude = (name: string) => generated[name]?.() ?? readFileSync(join(dir, name), "utf8")
   const global = readFileSync(join(dir, "global.md"), "utf8")
-  const profiles = readdirSync(join(repo, "agents")).filter(f => f.endsWith(".toml")).sort()
-    .map(filename => ({ filename, contents: readFileSync(join(repo, "agents", filename), "utf8") }))
   const style = [
     "---",
     "name: Q",
@@ -101,13 +248,16 @@ export function buildArtifacts(repo: string, roles = claudeRoles): Map<string, s
     ["claude/CLAUDE.md", `${header}\n\n${renderInstructions(global, "claude", readInclude)}`],
     ["claude/output-styles/q.md", style],
   ])
-  for (const [name, content] of renderAgents(profiles, roles)) artifacts.set(`claude/agents/${name}.md`, content)
+  for (const [name, content] of renderCodexProfiles(roles, roleInstructions)) artifacts.set(`agents/${name}.toml`, content)
+  for (const [name, content] of renderClaudeAgents(roles, roleInstructions)) artifacts.set(`claude/agents/${name}.md`, content)
+  for (const [name, content] of renderBriefs(roles, roleInstructions)) artifacts.set(`briefs/${name}.md`, content)
+  artifacts.set("external/pstack-models.mdc", renderPstackModels(roles))
   return artifacts
 }
 
 /** Entries in generator-owned directories that no artifact accounts for; directories end in "/". */
 function strays(repo: string, artifacts: Map<string, string>): string[] {
-  return ["claude/agents", "claude/output-styles"].flatMap(dir => {
+  return ["agents", "briefs", "claude/agents", "claude/output-styles"].flatMap(dir => {
     if (!existsSync(join(repo, dir))) return []
     return readdirSync(join(repo, dir), { withFileTypes: true })
       .map(entry => `${dir}/${entry.name}${entry.isDirectory() ? "/" : ""}`)
@@ -165,6 +315,8 @@ function links(repo: string, home: string, codexHome = join(home, ".codex")): Li
   return [
     { path: join(home, ".claude/CLAUDE.md"), target: join(repo, "claude/CLAUDE.md") },
     { path: join(home, ".claude/agents"), target: join(repo, "claude/agents") },
+    { path: join(home, ".agents/briefs"), target: join(repo, "briefs") },
+    { path: join(home, ".cursor/rules/pstack-models.mdc"), target: join(repo, "external/pstack-models.mdc") },
     { path: join(home, ".claude/output-styles/q.md"), target: join(repo, "claude/output-styles/q.md") },
     ...hookFiles(repo).map(f => ({ path: join(home, ".claude/hooks", f), target: join(repo, "claude/hooks", f) })),
     { path: join(home, ".claude/skills/review-agent"), target: join(codexHome, "skills/.system/review-agent"), optional: true },
@@ -374,9 +526,8 @@ export function checkInstalled(repo: string, home: string, { codexHome }: Instal
     }
   }
 
-  const lockPath = join(home, ".agents/.skill-lock.json")
-  if (existsSync(lockPath)) {
-    const lock = readJsonObject(lockPath) as { skills?: Record<string, { source?: string }> }
+  {
+    const lock = readLock(resolvePaths(home).lockPath)
     for (const [name, entry] of Object.entries(lock.skills ?? {}).sort(([a], [b]) => a.localeCompare(b))) {
       if (entry.source !== skillsLockSource) continue
       const diff = spawnSync("diff", ["-rq", join(home, ".agents/skills", name), join(repo, "skills", name)], { stdio: "ignore" })

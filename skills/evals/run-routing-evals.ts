@@ -658,7 +658,7 @@ export function validateCase(
       ...evidenceRoles.filter(action => action !== evidenceRole),
       "delegate-reviewer-review", "delegate-oracle-review", "consult-oracle", "use-built-in-review-agent", "delegate-independent-tracks",
       "delegate-standards-intent-simplification", "delegate-one-coupled-review", "dispatch-independent-tracks-in-parallel", "keep-coupled-review-local",
-      "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration", "run-codex-review",
+      "apply-post-implementation-review", "review-entire-intended-diff", "review-delta-since-last-snapshot", "review-combined-integration", "delegate-design-reviewer-review",
     ].every(action => forbiddenActions?.includes(action))
     const single = caseActions.includes("honor-single-track-scope") || evidenceOnly
     const blocked = caseActions.includes("report-blocked-review-coverage")
@@ -836,16 +836,30 @@ export async function skillCatalog(skillsRoot: string, skills: string[], variant
   return lines.join("\n")
 }
 
-export async function agentCatalog(sourceRoot: string): Promise<string> {
-  const lines: string[] = []
-  for (const { filename, path, contents } of await readAgentProfileFiles(sourceRoot)) {
+/** Reads a profile's name and description: TOML for Codex profiles, YAML-ish frontmatter for Claude agents. */
+function profileFields(filename: string, contents: string): { name?: unknown; description?: unknown } {
+  if (filename.endsWith(".toml")) {
     const profile = Bun.TOML.parse(contents)
-    if (!isRecord(profile) || profile.name !== filename.slice(0, -5) || typeof profile.description !== "string" || !profile.description.trim()) {
+    return isRecord(profile) ? profile : {}
+  }
+  const frontmatter = /^---\n([\s\S]*?)\n---\n/.exec(contents)?.[1] ?? ""
+  const field = (key: string) => {
+    const raw = new RegExp(`^${key}: (.*)$`, "m").exec(frontmatter)?.[1]
+    return raw?.startsWith('"') ? JSON.parse(raw) : raw
+  }
+  return { name: field("name"), description: field("description") }
+}
+
+export async function agentCatalog(sourceRoot: string): Promise<string> {
+  const lines = new Map<string, string>()
+  for (const { filename, path, contents } of await readAgentProfileFiles(sourceRoot)) {
+    const profile = profileFields(filename, contents)
+    if (profile.name !== filename.replace(/\.(toml|md)$/, "") || typeof profile.description !== "string" || !profile.description.trim()) {
       throw new Error(`${path} must define its filename-matching name and a non-empty description`)
     }
-    lines.push(`- ${profile.name}: ${profile.description} (path: ${path})`)
+    if (!lines.has(profile.name)) lines.set(profile.name, `- ${profile.name}: ${profile.description} (path: ${path})`)
   }
-  return lines.join("\n") || "No source agent profiles."
+  return [...lines.keys()].sort().map(name => lines.get(name)).join("\n") || "No source agent profiles."
 }
 
 export async function buildLivePrompt(

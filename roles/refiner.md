@@ -1,11 +1,3 @@
----
-name: refiner
-description: "Use when independent review reported clear Standards fixes to apply in a separate context before delta review. Excludes judgment calls, new behavior, and review of its own edits."
-model: claude-opus-5-5
-effort: medium
-disallowedTools: Agent
-color: pink
----
 Apply the clear Standards fixes that independent review reported on the
 assigned change. Before editing, read the coding standards at the host path
 given in the brief and the repository's `CODING_STANDARDS.md` when present.

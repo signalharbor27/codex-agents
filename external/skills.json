@@ -1,0 +1,30 @@
+{
+  "$comment": "Third-party skills this setup reads. scripts/external-skills.ts installs them unmodified with npx skills. `hidden` sources go to ~/.agents/skills only (never listed by Claude Code) and get a Codex [[skills.config]] disable entry; our skills read them by path. Visible sources install for both hosts.",
+  "sources": [
+    {
+      "source": "cursor/plugins",
+      "hidden": true,
+      "skills": [
+        "architect", "arena", "interrogate", "swarm", "blast-radius", "correct", "benchmark-checklist", "bro",
+        "figure-it-out", "show-me-your-work", "typescript-best-practices",
+        "principle-attack-the-premise", "principle-boundary-discipline", "principle-build-the-lever",
+        "principle-encode-lessons-in-structure", "principle-exhaust-the-design-space", "principle-experience-first",
+        "principle-explain-the-number", "principle-fix-root-causes", "principle-foundational-thinking",
+        "principle-guard-the-context-window", "principle-laziness-protocol", "principle-make-operations-idempotent",
+        "principle-migrate-callers-then-delete-legacy-apis", "principle-minimize-reader-load", "principle-model-the-domain",
+        "principle-never-block-on-the-human", "principle-outcome-oriented-execution", "principle-prove-it-works",
+        "principle-redesign-from-first-principles", "principle-separate-before-serializing-shared-state",
+        "principle-sequence-verifiable-units", "principle-subtract-before-you-add",
+        "principle-test-behavior-not-implementation", "principle-type-system-discipline"
+      ]
+    },
+    {
+      "source": "mattpocock/skills",
+      "hidden": true,
+      "skills": ["codebase-design", "domain-modeling", "prototype", "to-questionnaire", "wait-what"]
+    },
+    { "source": "mattpocock/skills", "hidden": false, "skills": ["writing-for-agents"] },
+    { "source": "blader/humanizer", "hidden": false, "skills": ["humanizer"] },
+    { "source": "humanlayer/skills", "hidden": false, "skills": ["show-me"] }
+  ]
+}

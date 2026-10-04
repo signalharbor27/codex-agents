@@ -16,6 +16,6 @@ trap 'rm -rf "$tmp"' EXIT
 git checkout-index --all --ignore-skip-worktree-bits --prefix="$tmp/"
 cd "$tmp"
 bun scripts/generate-hosts.ts --check ||
-  fail "staged generated host artifacts are stale" "bun scripts/generate-hosts.ts && git add AGENTS.md claude/"
+  fail "staged generated host artifacts are stale" "bun scripts/generate-hosts.ts && git add AGENTS.md agents/ briefs/ claude/ external/pstack-models.mdc"
 bash skills/evals/check-skill-surface.sh ||
   fail "skill surface check failed on the staged files" "fix the files reported above, stage them, then run bash skills/evals/check-skill-surface.sh"

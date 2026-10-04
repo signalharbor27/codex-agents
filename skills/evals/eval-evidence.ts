@@ -18,19 +18,27 @@ async function digestTree(root: string, prefix = ""): Promise<[string, string][]
   return result
 }
 
-export async function readAgentProfileFiles(sourceRoot: string) {
-  const agentsRoot = join(sourceRoot, "agents")
+async function readProfileDir(root: string, keep: (name: string) => boolean) {
   let filenames: string[]
   try {
-    filenames = await readdir(agentsRoot)
+    filenames = await readdir(root)
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") return []
     throw error
   }
-  return Promise.all(filenames.filter(name => name.endsWith(".toml") && name !== "registry.toml").sort().map(async filename => {
-    const path = join(agentsRoot, filename)
+  return Promise.all(filenames.filter(keep).sort().map(async filename => {
+    const path = join(root, filename)
     return { filename, path, contents: await readFile(path, "utf8") }
   }))
+}
+
+/** Native role profiles: Codex `agents/*.toml` and Claude `claude/agents/*.md`. A role native to both hosts appears in both. */
+export async function readAgentProfileFiles(sourceRoot: string) {
+  const [codex, claude] = await Promise.all([
+    readProfileDir(join(sourceRoot, "agents"), name => name.endsWith(".toml") && name !== "registry.toml"),
+    readProfileDir(join(sourceRoot, "claude/agents"), name => name.endsWith(".md")),
+  ])
+  return [...codex, ...claude]
 }
 
 export async function sourceProvenance(sourceRoot: string, skillsRoot = join(sourceRoot, "skills")) {
