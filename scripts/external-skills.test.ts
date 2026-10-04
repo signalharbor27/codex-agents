@@ -54,12 +54,19 @@ function withRoot(body: (paths: { root: string; repo: string; home: string }) =>
 }
 
 // Installs every manifest skill into home and records it in the lock the way npx skills would.
+// npx skills lists a skill for Claude Code by linking ~/.claude/skills/<name> to the shared copy.
+function linkForClaude(home: string, name: string) {
+  mkdirSync(join(home, ".claude/skills"), { recursive: true })
+  symlinkSync(`../../.agents/skills/${name}`, join(home, ".claude/skills", name))
+}
+
 function installSkills(home: string, lockPath = join(home, ".agents/.skill-lock.json")) {
   const lock: Record<string, { source: string; skillFolderHash: string }> = {}
-  for (const { source, skills } of sources) {
+  for (const { source, hidden, skills } of sources) {
     for (const name of skills) {
       mkdirSync(join(home, ".agents/skills", name), { recursive: true })
       writeFileSync(join(home, ".agents/skills", name, "SKILL.md"), "x")
+      if (!hidden) linkForClaude(home, name)
       lock[name] = { source, skillFolderHash: `h-${name}` }
     }
   }
@@ -113,6 +120,42 @@ describe("check", () => {
         "skill: alpha is not installed (expected from a/b)",
         "skill: shown is not installed (expected from c/d)",
       ])
+    })
+  })
+
+  test("requires visible skills to be listed for Claude Code and hidden ones not to be", () => {
+    withRoot(({ repo, home }) => {
+      installSkills(home)
+      quietInstall(repo, home)
+      const paths = resolvePaths(home, {})
+      const shownLink = join(home, ".claude/skills/shown")
+      const notListed = "skill: ~/.claude/skills/shown should link to ~/.agents/skills/shown"
+      rmSync(shownLink)
+      linkForClaude(home, "alpha")
+      expect(check(repo, paths)).toEqual(["skill: ~/.claude/skills/alpha exists, but a/b is hidden from Claude Code", notListed])
+      rmSync(join(home, ".claude/skills/alpha"))
+      // A stale copy, a dangling link, and a link to another skill all leave Claude reading something other than the accepted copy.
+      mkdirSync(join(shownLink, ".."), { recursive: true })
+      cpSync(join(home, ".agents/skills/shown"), shownLink, { recursive: true })
+      expect(check(repo, paths)).toEqual([notListed])
+      for (const target of ["../../.agents/skills/missing", "../../.agents/skills/alpha"]) {
+        rmSync(shownLink, { recursive: true })
+        symlinkSync(target, shownLink)
+        expect(check(repo, paths)).toEqual([notListed])
+      }
+    })
+  })
+
+  test("accepts the link npx writes from the physical directory when ~/.claude is itself a link", () => {
+    withRoot(({ root, repo, home }) => {
+      installSkills(home)
+      quietInstall(repo, home)
+      const physical = join(root, "dotclaude")
+      mkdirSync(join(physical, "skills"), { recursive: true })
+      rmSync(join(home, ".claude"), { recursive: true })
+      symlinkSync(physical, join(home, ".claude"))
+      symlinkSync("../../home/.agents/skills/shown", join(physical, "skills/shown"))
+      expect(check(repo, resolvePaths(home, {}))).toEqual([])
     })
   })
 
@@ -218,8 +261,9 @@ function withScript(body: (paths: { root: string; repo: string; home: string; ru
     const npx = join(root, "npx")
     writeFileSync(npx, `#!/usr/bin/env bash
 echo "$@" >> "${root}/calls"
-src="$4"; while [ "$1" != --skill ]; do shift; done; shift
+src="$4"; claude=; case " $* " in *" claude-code "*) claude=1;; esac; while [ "$1" != --skill ]; do shift; done; shift
 for name in "$@"; do [ "$name" = --yes ] && break; mkdir -p "$HOME/.agents/skills/$name"; echo x > "$HOME/.agents/skills/$name/SKILL.md"
+  [ -n "$claude" ] && mkdir -p "$HOME/.claude/skills" && ln -sfn "../../.agents/skills/$name" "$HOME/.claude/skills/$name"
   bun -e "const p='$HOME/.agents/.skill-lock.json';const f=Bun.file(p);const l=await f.exists()?await f.json():{skills:{}};l.skills['$name']={source:'$src',skillFolderHash:'h-$name'};await Bun.write(p,JSON.stringify(l))"; done
 `)
     chmodSync(npx, 0o755)

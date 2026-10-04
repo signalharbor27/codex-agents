@@ -7,7 +7,7 @@
 import { spawnSync } from "node:child_process"
 import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync, realpathSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs"
 import { basename, dirname, join, resolve } from "node:path"
-import { readLock, resolvePaths } from "./external-skills.ts"
+import { claudeSkillState, readLock, resolvePaths } from "./external-skills.ts"
 import { roles as registry, toolNotes, type Provider, type Role, type Seat } from "../roles/roles.ts"
 
 export type Host = "codex" | "claude"
@@ -527,12 +527,17 @@ export function checkInstalled(repo: string, home: string, { codexHome }: Instal
   }
 
   {
-    const lock = readLock(resolvePaths(home).lockPath)
-    for (const [name, entry] of Object.entries(lock.skills ?? {}).sort(([a], [b]) => a.localeCompare(b))) {
-      if (entry.source !== skillsLockSource) continue
+    // Each repo skill installs through `npx skills add` for both hosts: one copy in ~/.agents/skills, linked from ~/.claude/skills.
+    const lock = readLock(resolvePaths(home).lockPath).skills ?? {}
+    const repoSkills = readdirSync(join(repo, "skills")).filter(name => existsSync(join(repo, "skills", name, "SKILL.md")))
+    const lockSkills = Object.keys(lock).filter(name => lock[name]?.source === skillsLockSource)
+    for (const name of [...new Set([...repoSkills, ...lockSkills])].sort()) {
+      if (!repoSkills.includes(name)) { problems.push(`skill: ~/.agents/skills/${name} is installed from ${skillsLockSource}, but skills/${name} is gone; run npx skills remove -g ${name}`); continue }
+      if (!lockSkills.includes(name)) { problems.push(`skill: ${name} is not installed from ${skillsLockSource}; add it to the README install command's --skill list and rerun that command`); continue }
       const diff = spawnSync("diff", ["-rq", join(home, ".agents/skills", name), join(repo, "skills", name)], { stdio: "ignore" })
       if (diff.status === 1) problems.push(`skill: ~/.agents/skills/${name} differs from skills/${name}`)
       else if (diff.status !== 0) problems.push(`skill: could not compare ~/.agents/skills/${name} with skills/${name}`)
+      if (claudeSkillState(home, name) !== "linked") problems.push(`skill: ~/.claude/skills/${name} should link to ~/.agents/skills/${name}`)
     }
   }
   return { problems, warnings }

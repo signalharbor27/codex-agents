@@ -8,14 +8,14 @@ Install the skills from this repository:
 
 ```bash
 npx skills add https://github.com/signalharbor27/codex-agents.git \
-  --global --agent codex --skill engineering debugging test-design \
+  --global --agent codex claude-code --skill engineering debugging test-design \
   review-and-simplify-changes receiving-code-review improve-codebase-architecture \
   improve-test-suite using-git-worktrees finishing-a-development-branch \
   describe-pr grill-me effect-ts writing-rust designing-data-intensive-systems \
-  writing-skills project-verification codebase-investigation retro --copy --yes
+  writing-skills project-verification codebase-investigation retro --yes
 ```
 
-The installer copies skills. After updates, reinstall the selected skills and compare them with the source. Keep sibling skills together when their references depend on one another. The evaluation harness stays in this repository.
+The installer keeps one copy per skill in `~/.agents/skills`, which Codex reads, and links it from `~/.claude/skills` for Claude Code. These scripts assume Claude Code's default `~/.claude` directory, so leave `CLAUDE_CONFIG_DIR` unset when installing or checking. After updates, rerun the command; `generate-hosts.ts --check-installed` fails when a repo skill is not installed, differs from its source, or is not linked for Claude Code, and when an installed skill no longer exists in the repo. Keep sibling skills together when their references depend on one another. The evaluation harness stays in this repository.
 
 ### External skills
 

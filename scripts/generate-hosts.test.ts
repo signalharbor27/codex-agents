@@ -241,6 +241,8 @@ describe("generator subprocess", () => {
       mkdirSync(join(repo, "skills", name!), { recursive: true })
       writeFileSync(join(home, ".agents/skills", name!, "SKILL.md"), body!)
       writeFileSync(join(repo, "skills", name!, "SKILL.md"), "same")
+      mkdirSync(join(home, ".claude/skills"), { recursive: true })
+      symlinkSync(`../../.agents/skills/${name}`, join(home, ".claude/skills", name!))
     }
     writeFileSync(join(home, ".agents/.skill-lock.json"), JSON.stringify({ skills: {
       same: { source: skillsLockSource },
@@ -292,6 +294,21 @@ describe("generator subprocess", () => {
 
     writeFileSync(join(home, ".agents/skills/drifted/SKILL.md"), "same")
     expect(await run(repo, "--check-installed", "--home", home)).toMatchObject({ exitCode: 0, stdout: "installed Claude surface matches\n" })
+    // Every repo skill must be installed from this repo and listed for Claude Code through a link to the shared copy.
+    rmSync(join(home, ".claude/skills/same"))
+    mkdirSync(join(repo, "skills/fresh"))
+    writeFileSync(join(repo, "skills/fresh/SKILL.md"), "new")
+    rmSync(join(repo, "skills/drifted"), { recursive: true })
+    expect((await run(repo, "--check-installed", "--home", home)).stderr.split("\n").filter(line => line.startsWith("skill:"))).toEqual([
+      "skill: ~/.agents/skills/drifted is installed from signalharbor27/codex-agents, but skills/drifted is gone; run npx skills remove -g drifted",
+      `skill: fresh is not installed from ${skillsLockSource}; add it to the README install command's --skill list and rerun that command`,
+      "skill: ~/.claude/skills/same should link to ~/.agents/skills/same",
+    ])
+    symlinkSync("../../.agents/skills/same", join(home, ".claude/skills/same"))
+    rmSync(join(repo, "skills/fresh"), { recursive: true })
+    mkdirSync(join(repo, "skills/drifted"))
+    writeFileSync(join(repo, "skills/drifted/SKILL.md"), "same")
+    expect((await run(repo, "--check-installed", "--home", home)).exitCode).toBe(0)
     writeFileSync(settingsPath, JSON.stringify({ ...settings, theme: "light" }))
     expect((await run(repo, "--check-installed", "--home", home)).stderr).toContain("settings: key differs from claude/settings.fragment.json: theme")
     writeFileSync(settingsPath, JSON.stringify(settings))

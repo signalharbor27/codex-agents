@@ -88,6 +88,19 @@ export function writeConfig(configPath: string, next: string) {
   renameSync(temp, target)
 }
 
+/** How Claude Code sees a skill: linked to the shared ~/.agents copy as npx skills installs it, absent, or something else. */
+export function claudeSkillState(home: string, name: string): "linked" | "absent" | "other" {
+  const entry = join(home, ".claude/skills", name)
+  if (!isLink(entry) && !existsSync(entry)) return "absent"
+  try {
+    // Real paths, because npx writes the relative link from the physical directory when ~/.claude is itself a link.
+    const shared = realpathSync(join(home, ".agents/skills", name))
+    return realpathSync(entry) === shared && existsSync(join(shared, "SKILL.md")) ? "linked" : "other"
+  } catch {
+    return "other"
+  }
+}
+
 function isLink(path: string) {
   try {
     return lstatSync(path).isSymbolicLink()
@@ -144,8 +157,11 @@ export function check(repo: string, paths: Paths): string[] {
   const problems: string[] = []
   const lock = readLock(paths.lockPath)
   const accepted = readAccepted(repo)
-  for (const { source, skills } of sources) {
+  for (const { source, hidden, skills } of sources) {
     for (const name of skills) {
+      const claude = claudeSkillState(paths.home, name)
+      if (hidden && claude !== "absent") problems.push(`skill: ~/.claude/skills/${name} exists, but ${source} is hidden from Claude Code`)
+      if (!hidden && claude !== "linked") problems.push(`skill: ~/.claude/skills/${name} should link to ~/.agents/skills/${name}`)
       const entry = lock.skills?.[name]
       if (!entry) problems.push(`skill: ${name} is not installed (expected from ${source})`)
       else if (entry.source !== source) problems.push(`skill: ${name} comes from ${entry.source}, expected ${source}`)

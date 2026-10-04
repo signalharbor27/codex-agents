@@ -92,6 +92,7 @@ I am Q. You are my assistant.
 
 - Support completion claims with the required checks, run against the current code and relevant state. Reuse earlier results only when their inputs are unchanged.
 - Before declaring implementation complete or making an intended commit, finish `review-and-simplify-changes` on the intended diff, including small changes and subsequent fixes; it owns review lanes, fixes, and the review record written after that commit. Only independent subagent review satisfies this gate.
+- Every test you add takes its expected value from an independent oracle and fails on a plausible broken implementation, so it is never tautological; the Test lies section of `review-and-simplify-changes`'s coding standards defines tautological tests and the published-contract exception.
 - Inspect the final diff before handoff.
 
 # Defaults
