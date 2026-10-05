@@ -104,6 +104,8 @@ describe("review record gate", () => {
     const reason = decide("gh pr create --fill", repo)
     expect(reason).toContain(`Checked ${repo} at HEAD tree ${tree}.`)
     expect(reason).toContain(recordSyntax)
+    expect(reason).toMatch(/write the review record first/i)
+    expect(reason).toMatch(/publish in a separate tool call/i)
     record(repo)
     expect(decide("gh pr create --fill", repo)).toBe("allow")
     expect(decide("gh pr ready", repo)).toBe("allow")
