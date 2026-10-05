@@ -26,7 +26,7 @@ Ground the description in the final diff and verification evidence.
 
 ## Minimal Workflow
 
-1. Read and apply `humanizer` and `show-me` before writing or updating the description. Use the repository's PR template when present.
+1. Read and apply `humanizer` and `show-me` before writing or updating the description. Use the repository's PR template when present. For visible UI changes, read the repository's UI evidence and attachment requirements, and include the required rendered states in the description. State missing evidence before publication.
 2. Read the final diff, relevant context, and any plan or ticket that explains intent. If staged planning artifacts exist, read their durable decisions and phase intent. Do not draft from a plan or file list alone.
 3. Lead with the concrete problem and resulting behavior.
 4. Open the "what changed" part with the smallest `show-me` sketch of the change: pseudocode, a call tree, a fenced `diff` of before and after behavior, or GitHub-rendered Mermaid. Show the trigger, the boundaries crossed, and the observable result. The prose after it explains why the change was needed and how the affected abstractions and primitives interact, scaled to the change; leave out what the sketch already shows.
