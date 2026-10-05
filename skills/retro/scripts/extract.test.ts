@@ -292,6 +292,48 @@ describe("retro extract.py", () => {
     expect(sessions["codex:codex-tui"]!.role).toBe("reviewer")
   })
 
+  test("bare role briefs mark children and skip them unless explicitly included", () => {
+    const say = { type: "user", timestamp: ts(1), message: { content: "You are the implementer subagent.\nShip it." } }
+    const user = { type: "event_msg", timestamp: ts(1), payload: { type: "user_message", message: "You are the implementer subagent.\nShip it." } }
+    expect(Object.keys(extractOnly([say], [meta("codex-tui", "cli"), user]))).toEqual([])
+    const included = extractOnly([say], [meta("codex-tui", "cli"), user], "--include-automated")
+    expect(included.claude!.role).toBe("implementer")
+    expect(included["codex:codex-tui"]!.role).toBe("implementer")
+  })
+
+  test("T3 terminal notices are excluded while genuine steering remains", () => {
+    const id = "node:delegated-task:command%3Amcp%3Asynthetic%3Adelegate-task%3Areview"
+    const notice = `Delegated task ${id} reached a terminal state. Use task_status with taskId ${id} to read the result.`
+    const batch = `${notice}\n${notice.replaceAll("%3Areview", "%3Adesign")}`
+    const steering = `${notice} Please fix the findings.`
+    const batchSteering = `${batch} Please fix these too.`
+    const say = (message: string) => ({ type: "user", timestamp: ts(1), message: { content: message } })
+    const user = (message: string) => ({ type: "event_msg", timestamp: ts(1), payload: { type: "user_message", message } })
+    const sessions = extractOnly([say(notice), say(batch), say(steering), say(batchSteering)], [meta("codex-tui", "cli"), user(notice), user(batch), user(steering), user(batchSteering)])
+    expect(sessions.claude!.user_msgs).toBe("2")
+    expect(sessions["codex:codex-tui"]!.user_msgs).toBe("2")
+    expect(sessions.claude!.digest).toContain("L3\n" + steering)
+    expect(sessions["codex:codex-tui"]!.digest).toContain("L4\n" + steering)
+    expect(sessions.claude!.digest).toContain("L4\n" + batchSteering)
+    expect(sessions["codex:codex-tui"]!.digest).toContain("L5\n" + batchSteering)
+  })
+
+  test("mixed exec failures retain counts without blaming the first successful tool", () => {
+    const sessions = extractOnly([], [
+      meta("codex-tui", "cli"),
+      call("mixed", "await tools.apply_patch('patch'); await tools.exec_command({cmd:'false'})", 1),
+      scriptOut("mixed", ["Script completed\nOutput:\n", "Successfully updated file", JSON.stringify({ chunk_id: "failed", wall_time_seconds: 0.1, exit_code: 1, output: "command failed" })], 2),
+      call("same", "await tools.exec_command({cmd:'true'}); await tools.exec_command({cmd:'false'})", 3),
+      scriptOut("same", ["Script completed\nOutput:\n", JSON.stringify({ chunk_id: "failed", wall_time_seconds: 0.1, exit_code: 2, output: "second failed" })], 4),
+    ])
+    const result = sessions["codex:codex-tui"]!
+    expect(result.tool_errors).toBe("2")
+    expect(result.tool_calls).toBe("4")
+    expect(result.digest).toContain("L3 exec exit 1:")
+    expect(result.digest).toContain("L5 exec_command exit 2:")
+    expect(result.digest).not.toContain("apply_patch exit")
+  })
+
   test("the session cwd comes only from events inside the window", () => {
     const sessions = extractOnly(
       [

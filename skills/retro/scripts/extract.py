@@ -8,7 +8,7 @@ same directory. Python standard library only; streams line by
 line so large logs stay within the memory cap.
 
 A session whose first user message opens with a delegated-child brief ("You
-are the `<role>` subagent." or "Act as the <role> sub-agent for this task.") is
+are the `<role>` subagent." (backticks optional) or "Act as the <role> sub-agent for this task.") is
 a delegated child stored as a top-level session; like Codex exec and subagent
 rollouts it is skipped unless `--include-automated` is given, and every skipped
 rollout is listed in `skipped.tsv`.
@@ -40,7 +40,17 @@ CLAUDE_HOOK = re.compile(
     r"|<tool_use_error>Blocked:|Hook \S+ (?:denied|blocked)|Permission to use \S+ .*has been denied)"
 )
 # Delegated-child briefs: an optional orchestrator prefix, then our role line.
-DELEGATED = re.compile(r"^(?:Act as the ([\w-]+) sub-agent for this task\.\s*)?(?:You are the `([\w-]+)` subagent\.)?")
+DELEGATED = re.compile(r"^(?:Act as the ([\w-]+) sub-agent for this task\.\s*)?(?:You are the (?:`([\w-]+)`|([\w-]+)) subagent\.)?")
+T3_NOTICE = re.compile(
+    r"(?:Delegated task (node:delegated-task:\S+) reached a terminal state\.\s+"
+    r"Use task_status with taskId \1 to read the result\.\s*)+"
+)
+
+
+def skip_user(msg):
+    return SKIP_USER.match(msg) or T3_NOTICE.fullmatch(msg)
+
+
 CODEX_POLICY_REJECT = re.compile(r"` rejected: ([^\"\\]{1,200})")
 HEADER_EXIT = re.compile(r"^(?:Process exited with code|Exit code:)\s*(-?\d+)\s*$", re.M)
 MAX_USER = 500
@@ -160,13 +170,13 @@ class Session:
     def note_first_user(self, msg):
         """Keep the first human-visible user message, read regardless of the window."""
         msg = (msg or "").strip()
-        if self.first_user is None and msg and not SKIP_USER.match(msg):
+        if self.first_user is None and msg and not skip_user(msg):
             self.first_user = msg
 
     def role(self):
         """Return the delegated child's role, or "" for a top-level session."""
         match = DELEGATED.match(self.first_user or "")
-        return match.group(2) or match.group(1) or ""
+        return match.group(2) or match.group(3) or match.group(1) or ""
 
     def add_error(self, ts, line, label, text):
         self.nerr += 1
@@ -258,7 +268,7 @@ def parse_claude(path, since, until):
         msg = text_of(content)
         if "Request interrupted" in msg:
             s.interrupts += 1
-        if msg.strip() and not SKIP_USER.match(msg.strip()):
+        if msg.strip() and not skip_user(msg.strip()):
             s.add_user(ts, lineno, msg)
     return s
 
@@ -349,7 +359,7 @@ def parse_codex(path, since, until, include_automated):
         if t == "event_msg":
             if is_user:
                 msg = p.get("message") or text_of(item.get("content"))
-                if msg and msg.strip() and not SKIP_USER.match(msg.strip()):
+                if msg and msg.strip() and not skip_user(msg.strip()):
                     s.add_user(ts, lineno, msg, (pt, p.get("turn_id")))
             elif pt == "turn_aborted":
                 s.interrupts += 1
@@ -365,7 +375,7 @@ def parse_codex(path, since, until, include_automated):
             nested = re.findall(r"tools\.(\w+)\(", args) if name == "exec" else []
             for tool in nested or [name]:
                 s.tools[tool] += 1
-            calls[p.get("call_id")] = nested[0] if nested else name
+            calls[p.get("call_id")] = nested[0] if len(set(nested)) == 1 else name
             if "spawn_agent" in name or "spawn_agent" in args:
                 s.agents["spawn"] += 1
             for skill in set(re.findall(r"skills/([\w-]+)/SKILL\.md", args)):
