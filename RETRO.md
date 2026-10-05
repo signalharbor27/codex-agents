@@ -106,7 +106,7 @@ Owners: TweetStream helper family/deploy tests and the cited web test owners. Pr
 
 Category: tool economy / navigation. Verified unavailable aliases recur across at least seven distinct sessions, including `cake_Write`, `tiny_Read`, `erupt_SendMessage`, `functions` inside code mode and `tools.exec`. No source guidance advertises those stale names; tool-bridge cause remains unknown. GraphQL quota failure (`cf5cfe5f` L570) and watcher expiry (`c170458e` L4585) are independently observed, with no proven causal connection. `1c8e959b` L6254-L6255 and `ec3d8049` L5289-L5290 combined review-record creation with `gh pr ready`; the hook correctly checks before either command runs.
 
-Owners: T3/host capability bridge; existing REST fallback references; review-gate missing-record diagnostic. Proposed for Q: capability-aware dispatch, bounded REST recovery, and a diagnostic that says to record first and publish in a separate tool call. Low certainty/payoff relative to the accepted fixes; no hook relaxation. Load delta: 0.
+Follow-up: the owned diagnostic, REST recovery and watcher guidance are implemented in the commits listed under Authorized follow-up below. The unavailable aliases remain a T3/host capability-bridge proposal with cause unknown; no hook relaxation or guessed alias mapping. Load delta: 0.
 
 ## Churn audits and exclusions
 
@@ -156,4 +156,47 @@ Finding dispositions:
 
 Proof limits: redaction covers observed secret shapes, not arbitrary unknown credentials. Prose received static/reference checks, humanizer review and independent review, without live behavioral evaluation. No product UI was changed or rendered in this repository. Go review replies and production effects were not rerun. Findings outside codex-agents remain proposals; no external repository was edited.
 
-Suggested Q order [bias: accounting risk first]: review the local fixes; repair #476's currency aggregate; repair the narrow SQL-guard false positives; settle paired billing lifecycle ownership and scheduled-charge email facts; then take the named test-debt and tool-bridge follow-ups. Installing or integrating this branch remains Q's decision.
+### Authorized follow-up, 2026-10-05
+
+Authority: Q said "fix the rest using our skills" and restricted work to codex-agents. Standing rule: do not edit tenz-app/TweetStream or any other repository. Reused `/srv/data/workspaces/codex-agents/retro-2026-10-05-weekly`, branch `retro/2026-10-05-weekly`, clean head `a60a234`; its six commits were preserved. No other checkout or live install was changed. No production query, push, PR or merge was performed.
+
+Method: read this report first, then the installed `correct` method, destination references, hook/parser and tests, workflow/Standards, saved analyst evidence, and external test-audit campaign guidance. Recurrence counts retain independent sessions/PRs, not multiple symptoms in one audit. Architectural, type and executable enforcement for external product mistakes belong to the external product owners; only recurring judgment gaps with an existing codex-agents owner merit guidance here. Q's zero-word constraint overrides `correct`'s default instruction-table step. Always-loaded load delta: 0.
+
+Commits, each reviewed and recorded after committing its unchanged class:
+
+- `0536238`: record-first publication recovery, hook and regression assertion.
+- `c686f59`: bounded REST quota recovery, existing retro source reference.
+- `679c745`: expired-watch recovery, branch-finishing workflow.
+- `6a8cd8c`: command execution and target provenance, security reference.
+
+Accepted classes and levels:
+
+- Review record sequencing (two sessions): the owned gate already denies premature publication; its missing-record output now instructs record-first recovery, then publication in a separate tool call. Relaxing the check or executing the record inside the intercepted publication would defeat the contract. Extended the existing diagnostic/allow-after-record test; no new seam.
+- GraphQL quota recovery (explicitly authorized single observation): extended the existing REST fallback in `skills/retro/references/sources.md`. Read REST quota once, bound requests/pages/time, pin the PR head, expose incomplete coverage, and recheck the head within budget before integration. A hook or type cannot choose the needed read evidence across arbitrary GitHub tasks; reference guidance fits that judgment.
+- Watcher expiry recovery (explicitly authorized single observation): `skills/finishing-a-development-branch/SKILL.md` refreshes current state, retains pending-result uncertainty, re-arms one native watch under the existing request, or uses one command monitor with a deadline. Host-owned watches are outside this repository's implementation surface. Its optional REST pointer preserves supported installations without `retro`.
+- SQL guard execution/target provenance (four sessions): added one paragraph to the existing security reference. Distinguish quoted edit/body data from executed SQL, resolve production/disposable/unknown targets, retain production/unknown execution protection, and exercise both safe and unsafe cases at the owning guard. A shared keyword blacklist or guessed parser fix here cannot enforce another repository's command semantics; the real parser repair remains outside scope.
+
+Rejected additions and remaining proposals:
+
+- Non-USD amounts in a USD total: one unresolved #476 observation, below `correct`'s two-occurrence bar; currency guidance has a fitting money owner but recurrence is not established. The actual aggregate/fixture repair remains a TweetStream proposal.
+- Scattered paired lifecycle writers: already covered by `state-and-effects.md`'s Shared-state ownership and coding standards' Scattered invariant; another prose rule adds no owner enforcement.
+- Renewal email claims absent from snapshot: one #473 audit (final and midpoint copy are one source), below the recurrence bar; existing operation/state modeling and missing-data standards fit the underlying issue. Snapshot/provider fact ownership and contract fixtures remain product work.
+- Campaign ledger drift: one repaired historical session; installed external `test-audit/CAMPAIGN.md` already requires a named per-declaration ledger and reconciliation after source changes. A source-bound checker belongs to the product campaign owner; third-party skill left unchanged.
+- Test debt: existing Test lies standards already cover expected values derived from production, syntax-sensitive checks, private seams and setup-masked regressions; zero duplicate guidance.
+- Unavailable aliases: an exact scan of owned skills, scripts, instructions, role/brief artifacts, hooks and README finds no `cake_Write`, `tiny_Read`, `erupt_SendMessage` or `tools.exec` alias advertisement. Generator/role code emits delegation guidance, not the host capability dispatcher; extractor fixtures' `tools.exec_command` is a real tool name. No codex-agents cause or preventive bridge boundary was established. Retain the T3/host bridge proposal with cause unknown; no guessed alias mapping or additional always-loaded rule.
+
+Independent review: base `a60a234e7caeec31aaa34c21e44f5dbf51e94138` to full WIP tree `de2f1a331d7acbf1f21a772c68981b1fc0ca143b`. Native Sol reviewer at high and an independent native Sol design-review fallback at high read all five changed paths, affected hook/parser/record contracts, guidance routing, Standards/Intent, disposition evidence and check logs. All eight review topics covered or not material. Both returned no findings and approved each class's independent commit boundary. Merge danger: two-way / localized. Copy received the humanizer pass. Common-Git review records cover all four cumulative committed trees; the report is reviewed as a separate delta, with its final tree in the post-commit record. Second-family design coverage is absent: T3 children inherit the calling thread's other worktree, and native Opus is unavailable in this harness. The delegated-review reference permits an equivalent independent read-only fallback.
+
+Checks:
+
+- `TMPDIR=/tmp bun test skills/evals scripts claude skills/retro`: 658 pass, 0 fail, 2,647 assertions, 16 files.
+- `bash skills/evals/check-skill-surface.sh`: passed; generated host artifacts current.
+- `bun skills/evals/run-routing-evals.ts dry-run`: 83 cases, no model calls.
+- Focused hook suite: 53 pass. The extended missing-record test fails on `a60a234` hook copy (0 pass, 1 fail), then passes after repair. Literal expected sequencing comes from Q's requested diagnostic, not a production-derived oracle.
+- First combined suite: 657 pass / 1 fail; new hard cross-skill link broke the existing previous-source-without-retro case. Conditional installed-skill pointer repaired the owner; the unchanged focused regression and final combined suite pass.
+
+Evidence lives in this workspace's ignored `.bun/retro-followup/`: red/green hook logs, initial/final suites, surface and routing logs, source scan and reproducible review snapshots. These supplement the original private evidence directory; no fresh retrospective extraction was needed.
+
+Proof limits: prose prevention and host watcher behavior have no live behavioral evaluation. Alias causation remains unknown. Product defects were not repaired or queried.
+
+Remaining Q proposals [bias: accounting risk first]: repair the #476 aggregate and narrow SQL parser false positives in their product owners; settle paired billing transitions and scheduled-charge snapshot facts; then address the named product test-debt and unknown bridge failures. Those require separate scope. Installing or integrating this branch remains Q's decision.
