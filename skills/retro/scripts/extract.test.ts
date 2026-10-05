@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, test } from "bun:test"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -101,6 +101,62 @@ const extractOnly = (claude: unknown[], codex: unknown[], ...extra: string[]) =>
 }
 
 describe("retro extract.py", () => {
+  test("derived reports redact observed credential shapes and use private files", () => {
+    const jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzeW50aGV0aWMifQ.synthetic_signature"
+    const key = "synthetic_api_key_0123456789"
+    const cookie = "synthetic_session_cookie_0123456789"
+    const proxy = "https://synthetic-user:synthetic-password@proxy.example:443"
+    const say = (minute: number, text: string) => ({ type: "user", timestamp: ts(minute), message: { content: text } })
+    const sessions = extractOnly([
+      { type: "ai-title", aiTitle: `Updated token: ${jwt}` },
+      say(1, `Updated J7 token: ${jwt}`),
+      say(2, `1. use this api key ${key}`),
+      say(3, `__Secure-session_token\t${cookie}\t.example.com\t/\t2027-01-01\ttrue`),
+      say(4, `Cookie: session=${cookie}; other=private\nAuthorization: Bearer ${key}`),
+      say(5, `Use ${proxy} for the probe.`),
+      say(6, "Compare delivery in milliseconds; API key usage is unchanged."),
+      // Redacting this key leaves the line at exactly 300 characters; clipping first would cut the key to 10 characters, too short to redact.
+      toolResult("failure", `Exit code 1\n${"x".repeat(260)} use this api key ${key}`, true, 7),
+      toolResult("failure", `Exit code 1\nAuthorization: Bearer ${key}`, true, 8),
+    ], [])
+    const result = sessions.claude!
+    const digest = result.digest
+    for (const secret of [jwt, key, cookie, "synthetic-password", "other=private", "eyJhbGciOiJIUzI1NiJ9", "synthetic_"]) expect(JSON.stringify(result)).not.toContain(secret)
+    expect(result.title).toBe("Updated token: [REDACTED]")
+    expect(digest).toContain("Updated J7 token: [REDACTED]")
+    expect(digest).toContain("1. use this api key [REDACTED]")
+    expect(digest).toContain("__Secure-session_token\t[REDACTED]\t.example.com\t/")
+    expect(digest).toContain("https://[REDACTED]@proxy.example:443")
+    expect(digest).toContain("Compare delivery in milliseconds; API key usage is unchanged.")
+    expect(digest).toContain(`## Tool errors (first 2 of 2)
+- 2026-09-27T10:07:00.000Z L8 ?: Exit code 1 ${"x".repeat(260)} use this api key [REDACTED]
+- 2026-09-27T10:08:00.000Z L9 ?: Exit code 1 Authorization: [REDACTED]
+`)
+    const { out } = run()
+    expect(statSync(out).mode & 0o777).toBe(0o700)
+    for (const file of ["index.tsv", "skipped.tsv", "s000.md"]) expect(statSync(join(out, file)).mode & 0o777).toBe(0o600)
+  })
+
+  test("Codex JSON credentials and serialized cookie errors are redacted without losing diagnostics", () => {
+    const secret = "synthetic_credential_0123456789"
+    const sessions = extractOnly([], [
+      meta("codex-tui", "cli"),
+      { type: "event_msg", timestamp: ts(1), payload: { type: "user_message", message: JSON.stringify({ api_key: secret, Authorization: `Bearer ${secret}`, status: "failed" }) } },
+      { type: "event_msg", timestamp: ts(2), payload: { type: "user_message", message: `OPENAI_API_KEY=${secret}\nDB_PASSWORD="correct horse battery"\nFix API key authentication before retrying.\ntoken: expired; password: missing` } },
+      call("cookie", "await tools.exec_command({cmd:'probe'})", 3),
+      scriptOut("cookie", ["Script completed\nOutput:\n", JSON.stringify({ chunk_id: "cookie", wall_time_seconds: 0.1, exit_code: 1, output: `__Secure-session_token\t${secret}\t.example.com\t/\t2027-01-01\ttrue` })], 4),
+    ])
+    const result = sessions["codex:codex-tui"]!
+    expect(result).toMatchObject({ user_msgs: "2", tool_errors: "1" })
+    expect(result.digest).not.toContain("synthetic_credential")
+    expect(result.digest).not.toContain("correct horse battery")
+    expect(result.digest).toContain('"api_key": "[REDACTED]", "Authorization": "[REDACTED]", "status": "failed"')
+    expect(result.digest).toContain("OPENAI_API_KEY=[REDACTED]")
+    expect(result.digest).toContain("DB_PASSWORD=[REDACTED]")
+    expect(result.digest).toContain("Fix API key authentication before retrying.\ntoken: expired; password: missing")
+    expect(result.digest).toContain('L5 exec_command exit 1: {"chunk_id": "cookie", "wall_time_seconds": 0.1, "exit_code": 1, "output": "__Secure-session_token\\t[REDACTED]\\t.example.com\\t/')
+  })
+
   test("Claude digests count explicit errors and hook blocks only", () => {
     const { out, bySrc } = run()
     const claude = bySrc.claude!
@@ -166,6 +222,21 @@ describe("retro extract.py", () => {
     )
     expect(sessions.claude!.user_msgs).toBe("3")
     expect(sessions["codex:codex-tui"]!.user_msgs).toBe("4")
+  })
+
+  test("distinct original Codex prompts retain their pointers after redaction", () => {
+    const first = "api_key=synthetic_key_111111111111"
+    const second = "api_key=synthetic_key_222222222222"
+    const user = (text: string) => ({ type: "event_msg", timestamp: ts(1), payload: { type: "user_message", message: text, turn_id: "same-turn" } })
+    const item = (text: string) => ({ type: "event_msg", timestamp: ts(1), payload: { type: "item_completed", turn_id: "same-turn", item: { type: "UserMessage", content: [{ type: "input_text", text }] } } })
+    const sessions = extractOnly([], [meta("codex-tui", "cli"), user(first), item(second), user(second)])
+    const result = sessions["codex:codex-tui"]!
+    expect(result.user_msgs).toBe("2")
+    expect(result.digest).toContain("L2\napi_key=[REDACTED]")
+    expect(result.digest).toContain("L3\napi_key=[REDACTED]")
+    expect(result.digest).not.toContain("L4\n")
+    expect(result.digest).not.toContain(first)
+    expect(result.digest).not.toContain(second)
   })
 
   test("delegated children are skipped and listed by default, and kept with --include-automated", () => {

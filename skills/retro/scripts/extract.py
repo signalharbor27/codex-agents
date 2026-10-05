@@ -21,6 +21,7 @@ scripts, and error events. Hook hits count only explicit deny or block messages.
 import argparse
 import calendar
 import collections
+import hashlib
 import json
 import os
 import re
@@ -46,6 +47,40 @@ MAX_USER = 500
 MAX_ERRORS = 60
 MAX_HOOKS = 40
 
+JWT = re.compile(r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b")
+AUTH_URL = re.compile(r"((?:https?|socks5h?|postgres(?:ql)?|redis)://)[^\s/@:]+:[^\s/@]+@", re.I)
+AUTH_HEADER = re.compile(r"(\b(?:authorization|proxy-authorization|cookie|set-cookie)[\"']?\s*:\s*[\"']?)[^\r\n\"']+", re.I)
+COOKIE_ROW = re.compile(r"^(\S+\t)[^\t\r\n]+(?=\t[.\w-]+\t/)", re.M)
+SECRET_LABEL = r"(?:[A-Za-z0-9]+_)*(?:api[ _-]?key|token|password|secret)"
+OPAQUE_VALUE = r"(?=[A-Za-z0-9_./+=-]*[0-9_./+=-])[A-Za-z0-9_./+=-]{12,}"
+SECRET_VALUE = re.compile(
+    r"((?<![A-Za-z0-9])" + SECRET_LABEL + r"[\"']?\s*[:=]\s*)(?:\"[^\"\r\n]*\"|'[^'\r\n]*'|" + OPAQUE_VALUE + r")"
+    r"|(\bapi[ _-]?key\s+)" + OPAQUE_VALUE, re.I
+)
+
+
+def redact_data(value):
+    if isinstance(value, dict):
+        return {key: "[REDACTED]" if isinstance(item, str) and re.fullmatch(
+            SECRET_LABEL + r"|authorization|proxy-authorization|cookie|set-cookie", key, re.I
+        ) else redact_data(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [redact_data(item) for item in value]
+    return redact(value) if isinstance(value, str) else value
+
+
+def redact(text):
+    if text.lstrip().startswith(("{", "[")):
+        try:
+            return json.dumps(redact_data(json.loads(text)), ensure_ascii=False)
+        except (ValueError, RecursionError):
+            pass
+    text = JWT.sub("[REDACTED]", text)
+    text = AUTH_URL.sub(r"\1[REDACTED]@", text)
+    text = AUTH_HEADER.sub(r"\1[REDACTED]", text)
+    text = COOKIE_ROW.sub(r"\1[REDACTED]", text)
+    return SECRET_VALUE.sub(lambda match: (match.group(1) or match.group(2)) + "[REDACTED]", text)
+
 
 def text_of(content):
     if isinstance(content, str):
@@ -58,7 +93,7 @@ def text_of(content):
 
 
 def trunc(s, n=1200):
-    s = (s or "").strip()
+    s = redact(s or "").strip()
     return s if len(s) <= n else s[:n] + " …[+%d]" % (len(s) - n)
 
 
@@ -110,8 +145,9 @@ class Session:
         same text in the same turn, or in the same second when a turn id is
         missing. A repeated message at another time is a new entry.
         """
-        last, self.last_user_rep = self.last_user_rep, rep and (rep[0], rep[1], ts, trunc(msg))
-        if rep and last and last[0] != rep[0] and last[3] == trunc(msg):
+        identity = hashlib.sha256(msg.encode()).digest() if rep else None
+        last, self.last_user_rep = self.last_user_rep, rep and (rep[0], rep[1], ts, identity)
+        if rep and last and last[0] != rep[0] and last[3] == identity:
             same_turn = last[1] == rep[1] if last[1] and rep[1] else last[2][:19] == ts[:19]
             if same_turn:
                 self.last_user_rep = None
@@ -229,8 +265,9 @@ def parse_claude(path, since, until):
 
 def codex_output_text(output):
     if isinstance(output, str):
-        return output
-    return text_of(output)
+        return redact(output)
+    return "\n".join(redact(part.get("text", "")) for part in output or []
+                     if isinstance(part, dict) and part.get("type") in ("text", "input_text", "output_text"))
 
 
 SETTLED_INDEX_KEYS = {"i", "index", "task"}
@@ -394,22 +431,24 @@ DIGEST_NAME = re.compile(r"s\d+\.md")
 
 
 def write_outputs(sessions, out):
-    os.makedirs(out, exist_ok=True)
+    os.makedirs(out, mode=0o700, exist_ok=True)
     # Drop digests from an earlier run so a smaller window leaves no stale sNNN.md.
     for name in os.listdir(out):
         if DIGEST_NAME.fullmatch(name):
             os.remove(os.path.join(out, name))
     columns = ["id", "src", "role", "start", "end", "kb", "user_msgs", "tool_calls", "tool_errors", "hook_hits", "interrupts", "compactions", "cwd", "title"]
     with open(os.path.join(out, "index.tsv"), "w") as w:
+        os.fchmod(w.fileno(), 0o600)
         w.write("\t".join(columns) + "\n")
         for i, s in enumerate(sessions):
-            title = s.title[:60] or (one_line(s.user[0][2], 80) if s.user else "")
+            title = redact(s.title)[:60] or (one_line(s.user[0][2], 80) if s.user else "")
             row = ["s%03d" % i, s.src, s.role(), (s.start or "")[:16], (s.end or "")[:16], s.bytes // 1000, len(s.user) + s.user_dropped,
                    sum(s.tools.values()), s.nerr, s.nhooks, s.interrupts, s.compactions, short_cwd(s.cwd), title.replace("\t", " ")]
             w.write("\t".join(map(str, row)) + "\n")
     for i, s in enumerate(sessions):
         with open(os.path.join(out, "s%03d.md" % i), "w") as w:
-            w.write("# s%03d %s %s\n" % (i, s.src, s.title))
+            os.fchmod(w.fileno(), 0o600)
+            w.write("# s%03d %s %s\n" % (i, s.src, redact(s.title)))
             if s.role():
                 w.write("delegated child: %s\n" % s.role())
             w.write("file: %s\ncwd: %s\nspan: %s → %s\n" % (s.path, s.cwd, s.start, s.end))
@@ -468,6 +507,7 @@ def main(argv=None):
     out = os.path.expanduser(args.out)
     write_outputs(sessions, out)
     with open(os.path.join(out, "skipped.tsv"), "w") as w:
+        os.fchmod(w.fileno(), 0o600)
         w.write("reason\tsrc\tpath\n")
         w.write("".join("%s\t%s\t%s\n" % row for row in skipped))
     automated = sum(not reason.startswith("delegated:") for reason, _, _ in skipped)
