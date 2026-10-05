@@ -47,8 +47,8 @@ Build the smallest production-complete change that delivers the requested outcom
 - Read [references/legacy-change.md](references/legacy-change.md) when behavior is poorly understood, under-tested, tightly coupled, migration-sensitive, or requires repeated mechanical edits.
 - Read [references/state-and-effects.md](references/state-and-effects.md) for money, durable state, external effects, webhooks, jobs, retries, concurrency, or recovery.
 - Read [references/compatibility-and-delivery.md](references/compatibility-and-delivery.md) for public contracts, SDK/schema changes, mixed-version deploys, migrations, rollout, or rollback.
-- Read [references/security.md](references/security.md) for auth, permissions, secrets, attacker-controlled input, abuse, replay, or sensitive data.
-- Read [references/performance-and-capacity.md](references/performance-and-capacity.md) for hot paths, latency/throughput targets, resource limits, or capacity work.
+- Read [references/security.md](references/security.md) for auth, permissions, secrets, command guards, attacker-controlled input, abuse, replay, or sensitive data.
+- Read [references/performance-and-capacity.md](references/performance-and-capacity.md) for hot paths, latency comparisons or research, latency/throughput targets, resource limits, or capacity work.
 - Read [references/proof.md](references/proof.md) only when the trustworthy proof is not obvious or the change has material failure modes.
 - Read [references/external-skills.md](references/external-skills.md) when a pressure it lists applies, to find the installed external principle or workflow skill to read by path.
 - Read [references/durable-plan.md](references/durable-plan.md) only after the user requests or authorizes an in-repo plan that must survive sessions or agents, including discovery work whose route is not yet execution-ready.

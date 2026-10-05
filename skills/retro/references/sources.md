@@ -15,10 +15,11 @@ nice -n 19 python3 <retro-skill>/scripts/extract.py --since 2026-10-02 --out ~/r
 
 - `--since` is inclusive and `--until` exclusive, both `YYYY-MM-DD` UTC. Only events inside the window are counted.
 - `--claude-root` and `--codex-root` override the log roots. `--include-automated` keeps `codex_exec` rollouts, subagent rollouts, and delegated children, which are skipped by default because they repeat their parent's work.
-- A delegated child is a session stored as top-level whose first user message, read regardless of the window, starts with "You are the `<role>` subagent." or the orchestrator prefix "Act as the <role> sub-agent for this task.". T3 `delegate_task` children appear this way in both log families. Its role (ours when present, else the prefix's) fills the `role` column when included.
+- A delegated child is a session stored as top-level whose first user message, read regardless of the window, starts with "You are the `<role>` subagent." (backticks optional), or the orchestrator prefix "Act as the <role> sub-agent for this task.". T3 `delegate_task` children appear this way in both log families. Its role (ours when present, else the prefix's) fills the `role` column when included.
 - Every skipped rollout gets a row in `skipped.tsv` (reason `codex_exec`, `subagent`, or `delegated:<role>`, then source and path), and the summary line prints `automated_skipped` and `delegated_skipped`, so nothing leaves the window silently.
 - `--max-mem-mb` caps the address space (default 2048). The script streams line by line, and a week of logs takes seconds.
 - Output: `index.tsv`, with a header and one row per session (id, source, delegated role, span, size, user messages, tool calls, tool errors, hook hits, interrupts, compactions, cwd, title), plus one `sNNN.md` digest per session. A digest holds header stats, tool, skill, and subagent counts, the user's messages with timestamps, hook and guard blocks, and a sample of tool errors.
+- Exact T3 terminal completion notices, including batches, are omitted from user steering; messages with added human text stay. Mixed nested executor calls without result identity retain an `exec` error label rather than guessing the failing tool.
 - Tool errors are explicit failures only: `is_error` tool results, nonzero exit codes from tool-output headers or JSON `exit_code` fields, failed exec scripts, and error events. Hook hits are explicit deny or block messages: PreToolUse hook errors, Stop-hook blocks, harness `Blocked:` messages, permission denials, and exec-policy rejections. Reply-guard nudges are counted separately as `hook_nudges`.
 
 ## Reading raw logs
@@ -34,7 +35,7 @@ Open a raw log only when a digest hints at a problem: the user correcting, repea
 
 ## PR reviews
 
-Use GitHub REST through `gh api`; the shared GraphQL quota is often exhausted.
+Use GitHub REST through `gh api`; the shared GraphQL quota is often exhausted. When a command reports exhausted GraphQL quota, follow the GraphQL quota recovery reference of the `finishing-a-development-branch` skill.
 
 ```bash
 gh api 'repos/<owner>/<repo>/pulls?state=closed&sort=updated&direction=desc&per_page=50' \

@@ -216,7 +216,7 @@ export function checkPublish(publish: Publish, dir: string | undefined, pushedDi
   const at: Checkout = { dir, tree, head }
   const where = `Checked ${dir} at HEAD tree ${tree}.`
 
-  if (!recorded(at)) return `Blocked: ${publish.action} needs a review record with 0 open findings for this tree. ${where} Finish the review-and-simplify-changes loop on the committed state, then run from that checkout: ${recordSyntax}. Or open the PR as a draft.`
+  if (!recorded(at)) return `Blocked: ${publish.action} needs a review record with 0 open findings for this tree. ${where} Finish the review-and-simplify-changes loop on the committed state, then write the review record first from that checkout: ${recordSyntax}. After it succeeds, publish in a separate tool call; this hook checks before any command in the call runs. Or open the PR as a draft.`
 
   const upstream = upstreamOf(dir)
   const pushed = () => pushedDirs.some(pushedDir => toplevel(pushedDir) === toplevel(dir))

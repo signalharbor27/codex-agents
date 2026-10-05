@@ -176,7 +176,7 @@ The local suite validates skill metadata, references, generated role artifacts, 
 ```bash
 bash skills/evals/check-skill-surface.sh
 bash skills/evals/check-skill-surface.sh --installed   # also checks the live install
-bun test skills/evals scripts claude
+bun test skills/evals scripts claude skills/retro
 bun skills/evals/run-routing-evals.ts dry-run
 ```
 

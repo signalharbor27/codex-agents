@@ -40,6 +40,12 @@ When Q says the work is merged or asks to clean up, that request authorizes clea
 - Use `describe-pr` when the next step is writing or updating the PR summary.
 - For authorized removal of unmerged or kept-branch workspaces, follow [using-git-worktrees](../using-git-worktrees/SKILL.md#authorized-cleanup).
 
+## Watcher recovery
+
+When a PR watcher or command monitor expires, its last result is historical evidence. Read the current PR head and check state once; name any pending checks and the revision observed. Expiry alone establishes neither success nor failure.
+
+If the host exposes a PR-watch tool, inspect the existing registration and re-arm one watch for the same PR under the original monitoring request, then end the turn for its notification. Use the host's capability catalog for tool names. If that capability is unavailable, use one bounded command monitor with a stated deadline and wake-up path. At the deadline, report the pending result and stop the watch; repeated polling or duplicate monitors do not extend the request silently. For GraphQL quota failure, follow [GraphQL quota recovery](references/graphql-quota-recovery.md).
+
 ## Failure modes
 
 - Offering completion choices without verification
