@@ -1,6 +1,14 @@
 # Performance and capacity
 
-Load this for hot paths, latency/throughput targets, resource limits, or capacity work.
+Load this for hot paths, latency comparisons or research, latency/throughput targets, resource limits, or capacity work.
+
+## Latency comparisons
+
+Before calculating, record the event IDs, source files or columns, start and end clock boundaries, units, sample window, formula, exclusions, and one worked row. Check that the samples measure the same interval and that their clocks are comparable. Match IDs when comparing the same events; report unmatched rows and sample sizes.
+
+Keep ingress, persistence, server send, and customer receipt timestamps distinct. A persisted ingest metric establishes only its recorded boundary. Use the customer's retained receipt values when the question concerns their experience; inspect available retained data before proposing new instrumentation.
+
+For example, an event received by a server at 12:00:00.120 and by a customer at 12:00:00.185 has 65 ms of server-to-customer latency if those clocks are comparable. A 20 ms ingest metric for that event measures a different interval. Subtracting a configured hold gives a counterfactual; label it separately from observed measurements. Keep millisecond differences visible when they affect the acceptance criterion.
 
 ## Measure before changing
 
