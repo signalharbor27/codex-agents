@@ -30,6 +30,8 @@ Consider concrete abuse relevant to the feature: tenant crossing, IDOR, forged e
 
 Do not add generic security infrastructure without a present threat. Do not “fail open” to preserve UX on a privileged path. When security depends on a library or service version, verify its current documented contract.
 
+For command guards, bind the decision to the executed operation and its target: parse command arguments and payload boundaries, then resolve whether the target is production, disposable, or unknown. SQL quoted in a source edit or PR body is data; an SQL client executing that payload is an operation. Preserve denial for unsafe production execution and uncertain execution targets. Cover harmless edits and disposable targets alongside actual production SQL in the guard's own regression fixtures.
+
 ## Source basis
 
 - OWASP ASVS and OWASP Cheat Sheet Series: boundary validation, access control, secrets, SSRF, and webhook guidance.
