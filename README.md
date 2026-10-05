@@ -68,14 +68,6 @@ Merge [agent-settings.toml](agent-settings.toml) into the existing `$CODEX_HOME/
 
 Start a new task after installation. Check both the exposed roles and an actual agent launch.
 
-### Q's host notes
-
-These describe Q's machine; the instructions and skills stay host-neutral.
-
-- The custom provider also uses `model_catalog_url` and `features.api_key_model_discovery` in global config to discover available models. Those settings are local to the provider setup. Codex labels API-key discovery as under development.
-- Worktrunk's `~/.config/worktrunk/config.toml` sets `worktree-path` to `/srv/data/workspaces/{{ repo }}/{{ branch | sanitize }}`. Shell integration lives in `.zshrc` and `.bashrc`.
-- The primary disk is ext4 and `/srv/data` is XFS, so a copy from primary to the data disk uses full storage. example-app's locked `worktrunk-deps` worktree on XFS supplies dependencies to new XFS workspaces, and primary supplies the env files. User-config project hooks reconcile dependencies and generate the Prisma client in the destination.
-
 ## Roles
 
 Every subagent role comes from one registry: [roles/roles.ts](roles/roles.ts) sets each role's seats (provider, model, effort), authority, and preloaded skills, and `roles/<name>.md` holds its instructions. `bun scripts/generate-hosts.ts` renders them into:
@@ -166,7 +158,7 @@ Agent-created workspaces use Worktrunk. Reuse existing isolated task directories
 
 T3 creates a worktree when a thread launches with `t3_thread_launch` and a `workspaceStrategy`, or moves with `t3_worktree_handoff`. No Worktrunk hook runs there. Run the hooks on the existing worktree with `wt -C <path> hook pre-start`, then `wt -C <path> hook post-start --foreground`, or have a T3 project script with `runOnWorktreeCreate: true` do it for every new worktree. T3 still owns the worktree's removal.
 
-See [using-git-worktrees](skills/using-git-worktrees/SKILL.md) and the [remote setup guide](skills/using-git-worktrees/references/worktrunk.md) for environment copying, dependencies, and host configuration. Q's values are in [Q's host notes](#qs-host-notes).
+See [using-git-worktrees](skills/using-git-worktrees/SKILL.md) and the [remote setup guide](skills/using-git-worktrees/references/worktrunk.md) for environment copying, dependencies, and host configuration.
 
 ```bash
 wt list
