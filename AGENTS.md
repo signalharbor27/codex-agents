@@ -59,7 +59,7 @@ These rules cover replies to Q.
 - `claude-*` models run natively in Claude Code; from Codex, `delegate_task` uses provider instance `claudeAgent` and effort option `effort`.
 - `gpt-*` models run natively in Codex; from Claude Code, `delegate_task` uses provider instance `codex` and effort option `reasoningEffort`.
 
-- Every `delegate_task` call sets `runtimeMode: "full-access"`, and read-only roles set `interactionMode: "plan"`, so no subagent waits on Q's approval. After each launch, read `t3_thread_configuration` for the child; if its model, effort option, runtime mode, or interaction mode differs from the brief, cancel it with `task_cancel` and relaunch once; if the relaunch also differs, report it instead of retrying.
+- Every `delegate_task` call sets `runtimeMode: "full-access"`, and read-only roles set `interactionMode: "plan"`, so no subagent waits on Q's approval. After each launch, read `t3_thread_configuration` for the child; if its model, effort option, runtime mode, or interaction mode differs from the brief, cancel it with `task_cancel` and relaunch once; if the relaunch also differs, report it instead of retrying. Launch only the brief's model; never substitute another model or version. If the provider reports the model unavailable, recheck `orchestrator_capabilities`, retry once when it is listed, and otherwise report that seat as blocked; try the brief's model again at the next launch.
 - Delegated children wake you when they finish: keep each returned taskId, then end the turn or do independent work instead of polling. Steer a running child with `t3_thread_send`; answer its question with `t3_pending_request_respond`.
 - Roles, their models, and their T3 briefs:
 
