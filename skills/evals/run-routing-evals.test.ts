@@ -1075,13 +1075,17 @@ describe("retro-week contracts", () => {
   const validate = (value: RoutingCase) => validateCase(value, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(fixture.explicit_only_skills), resultSchema)
 
   test("clear Standards findings must go to the refiner, then a non-author delta review, not a full repeat", () => {
-    const routingCase = entry("refiner-clear-standards-findings")
-    const withoutRefiner = { ...resultFor(routingCase), actions: routingCase.required_actions.filter(action => action !== "dispatch-refiner-for-clear-standards-fixes") }
-    expect(compareResult(routingCase, withoutRefiner)).toEqual(["missing required action dispatch-refiner-for-clear-standards-fixes"])
-    const withoutDelta = { ...resultFor(routingCase), actions: routingCase.required_actions.filter(action => action !== "delta-review-by-non-author") }
-    expect(compareResult(routingCase, withoutDelta)).toEqual(["missing required action delta-review-by-non-author"])
-    const fullRepeat = { ...resultFor(routingCase), actions: [...routingCase.required_actions, "review-entire-intended-diff"] }
-    expect(compareResult(routingCase, fullRepeat)).toEqual(["forbidden action review-entire-intended-diff"])
+    for (const id of ["refiner-clear-standards-findings", "refiner-mixed-with-defect-fix"]) {
+      const routingCase = entry(id)
+      const withoutRefiner = { ...resultFor(routingCase), actions: routingCase.required_actions.filter(action => action !== "dispatch-refiner-for-clear-standards-fixes") }
+      expect(compareResult(routingCase, withoutRefiner)).toEqual(["missing required action dispatch-refiner-for-clear-standards-fixes"])
+      const withoutDelta = { ...resultFor(routingCase), actions: routingCase.required_actions.filter(action => action !== "delta-review-by-non-author") }
+      expect(compareResult(routingCase, withoutDelta)).toEqual(["missing required action delta-review-by-non-author"])
+      const fullRepeat = { ...resultFor(routingCase), actions: [...routingCase.required_actions, "review-entire-intended-diff"] }
+      expect(compareResult(routingCase, fullRepeat)).toEqual(["forbidden action review-entire-intended-diff"])
+      const folded = { ...resultFor(routingCase), actions: [...routingCase.required_actions, "fold-clear-fixes-into-other-writer"] }
+      expect(compareResult(routingCase, folded)).toEqual(["forbidden action fold-clear-fixes-into-other-writer"])
+    }
   })
 
   test("judgement-only findings and read-only reviews never dispatch the refiner", () => {

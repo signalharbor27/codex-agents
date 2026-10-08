@@ -68,7 +68,7 @@
     "improve-test-suite": {"positive": ["test-suite-review"], "near_negative": ["test-strategy"]},
     "retro": {"positive": ["retro-explicit-weekly"], "near_negative": ["retro-implicit-session-question", "wip-cleanup-quality"]},
     "receiving-code-review": {"positive": ["review-feedback"], "near_negative": ["small-coupled-review"]},
-    "review-and-simplify-changes": {"positive": ["wip-cleanup-quality", "implementation-complete-needs-review", "commit-ready-needs-review", "refiner-clear-standards-findings", "review-judgement-only-findings", "hot-path-one-way-review"], "near_negative": ["repo-architecture-review"]},
+    "review-and-simplify-changes": {"positive": ["wip-cleanup-quality", "implementation-complete-needs-review", "commit-ready-needs-review", "refiner-clear-standards-findings", "refiner-mixed-with-defect-fix", "review-judgement-only-findings", "hot-path-one-way-review"], "near_negative": ["repo-architecture-review"]},
     "test-design": {"positive": ["test-strategy"], "near_negative": ["unknown-flaky-failure"]},
     "using-git-worktrees": {"positive": ["worktree-isolation"], "near_negative": ["merge-conflict-safe-resolution"]},
     "writing-rust": {"positive": ["rust-api"], "near_negative": ["boundary-change"]},
@@ -1143,7 +1143,23 @@
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["engineering/references/boundary-design.md"],
       "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "dispatch-refiner-for-clear-standards-fixes", "review-delta-since-last-snapshot", "delta-review-by-non-author", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "confirm-final-review-coverage", "verify-before-completion"],
-      "forbidden_actions": ["delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review"],
+      "forbidden_actions": ["fold-clear-fixes-into-other-writer", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review"],
+      "expectations": {
+        "first_action": "pin-review-scope",
+        "mutation": "requested-repo-writes",
+        "question": ["none", "only-if-blocked"],
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "refiner-mixed-with-defect-fix",
+      "prompt": "Continue the review of this WIP implementation. The full intended diff was reviewed at snapshot R1 by an independent reviewer. Open findings: one correctness defect (the discount total rounds before summing line items, so a three-item cart is off by a cent), plus two Standards findings tagged fix: clear: inline a new pass-through module whose only function forwards to the pricing service into its single caller, and delete a comment that restates the next line. No Intent gaps or judgement calls are open, and a refiner is available. Existing authorization covers local fixes; do not commit.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
+      "optional_references": ["engineering/references/boundary-design.md"],
+      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "dispatch-refiner-for-clear-standards-fixes", "review-delta-since-last-snapshot", "delta-review-by-non-author", "delegate-reviewer-review", "delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "confirm-final-review-coverage", "verify-before-completion"],
+      "forbidden_actions": ["fold-clear-fixes-into-other-writer", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review"],
       "expectations": {
         "first_action": "pin-review-scope",
         "mutation": "requested-repo-writes",
