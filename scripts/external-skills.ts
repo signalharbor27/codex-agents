@@ -9,7 +9,8 @@ import { spawnSync } from "node:child_process"
 import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 
-export type Source = { source: string; hidden: boolean; skills: string[] }
+// `source` is the owner/repo the skills lock records; `subpath` narrows the install to one directory of it.
+export type Source = { source: string; subpath?: string; hidden: boolean; skills: string[] }
 
 export function readManifest(repo: string): Source[] {
   const manifest = JSON.parse(readFileSync(join(repo, "external/skills.json"), "utf8")) as { sources?: Source[] }
@@ -131,10 +132,10 @@ export function install(repo: string, paths: Paths, { npx = "npx", onLine = () =
   // Settle the config edit before installing anything, so a config we cannot extend leaves no partial install.
   const configPath = join(paths.codexHome, "config.toml")
   const { config, next } = nextConfig(configPath, sources, paths.home)
-  for (const { source, hidden, skills } of sources) {
+  for (const { source, subpath, hidden, skills } of sources) {
     // Hidden skills go to the shared ~/.agents/skills root only, so Claude Code never lists them; our skills read them by path.
     const agents = hidden ? ["codex"] : ["codex", "claude-code"]
-    const args = ["-y", "skills", "add", source, "--global", "--agent", ...agents, "--skill", ...skills, "--yes"]
+    const args = ["-y", "skills", "add", subpath ? `${source}/${subpath}` : source, "--global", "--agent", ...agents, "--skill", ...skills, "--yes"]
     onLine(`$ ${npx} ${args.join(" ")}`)
     const result = spawnSync(npx, args, { stdio: "inherit", env: { ...process.env, HOME: paths.home } })
     if (result.status !== 0) throw new Error(`npx skills add ${source} failed with exit ${result.status}`)

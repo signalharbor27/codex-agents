@@ -1,8 +1,9 @@
 {
-  "$comment": "Third-party skills this setup reads. scripts/external-skills.ts installs them unmodified with npx skills. `hidden` sources go to ~/.agents/skills only (never listed by Claude Code) and get a Codex [[skills.config]] disable entry; our skills read them by path. Visible sources install for both hosts.",
+  "$comment": "Third-party skills this setup reads. scripts/external-skills.ts installs them unmodified with npx skills. `hidden` sources go to ~/.agents/skills only (never listed by Claude Code) and get a Codex [[skills.config]] disable entry; our skills read them by path. Visible sources install for both hosts. `subpath` installs from one directory of the repo, for repos whose root plugin manifest hides the skills; the lock still records `source`.",
   "sources": [
     {
       "source": "cursor/plugins",
+      "subpath": "pstack",
       "hidden": true,
       "skills": [
         "architect", "arena", "interrogate", "swarm", "blast-radius", "correct", "benchmark-checklist", "bro",

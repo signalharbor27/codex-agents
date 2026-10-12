@@ -215,6 +215,17 @@ describe("install", () => {
     })
   })
 
+  test("installs a source with a subpath from that directory of the repo", () => {
+    withRoot(({ root, repo, home }) => {
+      const npx = join(root, "npx")
+      writeFileSync(npx, `#!/usr/bin/env bash\necho "$@" >> "${root}/calls"\n`)
+      chmodSync(npx, 0o755)
+      install(repo, resolvePaths(home, {}), { npx })
+      expect(readFileSync(join(root, "calls"), "utf8")).toBe(
+        "-y skills add a/b/pkg --global --agent codex --skill alpha --yes\n-y skills add c/d --global --agent codex claude-code --skill shown --yes\n")
+    }, [{ source: "a/b", subpath: "pkg", hidden: true, skills: ["alpha"] }, sources[1]!])
+  })
+
   test("leaves the shared copies alone when ~/.claude/skills is itself a link to ~/.agents/skills", () => {
     withRoot(({ repo, home }) => {
       installSkills(home)
