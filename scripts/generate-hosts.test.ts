@@ -120,7 +120,8 @@ describe("role rendering", () => {
 })
 
 describe("settings merge", () => {
-  // Policy: the fragment owns each top-level key it contains, wholesale. Installed-only keys, env included, are kept and are not drift.
+  // Policy: the fragment owns each top-level key it contains, wholesale, except hooks, which merge per event.
+  // Installed-only keys, env included, are kept and are not drift.
   const installed = { env: { TOKEN: "x" }, theme: "light", mine: 1, permissions: { allow: ["A"], deny: ["SendMessage", "Keep"] } }
   const fragment = { theme: "dark", permissions: { allow: ["A"], deny: ["Keep", "New"] }, hooks: { Stop: [1], UserPromptSubmit: [2] } }
 
@@ -134,11 +135,40 @@ describe("settings merge", () => {
 
   test("summarizes changes by rule and event name only", () => {
     expect(settingsChanges({ ...installed, hooks: { Stop: [1], Old: [3] } }, fragment)).toEqual([
-      "settings: hooks changed: Old, UserPromptSubmit",
+      "settings: hooks changed: UserPromptSubmit",
       "settings: permissions.deny removed: SendMessage",
       "settings: permissions.deny added: New",
       "settings: replaced theme",
     ])
+  })
+})
+
+describe("hooks merge", () => {
+  const own = (file: string) => ({ hooks: [{ type: "command", command: `bun "$HOME/.claude/hooks/${file}"` }] })
+  const tool = (event: string) => ({ hooks: [{ type: "command", command: `cmux-hook ${event}`, async: true }] })
+  const fragment = { hooks: { Stop: [own("reply-guard.ts")], UserPromptSubmit: [own("reply-guard.ts")] } }
+
+  test("replaces this repo's hook groups, keeps groups another tool added, and is not drift once merged", () => {
+    const installed = { hooks: { Stop: [own("old-guard.ts"), tool("Stop")], SessionStart: [tool("SessionStart")], PreToolUse: [own("gone.ts")] } }
+    const merged = mergeSettings(installed, fragment)
+    expect(merged.hooks).toEqual({
+      Stop: [own("reply-guard.ts"), tool("Stop")],
+      SessionStart: [tool("SessionStart")],
+      UserPromptSubmit: [own("reply-guard.ts")],
+    })
+    expect(settingsDrift(installed, fragment)).toEqual(["hooks"])
+    expect(settingsChanges(installed, fragment)).toEqual(["settings: hooks changed: PreToolUse, Stop, UserPromptSubmit"])
+    expect(settingsDrift(merged, fragment)).toEqual([])
+    expect(mergeSettings(merged, fragment)).toEqual(merged)
+  })
+
+  test("keeps another tool's command that shares a group with this repo's", () => {
+    const toolHook = { type: "command", command: "cmux-hook Stop" }
+    const installed = { hooks: { Stop: [{ hooks: [own("old-guard.ts").hooks[0], toolHook] }] } }
+    const merged = mergeSettings(installed, fragment)
+    expect(merged.hooks.Stop).toEqual([own("reply-guard.ts"), { hooks: [toolHook] }])
+    expect(settingsDrift(merged, fragment)).toEqual([])
+    expect(mergeSettings(merged, fragment)).toEqual(merged)
   })
 })
 
@@ -234,6 +264,7 @@ describe("generator subprocess", () => {
       theme: "light",
       mine: true,
       permissions: { deny: ["SendMessage", ...fragment.permissions.deny.slice(1)] },
+      hooks: { Stop: [{ hooks: [{ type: "command", command: "other-tool stop" }] }] },
     }), { mode: 0o644 })
     mkdirSync(join(home, ".codex/skills/.system/review-agent"), { recursive: true })
     for (const [name, body] of [["same", "same"], ["drifted", "installed"]]) {
@@ -279,7 +310,7 @@ describe("generator subprocess", () => {
     expect(readFileSync(join(backupDir, backups[1]!, "old.md"), "utf8")).toBe("old agent")
     const settingsPath = join(home, ".claude/settings.json")
     const settings = JSON.parse(readFileSync(settingsPath, "utf8"))
-    expect(settings).toEqual({ ...fragment, env: { TOKEN: secret }, mine: true })
+    expect(settings).toEqual({ ...fragment, env: { TOKEN: secret }, mine: true, hooks: { ...fragment.hooks, Stop: [...fragment.hooks.Stop, { hooks: [{ type: "command", command: "other-tool stop" }] }] } })
     expect(settings.permissions.deny).not.toContain("SendMessage")
     expect(statSync(settingsPath).mode & 0o777).toBe(0o600)
     expect(statSync(join(backupDir, backups[2]!)).mode & 0o777).toBe(0o600)
