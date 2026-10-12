@@ -31,7 +31,7 @@ Work is read-only: reading logs and PR data and writing digests and the report o
 
    Merge duplicates across batches. Two analysts who read the same evidence count as one source. Drop candidates that would change no consequential decision, action, or completion claim; unresolved audit items stay, even when they occur once.
 8. Rank the candidates, then read the installed `correct` skill's SKILL.md and apply its method to the top recurring mistake classes (two or more sessions): take the highest fix level that works (architecture, then types, then a lint or check whose error names the fix, then a test, then docs) and record why each higher level does not. Every proposed check names a real past mistake (session and `L<n>`, or a commit) it must fail on; whoever implements it shows that failure before the check passes on the fixed code.
-9. Write `<out>/RETRO.md` with the window, the method, the always-loaded budget, candidates by severity, and a suggested order. Present the candidates to the user by severity. The step is complete when every digest has been read, every audit has returned, and every candidate names its evidence, owner, and load delta.
+9. Write `<out>/RETRO.md`, outside every repository because it quotes private sessions, with the window, the method, the always-loaded budget, candidates by severity, and a suggested order. Present the candidates to the user by severity. The step is complete when every digest has been read, every audit has returned, and every candidate names its evidence, owner, and load delta.
 
 ## Scheduled mode
 
@@ -39,8 +39,9 @@ When the run comes from a T3 scheduled task, the schedule authorizes local imple
 
 - Create a new local branch in that repository with Worktrunk, following `using-git-worktrees`, and work only there.
 - Implement each accepted fix class per step 8, prove each new check fails on its past mistake, run the repository's checks, and finish `review-and-simplify-changes`; commit each class separately on the branch.
-- Write the ranked report to `RETRO.md` at the workspace root, marking each candidate implemented (with its commit) or proposed.
-- Never push, open a PR, or edit files in any other checkout; digests still go to `<out>`.
+- Keep session IDs, quotes, and incident details in the report. In a repository shared across projects (see [Owners](#owners)), implement only rules that hold for every project, and keep project names, hosts, services, and paths in the report as well, out of files and commit messages.
+- In the report, mark each candidate implemented (with its commit) or proposed.
+- Never push, open a PR, or edit files in any other checkout; digests and the report go to `<out>`.
 - Hand back the branch, absolute workspace path, report path, and one line per implemented fix for the user's review.
 
 ## Categories, in fix priority
@@ -58,6 +59,8 @@ Corrections from the user (repeating, overriding, "I told you") are evidence. Ma
 
 ## Owners
 
+Place each fix in the most specific owner that holds it. A repository shared across projects, such as one whose files install into user-level paths for every project, takes only rules that hold for every project. A rule about one project's code, hosts, services, or data goes to that project's `AGENTS.md`, `CODING_STANDARDS.md`, checks, or docs.
+
 - `AGENTS.md` and global instructions load on every turn. Keep them for navigation pointers and rules that apply to every task.
 - `CODING_STANDARDS.md` is read only by review.
 - Docs hold reference material and are reached through pointers. Look for an existing doc before writing a new one.
@@ -73,5 +76,6 @@ Corrections from the user (repeating, overriding, "I told you") are evidence. Ma
 - Inventing lessons to fill the report, or counting repeated analyst claims as independent
 - Editing environment files before the user authorizes the specific change, or outside the scheduled-mode branch
 - Proposing a check without the past mistake it must fail on
+- Committing a project-specific rule or private detail to a repository shared across projects
 
 Source basis: Matt Pocock's `retro` skill (github.com/mattpocock/skills, `skills/engineering/retro`, commit `d81f3a1`, MIT License, Copyright (c) 2026 Matt Pocock). Adapted, not copied: categories reordered by fix priority, multi-session extraction and analyst fan-out added, and evidence, owner, and load-delta required per candidate. The extraction and batching method comes from the user's 2026-10-02 retrospective.
