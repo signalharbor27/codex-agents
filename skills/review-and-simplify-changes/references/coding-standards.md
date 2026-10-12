@@ -67,6 +67,10 @@ Detail lives in the weak-types, error-handling, and legacy/fallback topics of th
 
 These requirements govern review coverage and correctness findings. Standards tags apply to code violations of the standards above.
 
+### Dependency and runtime behavior
+
+Before reporting a defect that depends on library, asynchronous, or deployment behavior, follow the dependency guidance in `engineering/references/proof.md` and trace the actual callers. Identify the operation or state that violates the contract; a type signature, handler attachment, or remembered platform behavior alone is insufficient. Reproduce when the trace leaves uncertainty. Report unverified assumptions as proof gaps.
+
 ### Rendered UI
 
 For visible UI changes, review the affected states in the rendered application at relevant viewport sizes. Judge hierarchy, copy, spacing, color, and interaction against the intended user task and repository design guidance. Reviewers may reuse screenshots, recordings, or browser observations when their source revision, states, and viewports are identified and the affected UI code has not changed. Inspect that evidence and cover any remaining states or interactions; a screenshot alone does not verify interaction. Report concrete findings with the state and evidence. Name unavailable coverage in the review; source review and typechecks leave appearance unverified. Backend-only changes do not need visual review.
