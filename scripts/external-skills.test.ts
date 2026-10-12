@@ -132,7 +132,7 @@ describe("check", () => {
       const notListed = "skill: ~/.claude/skills/shown should link to ~/.agents/skills/shown"
       rmSync(shownLink)
       linkForClaude(home, "alpha")
-      expect(check(repo, paths)).toEqual(["skill: ~/.claude/skills/alpha exists, but a/b is hidden from Claude Code", notListed])
+      expect(check(repo, paths)).toEqual(["skill: ~/.claude/skills/alpha exists, but a/b is hidden from Claude Code; run --install", notListed])
       rmSync(join(home, ".claude/skills/alpha"))
       // A stale copy, a dangling link, and a link to another skill all leave Claude reading something other than the accepted copy.
       mkdirSync(join(shownLink, ".."), { recursive: true })
@@ -187,6 +187,43 @@ describe("check", () => {
       quietInstall(repo, home)
       expect(check(repo, resolvePaths(home, { XDG_STATE_HOME: join(root, "state") }))).toEqual([])
       expect(check(repo, resolvePaths(home, {}))).toContain("skill: alpha is not installed (expected from a/b)")
+    })
+  })
+})
+
+describe("install", () => {
+  // Runs install with a no-op npx and returns only the unlisting lines it reported.
+  const unlisted = (repo: string, home: string) => {
+    const lines: string[] = []
+    install(repo, resolvePaths(home, {}), { npx: "true", onLine: line => lines.push(line) })
+    return lines.filter(line => line.startsWith("unlisted"))
+  }
+
+  test("unlists a hidden skill npx linked for Claude Code, keeps a link elsewhere, and converges on rerun", () => {
+    withRoot(({ root, repo, home }) => {
+      installSkills(home)
+      linkForClaude(home, "alpha")
+      mkdirSync(join(root, "mine/zeta"), { recursive: true })
+      writeFileSync(join(root, "mine/zeta/SKILL.md"), "mine")
+      symlinkSync(join(root, "mine/zeta"), join(home, ".claude/skills/zeta"))
+      expect(unlisted(repo, home)).toEqual(["unlisted from Claude Code: ~/.claude/skills/alpha"])
+      expect(readdirSync(join(home, ".claude/skills")).sort()).toEqual(["shown", "zeta"])
+      expect(readFileSync(join(home, ".agents/skills/alpha/SKILL.md"), "utf8")).toBe("x")
+      expect(readFileSync(join(home, ".claude/skills/zeta/SKILL.md"), "utf8")).toBe("mine")
+      expect(check(repo, resolvePaths(home, {}))).toEqual(["skill: ~/.claude/skills/zeta exists, but a/b is hidden from Claude Code; it is not a link npx made, so remove it by hand"])
+      expect(unlisted(repo, home)).toEqual([])
+    })
+  })
+
+  test("leaves the shared copies alone when ~/.claude/skills is itself a link to ~/.agents/skills", () => {
+    withRoot(({ repo, home }) => {
+      installSkills(home)
+      rmSync(join(home, ".claude/skills"), { recursive: true })
+      symlinkSync("../.agents/skills", join(home, ".claude/skills"))
+      expect(unlisted(repo, home)).toEqual([])
+      expect(readdirSync(join(home, ".agents/skills")).sort()).toEqual(["alpha", "shown", "zeta"])
+      expect(readFileSync(join(home, ".codex/config.toml"), "utf8")).toContain("# BEGIN codex-agents")
+      expect(check(repo, resolvePaths(home, {}))).toContain("skill: ~/.claude/skills/alpha exists, but a/b is hidden from Claude Code; ~/.claude/skills is the shared ~/.agents/skills, so give Claude Code its own skills directory instead of deleting skills")
     })
   })
 })

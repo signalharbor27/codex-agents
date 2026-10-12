@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 // Installs the third-party skills listed in external/skills.json, unmodified, and keeps them out of Codex routing:
-//   bun scripts/external-skills.ts --install [--home D]  npx skills add each source, then write the Codex hide block
+//   bun scripts/external-skills.ts --install [--home D]  npx skills add each source, unlist hidden skills from Claude Code, then write the Codex hide block
 //   bun scripts/external-skills.ts --check [--home D]    verify installs, accepted hashes, and the hide block, read-only
 //   bun scripts/external-skills.ts --accept [--home D]   record the installed hashes in external/accepted.json after review
-// `npx skills update -g` refreshes them later; --check then names every skill whose upstream content changed.
+// `npx skills update -g` refreshes them later; rerun --install (it unlists any hidden skill an update relinked for Claude Code),
+// then --check names every skill whose upstream content changed.
 import { spawnSync } from "node:child_process"
-import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, statSync, writeFileSync } from "node:fs"
+import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, renameSync, statSync, unlinkSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 
 export type Source = { source: string; hidden: boolean; skills: string[] }
@@ -101,6 +102,20 @@ export function claudeSkillState(home: string, name: string): "linked" | "absent
   }
 }
 
+/** Whether ~/.claude/skills/<name> is a link npx made to the shared copy, so removing it unlists the skill and nothing else. */
+function isNpxClaudeLink(home: string, name: string) {
+  return isLink(join(home, ".claude/skills", name)) && !claudeSkillsIsShared(home) && claudeSkillState(home, name) === "linked"
+}
+
+/** Whether ~/.claude/skills resolves to ~/.agents/skills, so every entry there is a shared copy rather than a link to one. */
+function claudeSkillsIsShared(home: string) {
+  try {
+    return realpathSync(join(home, ".claude/skills")) === realpathSync(join(home, ".agents/skills"))
+  } catch {
+    return false
+  }
+}
+
 function isLink(path: string) {
   try {
     return lstatSync(path).isSymbolicLink()
@@ -123,6 +138,12 @@ export function install(repo: string, paths: Paths, { npx = "npx", onLine = () =
     onLine(`$ ${npx} ${args.join(" ")}`)
     const result = spawnSync(npx, args, { stdio: "inherit", env: { ...process.env, HOME: paths.home } })
     if (result.status !== 0) throw new Error(`npx skills add ${source} failed with exit ${result.status}`)
+  }
+  // An update or an earlier install can leave a hidden skill linked for Claude Code; anything else stays for --check to report.
+  for (const name of sources.filter(source => source.hidden).flatMap(source => source.skills)) {
+    if (!isNpxClaudeLink(paths.home, name)) continue
+    unlinkSync(join(paths.home, ".claude/skills", name))
+    onLine(`unlisted from Claude Code: ~/.claude/skills/${name}`)
   }
   if (next !== config) {
     writeConfig(configPath, next)
@@ -160,7 +181,12 @@ export function check(repo: string, paths: Paths): string[] {
   for (const { source, hidden, skills } of sources) {
     for (const name of skills) {
       const claude = claudeSkillState(paths.home, name)
-      if (hidden && claude !== "absent") problems.push(`skill: ~/.claude/skills/${name} exists, but ${source} is hidden from Claude Code`)
+      if (hidden && claude !== "absent") {
+        const repair = isNpxClaudeLink(paths.home, name) ? "run --install"
+          : claudeSkillsIsShared(paths.home) ? "~/.claude/skills is the shared ~/.agents/skills, so give Claude Code its own skills directory instead of deleting skills"
+          : "it is not a link npx made, so remove it by hand"
+        problems.push(`skill: ~/.claude/skills/${name} exists, but ${source} is hidden from Claude Code; ${repair}`)
+      }
       if (!hidden && claude !== "linked") problems.push(`skill: ~/.claude/skills/${name} should link to ~/.agents/skills/${name}`)
       const entry = lock.skills?.[name]
       if (!entry) problems.push(`skill: ${name} is not installed (expected from ${source})`)
