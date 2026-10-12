@@ -1,6 +1,6 @@
 # Proof
 
-Load this only when the trustworthy proof is not obvious or the change has material failure modes.
+Load this only when the trustworthy proof is not obvious, the change has material failure modes, or you start parallel, long-running, or resource-heavy scratch runs.
 
 ## Choose the cheapest trustworthy seam
 
@@ -15,6 +15,12 @@ Start from the claim, then select the lowest-cost evidence that can falsify it:
 - deployability: build/migration/dry-run plus the relevant runtime observation.
 
 Prefer existing repository tests and commands. Test through public or stable interfaces and keep the dependency under test real. Fake slow or uncontrollable edges; mock only the external boundary whose protocol is already understood.
+
+## Bound scratch resources
+
+Before starting or delegating runs that execute in parallel or start processes, containers, databases, or services that can outlive the tool call, name the resource owner, maximum concurrent runs, wall deadline, output limit, and permitted teardown. Use a harness that enforces those bounds and terminates its child processes; a tool timeout or background flag does not establish cleanup. Verify teardown on failure and cancellation before scaling the run. If cleanup fails, stop allocating replacements and retain the owned resource identifiers for recovery.
+
+On hosts shared with production, run resource-pressure proofs in CPU- and memory-capped disposable containers or isolated CI. Verify the effective limits; a requested quota without an active controller proves nothing. Keep these constraints in delegation briefs. Use the repository's scratch labels and cleanup path.
 
 ## Avoid false confidence
 

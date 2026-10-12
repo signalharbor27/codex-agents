@@ -23,4 +23,6 @@ An arbitrary delay is valid only when elapsed time itself is the behavior under 
 
 Identify the shared state, actors, legal transitions, and synchronization or ownership mechanism. Reproduce with a deterministic barrier or stress loop where practical. A “race condition” claim is incomplete until the conflicting operations and invalid interleaving are shown.
 
+Before stress or parallel reproduction, apply the scratch-resource bounds in `engineering/references/proof.md`. Carry the enforced limits and teardown contract into each delegated run.
+
 Source basis: Google testing guidance on flaky tests and synchronization, plus the scientific debugging method in Zeller’s *Why Programs Fail*.
