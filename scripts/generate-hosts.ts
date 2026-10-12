@@ -361,8 +361,8 @@ function readFragment(repo: string): Json {
   if ("env" in fragment) throw new Error("claude/settings.fragment.json must not contain env")
   // A hook registered under ~/.claude/hooks must be one the install links from claude/hooks.
   const linked = hookFiles(repo)
-  for (const { event, script } of hookScripts(fragment, "$HOME")) {
-    const file = /^\$HOME\/\.claude\/hooks\/([^/]+)$/.exec(script ?? "")?.[1]
+  for (const { event, command } of hookScripts(fragment, "$HOME")) {
+    const file = ownHookFile(command)
     if (file && !linked.includes(file)) throw new Error(`claude/settings.fragment.json: ${event} hook ${file} has no claude/hooks/${file}`)
   }
   return fragment
@@ -376,15 +376,44 @@ function canonical(value: unknown): string {
   return JSON.stringify(value)
 }
 
-/** Fragment-owned top-level keys whose installed values differ. Installed-only keys and env are not drift. */
+/** Fragment-owned top-level keys whose installed values differ from the merge. Installed-only keys, env, and other tools' hooks are not drift. */
 export function settingsDrift(installed: Json, fragment: Json): string[] {
-  return Object.keys(fragment).sort().filter(key => canonical(installed[key]) !== canonical(fragment[key]))
+  const merged = mergeSettings(installed, fragment)
+  return Object.keys(fragment).sort().filter(key => canonical(installed[key]) !== canonical(merged[key]))
 }
 
-/** The fragment replaces each top-level key it contains, wholesale; installed-only keys, including env, are kept. */
+/** The fragment replaces each top-level key it contains, except hooks, which merge per event; installed-only keys, including env, are kept. */
 export function mergeSettings(installed: Json, fragment: Json): Json {
   if ("env" in fragment) throw new Error("claude/settings.fragment.json must not contain env")
-  return { ...installed, ...fragment }
+  return { ...installed, ...fragment, ...("hooks" in fragment ? { hooks: mergeHooks(installed.hooks, fragment.hooks) } : {}) }
+}
+
+/** The ~/.claude/hooks file a hook command runs when it has this repo's form, `bun "$HOME/.claude/hooks/<file>"`. */
+function ownHookFile(command: string): string | undefined {
+  return /^bun\s+"\$HOME\/\.claude\/hooks\/([^/"]+)"$/.exec(command)?.[1]
+}
+
+/** An installed hook group without this repo's commands, or undefined when only ours were in it. Other shapes pass through. */
+function withoutOwnHooks(group: unknown): unknown {
+  const hooks = asObject(group).hooks
+  if (!Array.isArray(hooks)) return group
+  const foreign = hooks.filter(hook => !ownHookFile(String(asObject(hook).command ?? "")))
+  if (foreign.length === hooks.length) return group
+  return foreign.length ? { ...asObject(group), hooks: foreign } : undefined
+}
+
+/** Per event, the fragment's hook groups, then the hooks other tools installed; this repo's old hooks are dropped. */
+function mergeHooks(installed: unknown, fragment: unknown): Json {
+  const theirs = asObject(installed)
+  const ours = asObject(fragment)
+  const merged: Json = {}
+  for (const event of new Set([...Object.keys(theirs), ...Object.keys(ours)])) {
+    const own = [ours[event] ?? []].flat()
+    const kept = [theirs[event] ?? []].flat().map(withoutOwnHooks)
+      .filter(group => group !== undefined && !own.some(g => canonical(g) === canonical(group)))
+    if (own.length || kept.length) merged[event] = [...own, ...kept]
+  }
+  return merged
 }
 
 const asObject = (value: unknown): Json => (value && typeof value === "object" && !Array.isArray(value) ? value as Json : {})
@@ -392,6 +421,7 @@ const strings = (value: unknown) => (Array.isArray(value) ? value.filter((v): v 
 
 /** Names what the merge changes: permission rules removed/added, hook events changed, other keys replaced. Never values. */
 export function settingsChanges(installed: Json, fragment: Json): string[] {
+  const merged = mergeSettings(installed, fragment)
   const lines: string[] = []
   for (const key of settingsDrift(installed, fragment)) {
     if (key === "permissions") {
@@ -413,7 +443,7 @@ export function settingsChanges(installed: Json, fragment: Json): string[] {
       }
     } else if (key === "hooks") {
       const before = asObject(installed[key])
-      const after = asObject(fragment[key])
+      const after = asObject(merged[key])
       const events = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort()
         .filter(event => canonical(before[event]) !== canonical(after[event]))
       lines.push(`settings: hooks changed: ${events.join(", ")}`)
