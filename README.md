@@ -22,13 +22,13 @@ The installer keeps one copy per skill in `~/.agents/skills`, which Codex reads,
 Third-party skills from pstack, Matt Pocock, humanizer, and show-me are listed in [external/skills.json](external/skills.json) and installed unmodified for Codex and Claude Code:
 
 ```bash
-bun scripts/external-skills.ts --install   # npx skills add each source, then write the Codex hide block
+bun scripts/external-skills.ts --install   # npx skills add each source, unlist hidden skills from Claude Code, then write the Codex hide block
 bun scripts/external-skills.ts --check     # verify installs, accepted upstream versions, and the hide block, read-only
 bun scripts/external-skills.ts --accept    # after reviewing an upstream change, record it in external/accepted.json
-npx skills update -g                       # refresh later, then rerun --check
+npx skills update -g                       # refresh later, then rerun --install and --check
 ```
 
-Sources marked `hidden` install into `~/.agents/skills` only, so Claude Code never lists them, and `--install` writes a managed `[[skills.config]]` block in Codex's `config.toml` (under `$CODEX_HOME` when set) that disables their automatic routing. The write keeps the file's permissions and any symlink, and refuses output that is not valid TOML. Our skills read hidden skills by path (`~/.agents/skills/<name>/SKILL.md`). `--check` also names any installed skill whose upstream folder hash differs from [external/accepted.json](external/accepted.json); an update takes effect when installed, so review what `--check` reports before relying on the new version. The global instructions map their Cursor `Task`/`subagent_type` calls to our roles and their aliases (`tdd`, `reflect`, `deslop`, and others) to our skills, and pstack reads its per-role models from the generated `external/pstack-models.mdc`.
+Sources marked `hidden` install into `~/.agents/skills` only, so Claude Code never lists them; `--install` removes any `~/.claude/skills` link to a hidden skill's shared copy, such as one an update recreated, and writes a managed `[[skills.config]]` block in Codex's `config.toml` (under `$CODEX_HOME` when set) that disables their automatic routing. The write keeps the file's permissions and any symlink, and refuses output that is not valid TOML. Our skills read hidden skills by path (`~/.agents/skills/<name>/SKILL.md`). `--check` also names any installed skill whose upstream folder hash differs from [external/accepted.json](external/accepted.json); an update takes effect when installed, so review what `--check` reports before relying on the new version. The global instructions map their Cursor `Task`/`subagent_type` calls to our roles and their aliases (`tdd`, `reflect`, `deslop`, and others) to our skills, and pstack reads its per-role models from the generated `external/pstack-models.mdc`.
 
 ### Global instructions
 
