@@ -88,7 +88,6 @@ const run = (...extra: string[]) => {
   return { out, stdout: proc.stdout.toString(), rows, bySrc }
 }
 
-// Runs extract.py over a fresh pair of roots holding one Claude and one Codex session.
 const extractOnly = (claude: unknown[], codex: unknown[], ...extra: string[]) => {
   const dir = mkdtempSync(join(root, "case-"))
   jsonl(join(dir, "claude", "-p", "s.jsonl"), claude)
@@ -101,6 +100,31 @@ const extractOnly = (claude: unknown[], codex: unknown[], ...extra: string[]) =>
 }
 
 describe("retro extract.py", () => {
+  test("bare proxy rows are redacted before deriving excerpts and serialized errors", () => {
+    const proxy = "192.0.2.10:8080:synthetic-user:synthetic-password"
+    const say = (message: string) => ({ type: "user", timestamp: ts(1), message: { content: message } })
+    const sessions = extractOnly([
+      { type: "ai-title", aiTitle: `Proxy ${proxy}` },
+      say(`Use these instead:\n${proxy}\n198.51.100.20:3128:another-user:p@ss/word`),
+      say("Probe 192.0.2.10:8080 failed: connection refused."),
+      say(`${"x".repeat(1170)} ${proxy}`),
+      toolResult("proxy", `Exit code 1\n${proxy}`, true, 2),
+    ], [
+      meta("codex-tui", "cli"),
+      { type: "event_msg", timestamp: ts(1), payload: { type: "user_message", message: JSON.stringify({ proxies: [proxy], status: "failed" }) } },
+      call("proxy", "await tools.exec_command({cmd:'probe'})", 2),
+      scriptOut("proxy", [JSON.stringify({ chunk_id: "proxy", wall_time_seconds: 0.1, exit_code: 1, output: proxy })], 3),
+    ])
+    const all = JSON.stringify(sessions)
+    for (const secret of ["synthetic-user", "synthetic-password", "another-user", "p@ss/word"]) expect(all).not.toContain(secret)
+    expect(sessions.claude!.title).toBe("Proxy 192.0.2.10:8080:[REDACTED]")
+    expect(sessions.claude!.digest).toContain("198.51.100.20:3128:[REDACTED]")
+    expect(sessions.claude!.digest).toContain("Probe 192.0.2.10:8080 failed: connection refused.")
+    expect(sessions.claude!.digest).toContain(`${"x".repeat(1170)} 192.0.2.10:8080:[REDACTED]`)
+    expect(sessions["codex:codex-tui"]!.digest).toContain('"proxies": ["192.0.2.10:8080:[REDACTED]"], "status": "failed"')
+    expect(sessions["codex:codex-tui"]!.digest).toContain('"exit_code": 1, "output": "192.0.2.10:8080:[REDACTED]"')
+  })
+
   test("derived reports redact observed credential shapes and use private files", () => {
     const jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzeW50aGV0aWMifQ.synthetic_signature"
     const key = "synthetic_api_key_0123456789"

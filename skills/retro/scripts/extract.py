@@ -59,6 +59,7 @@ MAX_HOOKS = 40
 
 JWT = re.compile(r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b")
 AUTH_URL = re.compile(r"((?:https?|socks5h?|postgres(?:ql)?|redis)://)[^\s/@:]+:[^\s/@]+@", re.I)
+PROXY_ROW = re.compile(r"(?<![\w.])((?:\d{1,3}\.){3}\d{1,3}:\d{1,5}):[^:\s\"'`<>\\]+:[^\s\"'`<>\\]+")
 AUTH_HEADER = re.compile(r"(\b(?:authorization|proxy-authorization|cookie|set-cookie)[\"']?\s*:\s*[\"']?)[^\r\n\"']+", re.I)
 COOKIE_ROW = re.compile(r"^(\S+\t)[^\t\r\n]+(?=\t[.\w-]+\t/)", re.M)
 SECRET_LABEL = r"(?:[A-Za-z0-9]+_)*(?:api[ _-]?key|token|password|secret)"
@@ -87,6 +88,7 @@ def redact(text):
             pass
     text = JWT.sub("[REDACTED]", text)
     text = AUTH_URL.sub(r"\1[REDACTED]@", text)
+    text = PROXY_ROW.sub(r"\1:[REDACTED]", text)
     text = AUTH_HEADER.sub(r"\1[REDACTED]", text)
     text = COOKIE_ROW.sub(r"\1[REDACTED]", text)
     return SECRET_VALUE.sub(lambda match: (match.group(1) or match.group(2)) + "[REDACTED]", text)
