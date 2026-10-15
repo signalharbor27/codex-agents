@@ -889,11 +889,18 @@ ${routingCase.prompt}
 </task>`
 }
 
+/** Markdown files under each skill folder other than SKILL.md, as skill-relative paths. */
+export async function skillReferenceFiles(skillsRoot: string): Promise<Set<string>> {
+  const files = await Array.fromAsync(new Bun.Glob("*/**/*.md").scan({ cwd: skillsRoot }))
+  return new Set(files.filter(file => !file.startsWith("evals/") && !file.endsWith("/SKILL.md")))
+}
+
 export function parseLiveResult(
   output: string,
   fixture: RoutingFixture,
   resultSchema: unknown,
   label = "codex exec",
+  existingReferences?: ReadonlySet<string>,
 ): RoutingResult {
   let value: unknown
   try {
@@ -921,9 +928,12 @@ export function parseLiveResult(
     if (!knownSkills.has(skill) && !hostSkills.has(skill)) throw new Error(`${label} result references unknown skill ${skill}`)
     if (skill === value.primary_skill) throw new Error(`${label} result repeats primary skill as modifier`)
   }
+  // An uncatalogued reference that exists in the staged skills is a valid load; compareResult scores only catalogued ones.
   const knownReferences = new Set(fixture.skill_references)
   for (const reference of value.references as string[]) {
-    if (!knownReferences.has(reference)) throw new Error(`${label} result references unknown reference ${reference}`)
+    if (!knownReferences.has(reference) && !existingReferences?.has(reference)) {
+      throw new Error(`${label} result references unknown reference ${reference}`)
+    }
   }
   const knownActions = new Set(enumValues(resultSchema, "actions"))
   for (const action of value.actions as string[]) {
@@ -938,7 +948,12 @@ export function parseLiveResult(
 }
 
 // Modifiers and references are unordered sets: neither the prompt nor the schema gives their order meaning.
-export function compareResult(routingCase: RoutingCase, result: RoutingResult, hostSkills: readonly string[] = []): string[] {
+export function compareResult(
+  routingCase: RoutingCase,
+  result: RoutingResult,
+  hostSkills: readonly string[] = [],
+  scoredReferences?: readonly string[],
+): string[] {
   const failures: string[] = []
   if (result.primary_skill !== routingCase.primary_skill) {
     failures.push(`primary_skill: expected ${routingCase.primary_skill}, got ${result.primary_skill}`)
@@ -951,7 +966,8 @@ export function compareResult(routingCase: RoutingCase, result: RoutingResult, h
     )
   }
   const optionalReferences = routingCase.optional_references ?? []
-  if (!sameMembers(result.references.filter(reference => !optionalReferences.includes(reference)), routingCase.expected_references)) {
+  const scored = result.references.filter(reference => !optionalReferences.includes(reference) && (!scoredReferences || scoredReferences.includes(reference)))
+  if (!sameMembers(scored, routingCase.expected_references)) {
     failures.push(
       `references: expected ${routingCase.expected_references.join(",")}, got ${result.references.join(",")}`,
     )
@@ -1241,8 +1257,8 @@ async function runLiveCase(
   const trace = parseTrace(stdout)
   trace.elapsed_ms = Math.round(performance.now() - started)
   try {
-    const result = parseLiveResult(trace.messages.at(-1)!, fixture, resultSchema)
-    return { result, failures: compareResult(routingCase, result, fixture.host_skills), trace, prompt_hash: sha256(prompt) }
+    const result = parseLiveResult(trace.messages.at(-1)!, fixture, resultSchema, "codex exec", await skillReferenceFiles(skillsRoot))
+    return { result, failures: compareResult(routingCase, result, fixture.host_skills, fixture.skill_references), trace, prompt_hash: sha256(prompt) }
   } catch (error) {
     return { result: null, failures: [error instanceof Error ? error.message : String(error)], trace, prompt_hash: sha256(prompt) }
   }
@@ -1274,8 +1290,8 @@ export async function runClaudeLiveCase(
     // The staged root differs per run; hash the prompt with it replaced so equal inputs hash equally.
     const evidence = { trace, prompt_hash: sha256(prompt.replaceAll(stageRoot, "<STAGED_SOURCE>")), instructions_file: instructions.path, instructions_hash: sha256(instructions.contents) }
     try {
-      const result = parseLiveResult(trace.messages.at(-1)!, fixture, resultSchema, "claude -p")
-      return { result, failures: compareResult(routingCase, result, fixture.host_skills), ...evidence }
+      const result = parseLiveResult(trace.messages.at(-1)!, fixture, resultSchema, "claude -p", await skillReferenceFiles(skillsRoot))
+      return { result, failures: compareResult(routingCase, result, fixture.host_skills, fixture.skill_references), ...evidence }
     } catch (error) {
       return { result: null, failures: [error instanceof Error ? error.message : String(error)], ...evidence }
     }

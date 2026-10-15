@@ -38,7 +38,6 @@ Design skills that route predictably, disclose relevant detail, and make complet
 - Read [DESCRIPTIONS.md](DESCRIPTIONS.md) when writing a description or when routing clarity is the main problem.
 - Read [EVALUATING-SKILLS.md](EVALUATING-SKILLS.md) when validating whether a skill improves agent behavior.
 - Read [SESSION-LESSONS.md](SESSION-LESSONS.md) when session evidence, recurring mistakes, or an explicit retrospective may justify a skill change.
-- Read [graphviz-conventions.dot](graphviz-conventions.dot) when a skill carries a Graphviz process diagram, and render the diagrams in its `SKILL.md` with [render-graphs.js](render-graphs.js), which writes SVGs to that skill's `diagrams/` directory, to check them.
 
 ## Failure modes
 

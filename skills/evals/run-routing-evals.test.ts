@@ -26,6 +26,7 @@ import {
   hasExactSkillInvocation,
   parseOpenAiPolicy,
   parseLiveResult,
+  skillReferenceFiles,
   parseSkillFrontmatter,
   readJson,
   validateFixtureTopLevel,
@@ -818,7 +819,7 @@ describe("invocation coverage and catalog stress", () => {
     } finally { await rm(root, { recursive: true, force: true }) }
   })
   test("reference schema accepts actual local reference paths", () => {
-    const pattern = (resultSchema as any).properties.references.items.pattern
+    const { pattern } = (resultSchema as { properties: { references: { items: { pattern: string } } } }).properties.references.items
     for (const reference of ["engineering/references/boundary-design.md", "designing-data-intensive-systems/FOUNDATIONS.md", "designing-data-intensive-systems/TRANSACTIONS.md", "effect-ts/references/BEST_PRACTICES/schema-patterns.md"]) {
       expect(new RegExp(pattern).test(reference)).toBe(true)
     }
@@ -1325,3 +1326,47 @@ function resultForCase(entry: RoutingCase): RoutingResult {
     ...Object.fromEntries(Object.entries(entry.expectations).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
   } as RoutingResult
 }
+
+describe("uncatalogued references", () => {
+  const routingCase: RoutingCase = {
+    id: "uncatalogued-reference",
+    prompt: "Synthetic request that loads a modifier reference outside the catalog.",
+    primary_skill: validResult.primary_skill,
+    expected_modifier_skills: [],
+    expected_references: [],
+    required_actions: [],
+    expectations: {
+      first_action: validResult.first_action,
+      mutation: validResult.mutation,
+      question: validResult.question,
+      stop: validResult.stop,
+    },
+  }
+
+  test("accepts an existing reference that the catalog does not list", async () => {
+    const existing = await skillReferenceFiles(join(import.meta.dir, ".."))
+    const result = { ...validResult, references: ["effect-ts/CLIENT_WRAPPERS.md"] }
+    expect(fixture.skill_references).not.toContain("effect-ts/CLIENT_WRAPPERS.md")
+    expect(parseLiveResult(JSON.stringify(result), fixture, resultSchema, "codex exec", existing)).toEqual(result)
+    expect(() => parseLiveResult(JSON.stringify(result), fixture, resultSchema)).toThrow("unknown reference")
+  })
+
+  test("rejects invented paths and skill entrypoints even with the existing files listed", async () => {
+    const existing = await skillReferenceFiles(join(import.meta.dir, ".."))
+    for (const reference of ["designing-data-intensive-systems/MISSING.md", "effect-ts/SKILL.md", "evals/README.md"]) {
+      const result = { ...validResult, references: [reference] }
+      expect(() => parseLiveResult(JSON.stringify(result), fixture, resultSchema, "codex exec", existing)).toThrow(
+        `codex exec result references unknown reference ${reference}`,
+      )
+    }
+  })
+
+  test("scores catalogued references and ignores uncatalogued ones", () => {
+    const uncatalogued = { ...validResult, references: ["effect-ts/CLIENT_WRAPPERS.md"] }
+    expect(compareResult(routingCase, uncatalogued, [], fixture.skill_references)).toEqual([])
+    const extra = { ...validResult, references: ["effect-ts/CLIENT_WRAPPERS.md", "engineering/references/proof.md"] }
+    expect(compareResult(routingCase, extra, [], fixture.skill_references)).toEqual([
+      "references: expected , got effect-ts/CLIENT_WRAPPERS.md,engineering/references/proof.md",
+    ])
+  })
+})

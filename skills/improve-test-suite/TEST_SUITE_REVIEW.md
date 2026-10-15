@@ -1,71 +1,39 @@
 # Test suite review
 
-Use this rubric to review a test suite and produce a practical cleanup and improvement plan.
-
 ## Review axes
 
-- behavior fit: do tests prove observable behavior through public interfaces
-- seam quality: do tests lock down the right contracts and boundaries
-- redundancy: are multiple tests proving the same thing at higher cost
-- brittleness: do tests fail on harmless refactors or internal renames
-- realism: what stays real versus fake or mocked
-- speed and signal: does the suite give fast trustworthy feedback
-- TDD fit: where a cheap failing test would make future changes safer
+- behavior fit: Do tests read like behavior specs and prove observable behavior through real code paths and public interfaces?
+- brittleness: Which tests would fail on a harmless internal refactor or rename?
+- seam quality: Do tests prove the contract, incident, or decision boundary where a real failure would matter? Which missing seam-level tests would let us delete broad or brittle coverage?
+- redundancy: Which tests prove the same behavior at several layers, or at higher cost, with no extra signal?
+- realism: What stays real versus faked or mocked, and where do mocks hide the real failure boundary?
+- fixture grounding: What grounds consequential fixtures and setup in real inputs, and which observation would reject a plausible broken implementation?
+- speed and signal: Does the suite give fast, trustworthy feedback?
+- TDD fit: Where would a cheap, trustworthy failing path or vertical-slice TDD make future changes and bug fixes safer and cheaper? TDD is optional for config churn and mechanical work.
 
-## Strong tests
-
-- exercise real code paths through public interfaces
-- read like behavior specs
-- survive internal refactors when behavior stays the same
-- prove a real seam, contract, incident, or decision boundary
-- make future bug-fix TDD easier by exposing a cheap trustworthy failing path
-
-## Weak tests
-
-- lie in one of the ways the test-lie catalog in [coding-standards.md](../review-and-simplify-changes/references/coding-standards.md) names: tautological, structure-sensitive, can't-fail, or private-path
-- duplicate broader coverage without adding new signal
-- are so slow or flaky that teams stop trusting them
-
-## Useful review questions
-
-- Which tests would fail on a harmless internal refactor
-- Which tests prove the same behavior at multiple layers with no extra signal
-- Where are mocks hiding the real failure boundary
-- What grounds consequential fixtures and setup in real inputs, and which observation would reject a plausible broken implementation
-- Which missing seam-level tests would let us delete broad or brittle coverage
-- Where would vertical-slice TDD make future bug fixes safer and cheaper
-
-## Keep or remove heuristics
+## Keep or remove
 
 Keep tests that:
 
 - protect user-visible behavior, incident regressions, or important contracts
 - prove the seam where a real failure would matter
-- stay stable across internal refactors
+- stay stable across internal refactors when behavior stays the same
 
 Remove, demote, or rewrite tests that:
 
-- lie per the test-lie catalog
+- lie in one of the ways the test-lie catalog in `../review-and-simplify-changes/references/coding-standards.md` names: tautological, structure-sensitive, can't-fail, or private-path
 - duplicate broader trustworthy coverage without new signal
+- are slow or flaky enough that teams stop trusting them
 - add maintenance cost without protecting a meaningful risk
 
-## Delegation fit
+Plan replacements seam by seam, naming each seam's payoff.
 
-For standalone audits, delegate bounded, read-only tracks when independent subsystems or test layers benefit from separate context; small or tightly coupled audits may stay local. Checks assigned through `review-and-simplify-changes` retain its required independent reviewers, who return findings without further delegation.
+## Delegation tracks
 
-Useful subagent tracks include:
+Useful read-only subagent tracks for a standalone audit:
 
 - frontend or backend test-surface audit
 - integration and contract test review
 - end-to-end suite signal and redundancy review
 - mock and fixture inventory
 - incident-regression audit
-
-Keep main-thread ownership of synthesis, prioritization, and the final plan. Use phases only when dependencies or rollout require them.
-
-## Avoid these outcomes
-
-- “more tests = better” reasoning
-- giant replacement plans with no seam-by-seam payoff
-- deleting tests without mapping what risk they currently cover
-- treating TDD as mandatory for config churn or mechanical work

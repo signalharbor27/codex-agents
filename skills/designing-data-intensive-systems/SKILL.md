@@ -32,7 +32,7 @@ Apply these domain constraints within the primary engineering or review skill. S
 - Read [FOUNDATIONS.md](FOUNDATIONS.md) when the decision turns on data models, storage engines, encoding and schema evolution, or reliability, scalability, and maintainability tradeoffs.
 - Read [PARTITIONING.md](PARTITIONING.md) when shard-key choice, hot-spot risk, secondary indexes, routing, or rebalancing dominate the design.
 - Read [REPLICATION.md](REPLICATION.md) when failover, replica lag, read scaling, write topology, conflict resolution, or consistency between copies is central.
-- Read [TRANSACTIONS.md](TRANSACTIONS.md) when isolation anomalies, ACID semantics, deadlocks, serializability, or distributed transactions are in question.
+- Read [TRANSACTIONS.md](TRANSACTIONS.md) when concurrent writers, lost updates, multi-step writes or migrations that must stay atomic, isolation anomalies, ACID semantics, deadlocks, serializability, or distributed transactions are in question.
 - Read [STREAM.md](STREAM.md) when event flow, CDC, event sourcing, low-latency processing, or exactly-once and replay claims drive the design.
 - Read [BATCH.md](BATCH.md) when bounded recomputation, offline pipelines, large joins, or the relative simplicity of batch processing drive the design.
 - Read [DISTRIBUTED.md](DISTRIBUTED.md) when partial failures, clocks, coordination, consensus, or CAP-style tradeoffs dominate.
