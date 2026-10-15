@@ -90,7 +90,7 @@ These rules cover replies to Q.
 
 - Support completion claims with the required checks, run against the current code and relevant state. Reuse earlier results only when their inputs are unchanged.
 - Before declaring implementation complete or making an intended commit, finish `review-and-simplify-changes` on the intended diff, including small changes and subsequent fixes. Only independent subagent review satisfies this gate. When unrelated dirty files block the review record, write it from a clean detached worktree of the reviewed commit; report it skipped only if that fails.
-- Never add or keep a tautological test. Each test you add or change takes its expected value from an independent oracle (the requirement, a spec, a hand-computed value, or a published contract) and fails on a plausible broken implementation. A test whose expected value comes from the code under test, restates a constant, or still passes with the behavior removed is a defect; fix it before handoff. The Test lies section of `review-and-simplify-changes`'s coding standards lists the cases and the published-contract exception.
+- Never add a tautological test, and fix any in a test you add or change. Each test you add or change takes its expected value from an independent oracle (the requirement, a spec, a hand-computed value, or a published contract) and fails on a plausible broken implementation. A test whose expected value comes from the code under test, restates a constant, or still passes with the behavior removed is a defect; fix it before handoff. The Test lies section of `review-and-simplify-changes`'s coding standards lists the cases and the published-contract exception.
 
 # Defaults
 
