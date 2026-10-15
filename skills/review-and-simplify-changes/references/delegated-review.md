@@ -21,7 +21,7 @@ For the large-change lane, brief one `design_reviewer` for `improve-codebase-arc
 
 Choose risk tracks from changed behavior and contracts. Directory names or display wording alone do not create financial or security review work. A task explicitly limited to mechanical evidence or command execution uses its corresponding role and does not establish substantive review coverage.
 
-Launch each role as its brief (`~/.agents/briefs/<role>.md`) describes, with a fresh or bounded assignment, so its model family and effort apply. If the role's model is unavailable, follow the global instructions' unavailable-model rule: no other model substitutes, Oracle is not a fallback, and the seat's coverage is blocked; `design_reviewer` never runs on a GPT model. Report blocked coverage if no suitable reviewer is available; main-agent review cannot close it.
+Launch each role as its brief (`~/.agents/briefs/<role>.md`) describes, with a fresh or bounded assignment, so its model family and effort apply. If the role's model is unavailable, follow the unavailable-model rule in that brief: no other model substitutes, Oracle is not a fallback, and the seat's coverage is blocked; `design_reviewer` never runs on a GPT model. Report blocked coverage if no suitable reviewer is available; main-agent review cannot close it.
 
 ## Run the `oracle` and `judge` pass
 

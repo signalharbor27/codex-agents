@@ -2,6 +2,8 @@
 
 Installed unmodified and hidden from automatic routing. When a pressure below is present, read the installed `<name>` skill's SKILL.md by path (`~/.agents/skills/<name>/SKILL.md`) and apply its method inside the current skill's workflow. Our skills own the workflow and our instructions win on conflict: authority, approval, scope, and Git rules never loosen because an external skill says so.
 
+When a skill names Cursor `Task`, `subagent_type`, or `pstack-models.mdc`, read `~/.agents/third-party-skills.md`.
+
 ## Engineering
 
 - Non-trivial edits, migrations, or analyses a script, codemod, or generator could do or prove: `principle-build-the-lever`

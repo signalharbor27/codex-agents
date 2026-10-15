@@ -154,6 +154,8 @@ export function renderBriefs(roles: Record<string, Role>, instructions: Map<stri
       ...seats,
       "",
       `Every \`delegate_task\` call passes \`runtimeMode: "${modes.runtimeMode}"\` and \`interactionMode: "${modes.interactionMode}"\`.`,
+      "After each launch, read `t3_thread_configuration` for the child. If its model, effort option, runtime mode, or interaction mode differs from this brief, cancel it with `task_cancel` and relaunch once; report a second mismatch instead of retrying.",
+      "Launch exactly the model named here. If the provider reports it unavailable, recheck `orchestrator_capabilities` and retry once when it is listed; otherwise report a blocked seat and try this model again at the next launch.",
       "A delegated child starts with everything below the line, followed by the assignment.",
       "",
       "---",
@@ -170,53 +172,49 @@ export function renderBriefs(roles: Record<string, Role>, instructions: Map<stri
 /** Where --install links the briefs, so both hosts read them at one path. */
 export const briefsHome = "~/.agents/briefs"
 
-/** How each provider's seats are launched, included into AGENTS.md and CLAUDE.md as `<!-- include:providers.md -->`. */
-export function renderProviderTable(): string {
-  return (["claude", "codex"] as const).map(provider => {
-    const prefix = provider === "claude" ? "claude-*" : "gpt-*"
-    return `- \`${prefix}\` models run natively in ${hostName[provider]}; from ${otherHost(provider)}, \`delegate_task\` uses provider instance \`${providerInstance[provider]}\` and effort option \`${effortOption[provider]}\`.`
-  }).join("\n") + "\n"
-}
-
-/** The role table included into AGENTS.md and CLAUDE.md as `<!-- include:roles.md -->`. */
+/** The role table included into AGENTS.md and CLAUDE.md as `<!-- include:roles.md -->`; seats live in the briefs, so the always-loaded table stays model-free. */
 export function renderRoleTable(roles: Record<string, Role>): string {
-  return Object.entries(roles).map(([name, role]) => {
-    const seats = role.seats.map(seatLabel).join(" + ")
-    return `- \`${name}\` (${role.authority}): ${seats}. Brief: \`${briefsHome}/${name}.md\`.`
-  }).join("\n") + "\n"
+  return Object.entries(roles).map(([name, role]) => `- \`${name}\` (${role.authority}): \`${briefsHome}/${name}.md\`.`).join("\n") + "\n"
 }
 
-/** pstack's per-role model lines, mapped onto our roles' seats. A slug is `<model>-<effort>`; global instructions say how to split it. */
-const pstackLines: [line: string, seats: (roles: Record<string, Role>) => Seat[]][] = [
-  ["feature, refactoring", r => r.implementer!.seats],
-  ["bug-fix", r => r.implementer!.seats],
-  ["perf-issue", r => r.implementer!.seats],
-  ["hillclimb", r => r.implementer!.seats],
-  ["judgment and prose", r => r.implementer!.seats],
-  ["hardest tasks", r => r.architect!.seats.filter(seat => seat.provider === "claude")],
-  ["how explorer", r => r.explorer!.seats],
-  ["how explainer", r => r.judge!.seats],
-  ["why investigators", r => r.explorer!.seats],
-  ["why synthesizer", r => r.judge!.seats],
-  ["reflect tooling", r => r.explorer!.seats],
-  ["reflect judgment, divergent, synthesizer", r => r.judge!.seats],
-  ["arena runners", r => r.architect!.seats],
-  ["arena cross-judge pool", r => r.judge!.seats],
-  ["swarm workers", r => r.explorer!.seats],
-  ["architect runners", r => r.architect!.seats],
-  ["interrogate reviewers", r => [...r.reviewer!.seats, ...r.design_reviewer!.seats]],
+/** pstack's per-role model lines, each mapped onto the seats of the roles it launches through, optionally narrowed to one provider's seat. */
+const pstackLines: [line: string, picks: [role: string, provider?: Provider][]][] = [
+  ["feature, refactoring", [["implementer"]]],
+  ["bug-fix", [["implementer"]]],
+  ["perf-issue", [["implementer"]]],
+  ["hillclimb", [["implementer"]]],
+  ["judgment and prose", [["implementer"]]],
+  ["hardest tasks", [["architect", "claude"]]],
+  ["how explorer", [["explorer"]]],
+  ["how explainer", [["judge"]]],
+  ["why investigators", [["explorer"]]],
+  ["why synthesizer", [["judge"]]],
+  ["reflect tooling", [["explorer"]]],
+  ["reflect judgment, divergent, synthesizer", [["judge"]]],
+  ["arena runners", [["architect"]]],
+  ["arena cross-judge pool", [["judge"]]],
+  ["swarm workers", [["explorer"]]],
+  ["architect runners", [["architect"]]],
+  ["interrogate reviewers", [["reviewer"], ["design_reviewer"]]],
 ]
 
-/** The model rule pstack's skills read from ~/.cursor/rules/pstack-models.mdc, generated so they run on our seats. */
+/** The model rule pstack's skills read from ~/.cursor/rules/pstack-models.mdc, generated so they run on our seats. A value is `<model>-<effort>` slugs followed by the role whose brief launches them. */
 export function renderPstackModels(roles: Record<string, Role>): string {
+  const pick = ([name, provider]: [string, Provider?]) => {
+    const role = roles[name]
+    if (!role) throw new Error(`pstack-models: no role ${name} in roles/roles.ts`)
+    const seats = role.seats.filter(seat => !provider || seat.provider === provider)
+    if (!seats.length) throw new Error(`pstack-models: ${name} has no ${provider} seat`)
+    return `${seats.map(seat => `${seat.model}-${seat.effort}`).join(", ")} (${name})`
+  }
   return [
     "---",
     "description: pstack per-role model choices (overrides skill defaults)",
     "alwaysApply: true",
     "---",
-    "# Generated from roles/roles.ts by scripts/generate-hosts.ts. Each value is `<model>-<effort>`;",
-    "# launch it on the provider that runs the model, per Q's global instructions.",
-    ...pstackLines.map(([line, seats]) => `${line}: ${seats(roles).map(seat => `${seat.model}-${seat.effort}`).join(", ")}`),
+    "# Generated from roles/roles.ts by scripts/generate-hosts.ts. Each value lists `<model>-<effort>` slugs and, in parentheses, the role that runs them;",
+    `# launch each call through the brief of the role its function maps to (${briefsHome}/<role>.md), per ~/.agents/third-party-skills.md.`,
+    ...pstackLines.map(([line, picks]) => `${line}: ${picks.map(pick).join(", ")}`),
     "",
   ].join("\n")
 }
@@ -231,7 +229,7 @@ function readRoleInstructions(repo: string): Map<string, string> {
 export function buildArtifacts(repo: string, roles = registry): Map<string, string> {
   const dir = join(repo, "instructions")
   const roleInstructions = readRoleInstructions(repo)
-  const generated: Record<string, () => string> = { "roles.md": () => renderRoleTable(roles), "providers.md": renderProviderTable }
+  const generated: Record<string, () => string> = { "roles.md": () => renderRoleTable(roles) }
   const readInclude = (name: string) => generated[name]?.() ?? readFileSync(join(dir, name), "utf8")
   const global = readFileSync(join(dir, "global.md"), "utf8")
   const style = [
@@ -317,6 +315,7 @@ function links(repo: string, home: string, codexHome = join(home, ".codex")): Li
     { path: join(home, ".claude/agents"), target: join(repo, "claude/agents") },
     { path: join(home, ".agents/briefs"), target: join(repo, "briefs") },
     { path: join(home, ".cursor/rules/pstack-models.mdc"), target: join(repo, "external/pstack-models.mdc") },
+    { path: join(home, ".agents/third-party-skills.md"), target: join(repo, "instructions/third-party-skills.md") },
     { path: join(home, ".claude/output-styles/q.md"), target: join(repo, "claude/output-styles/q.md") },
     ...hookFiles(repo).map(f => ({ path: join(home, ".claude/hooks", f), target: join(repo, "claude/hooks", f) })),
     { path: join(home, ".claude/skills/review-agent"), target: join(codexHome, "skills/.system/review-agent"), optional: true },

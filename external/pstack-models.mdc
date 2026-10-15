@@ -2,22 +2,22 @@
 description: pstack per-role model choices (overrides skill defaults)
 alwaysApply: true
 ---
-# Generated from roles/roles.ts by scripts/generate-hosts.ts. Each value is `<model>-<effort>`;
-# launch it on the provider that runs the model, per Q's global instructions.
-feature, refactoring: claude-opus-5-5-medium
-bug-fix: claude-opus-5-5-medium
-perf-issue: claude-opus-5-5-medium
-hillclimb: claude-opus-5-5-medium
-judgment and prose: claude-opus-5-5-medium
-hardest tasks: claude-opus-5-5-high
-how explorer: gpt-6.1-sol-medium
-how explainer: gpt-6.1-sol-high
-why investigators: gpt-6.1-sol-medium
-why synthesizer: gpt-6.1-sol-high
-reflect tooling: gpt-6.1-sol-medium
-reflect judgment, divergent, synthesizer: gpt-6.1-sol-high
-arena runners: claude-opus-5-5-high, gpt-6-astra-high
-arena cross-judge pool: gpt-6.1-sol-high
-swarm workers: gpt-6.1-sol-medium
-architect runners: claude-opus-5-5-high, gpt-6-astra-high
-interrogate reviewers: gpt-6.1-sol-high, claude-opus-5-5-medium
+# Generated from roles/roles.ts by scripts/generate-hosts.ts. Each value lists `<model>-<effort>` slugs and, in parentheses, the role that runs them;
+# launch each call through the brief of the role its function maps to (~/.agents/briefs/<role>.md), per ~/.agents/third-party-skills.md.
+feature, refactoring: claude-opus-5-5-medium (implementer)
+bug-fix: claude-opus-5-5-medium (implementer)
+perf-issue: claude-opus-5-5-medium (implementer)
+hillclimb: claude-opus-5-5-medium (implementer)
+judgment and prose: claude-opus-5-5-medium (implementer)
+hardest tasks: claude-opus-5-5-high (architect)
+how explorer: gpt-6.1-sol-medium (explorer)
+how explainer: gpt-6.1-sol-high (judge)
+why investigators: gpt-6.1-sol-medium (explorer)
+why synthesizer: gpt-6.1-sol-high (judge)
+reflect tooling: gpt-6.1-sol-medium (explorer)
+reflect judgment, divergent, synthesizer: gpt-6.1-sol-high (judge)
+arena runners: claude-opus-5-5-high, gpt-6-astra-high (architect)
+arena cross-judge pool: gpt-6.1-sol-high (judge)
+swarm workers: gpt-6.1-sol-medium (explorer)
+architect runners: claude-opus-5-5-high, gpt-6-astra-high (architect)
+interrogate reviewers: gpt-6.1-sol-high (reviewer), claude-opus-5-5-medium (design_reviewer)

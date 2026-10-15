@@ -82,7 +82,7 @@ describe("role rendering", () => {
     expect(brief).toContain('`{"providerInstanceId":"codex","model":"sol","options":{"reasoningEffort":"high"}}`')
     expect(brief).toContain('`runtimeMode: "full-access"` and `interactionMode: "plan"`')
     expect(brief).toEndWith(`---\n\nYou are the \`a\` subagent. Use "quoted" text\n\nUse grep_app.\n\nLoad these skills before work: \`review-agent\`.\n\n${toolNotes.grep_app}\n`)
-    expect(renderRoleTable({ a: role })).toBe("- `a` (read-only): opus at medium + sol at high. Brief: `~/.agents/briefs/a.md`.\n")
+    expect(renderRoleTable({ a: role })).toBe("- `a` (read-only): `~/.agents/briefs/a.md`.\n")
   })
 
   test("every registry role runs delegated children with full access, and read-only roles in plan mode", () => {
@@ -96,6 +96,33 @@ describe("role rendering", () => {
     }
   })
 
+  test("every registry brief tells the launcher, not the child, to check the launch and the model's availability", () => {
+    const artifacts = buildArtifacts(repoRoot)
+    const launcherTools = ["t3_thread_configuration", "task_cancel", "orchestrator_capabilities"]
+    for (const name of Object.keys(registry)) {
+      const [launcherPart, ...rest] = artifacts.get(`briefs/${name}.md`)!.split("\n---\n")
+      const childPart = rest.join("\n---\n")
+      expect(childPart.length, name).toBeGreaterThan(0)
+      for (const tool of launcherTools) {
+        expect(launcherPart, `${name} ${tool}`).toContain(`\`${tool}\``)
+        expect(childPart, `${name} ${tool}`).not.toContain(tool)
+      }
+    }
+  })
+
+  test("always-loaded instructions name no role model; each brief names its role's seat models", () => {
+    const artifacts = buildArtifacts(repoRoot)
+    const models = [...new Set(Object.values(registry).flatMap(r => r.seats.map(seat => seat.model)))]
+    expect(models.length).toBeGreaterThan(0)
+    for (const path of ["AGENTS.md", "claude/CLAUDE.md"]) {
+      for (const model of models) expect(artifacts.get(path)!, `${path} ${model}`).not.toContain(model)
+    }
+    for (const [name, r] of Object.entries(registry)) {
+      const launcherPart = artifacts.get(`briefs/${name}.md`)!.split("\n---\n")[0]!
+      for (const seat of r.seats) expect(launcherPart, `${name} ${seat.model}`).toContain(seat.model)
+    }
+  })
+
   test("fails on a role without instructions, instructions without a role, and two seats on one provider", () => {
     expect(() => renderBriefs({ a: role, b: role }, instructions)).toThrow("no roles/b.md for b")
     expect(() => renderBriefs({}, instructions)).toThrow("no role in roles/roles.ts for a.md")
@@ -103,18 +130,37 @@ describe("role rendering", () => {
     expect(() => renderBriefs({ a: role }, new Map([["a", "say '''"]]))).toThrow("must not contain '''")
   })
 
-  test("pstack model lines name each mapped seat as <model>-<effort>", () => {
+  test("pstack model lines name each mapped seat as <model>-<effort> and the role whose brief launches it", () => {
     const rule = renderPstackModels(registry)
     expect(rule).toStartWith("---\ndescription: pstack per-role model choices (overrides skill defaults)\nalwaysApply: true\n---\n")
-    expect(rule).toContain("\narena runners: claude-opus-5-5-high, gpt-6-astra-high\n")
-    expect(rule).toContain("\ninterrogate reviewers: gpt-6.1-sol-high, claude-opus-5-5-medium\n")
-    expect(rule).toContain("\nfeature, refactoring: claude-opus-5-5-medium\n")
+    expect(rule).toContain("~/.agents/briefs/<role>.md")
+    expect(rule).toContain("\narena runners: claude-opus-5-5-high, gpt-6-astra-high (architect)\n")
+    expect(rule).toContain("\ninterrogate reviewers: gpt-6.1-sol-high (reviewer), claude-opus-5-5-medium (design_reviewer)\n")
+    expect(rule).toContain("\nfeature, refactoring: claude-opus-5-5-medium (implementer)\n")
+    const lines = rule.split("\n").filter(line => /^[a-z].*: /.test(line) && !line.startsWith("description:") && !line.startsWith("alwaysApply:"))
+    expect(lines.length).toBeGreaterThan(0)
+    for (const line of lines) {
+      const groups = [...line.slice(line.indexOf(": ") + 2).matchAll(/([^()]+?) \((\w+)\)(?:, |$)/g)]
+      expect(groups.map(g => g[0]).join(""), line).toBe(line.slice(line.indexOf(": ") + 2))
+      for (const [, slugs, name] of groups) {
+        const seats = registry[name!]?.seats.map(seat => `${seat.model}-${seat.effort}`)
+        expect(seats, `${line}: ${name}`).toBeDefined()
+        for (const slug of slugs!.split(", ")) expect(seats, `${line}: ${slug}`).toContain(slug)
+      }
+    }
   })
 
-  test("the checked-in role table includes every registry role", () => {
+  test("the checked-in role table lists every registry role with its authority and brief path, and no seat model", () => {
+    const models = Object.values(registry).flatMap(r => r.seats.map(seat => seat.model))
     for (const path of ["AGENTS.md", "claude/CLAUDE.md"]) {
-      const checkedIn = readFileSync(join(repoRoot, path), "utf8")
-      for (const line of renderRoleTable(registry).trimEnd().split("\n")) expect(checkedIn, path).toContain(`${line}\n`)
+      const lines = readFileSync(join(repoRoot, path), "utf8").split("\n")
+      for (const [name, r] of Object.entries(registry)) {
+        const line = lines.find(l => l.startsWith(`- \`${name}\` (`))
+        expect(line, `${path} ${name}`).toBeDefined()
+        expect(line, `${path} ${name}`).toContain(`(${r.authority})`)
+        expect(line, `${path} ${name}`).toContain(`\`~/.agents/briefs/${name}.md\``)
+        for (const model of models) expect(line, `${path} ${name} ${model}`).not.toContain(model)
+      }
     }
   })
 })
@@ -288,6 +334,7 @@ describe("generator subprocess", () => {
       [".claude/agents", join(repo, "claude/agents")],
       [".agents/briefs", join(repo, "briefs")],
       [".cursor/rules/pstack-models.mdc", join(repo, "external/pstack-models.mdc")],
+      [".agents/third-party-skills.md", join(repo, "instructions/third-party-skills.md")],
       [".claude/output-styles/q.md", join(repo, "claude/output-styles/q.md")],
       ...hookFiles(repo).map(f => [`.claude/hooks/${f}`, join(repo, "claude/hooks", f)]),
       [".claude/skills/review-agent", join(home, ".codex/skills/.system/review-agent")],
@@ -348,7 +395,9 @@ describe("generator subprocess", () => {
 
     rmSync(join(home, ".claude/hooks/reply-guard.ts"))
     rmSync(join(home, ".claude/hooks/destructive-guard.ts"))
+    rmSync(join(home, ".agents/third-party-skills.md"))
     const noHook = await run(repo, "--check-installed", "--home", home)
+    expect(noHook.stderr).toContain(`link: ${join(home, ".agents/third-party-skills.md")} should point to ${join(repo, "instructions/third-party-skills.md")}`)
     expect(noHook.stderr).toContain(`link: ${join(home, ".claude/hooks/reply-guard.ts")} should point to`)
     expect(noHook.stderr).toContain(`hook: Stop script is missing: ${join(home, ".claude/hooks/reply-guard.ts")}`)
     expect(noHook.stderr).toContain(`hook: PreToolUse script is missing: ${join(home, ".claude/hooks/destructive-guard.ts")}`)
