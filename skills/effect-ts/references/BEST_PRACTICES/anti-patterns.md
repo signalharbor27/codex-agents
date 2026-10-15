@@ -1,6 +1,6 @@
 # Effect boundary review guide
 
-Treat these as strong defaults for Effect-native application code, not universal bans. Follow current official Effect documentation and established repo conventions. Apply each warning only at the boundary named in its heading. Interoperability, bootstrap, test, and intentionally unrecoverable paths may warrant exceptions.
+Treat these as strong defaults for Effect-native application code, not universal bans. Current official Effect documentation and established repo conventions take precedence. Apply each warning only at the boundary named in its heading. Interoperability, bootstrap, test, and intentionally unrecoverable paths may warrant exceptions.
 
 ## Avoid running Effects inside Effect-native services
 
@@ -17,9 +17,9 @@ export class UserService extends Effect.Service<UserService>()("UserService", {
 }) {}
 ```
 
-**Why:** This breaks Effect's composition model, bypasses error handling, cannot be tested, and loses tracing.
+Why: This breaks Effect's composition model, bypasses error handling, cannot be tested, and loses tracing.
 
-**Correct:**
+Correct:
 ```typescript
 const findById = Effect.fn("UserService.findById")(function* (id: UserId) {
     return yield* repo.findById(id)
@@ -38,9 +38,9 @@ yield* Effect.gen(function* () {
 })
 ```
 
-**Why:** Throws bypass Effect's error channel, cannot be caught with `catchTag`, and weaken type safety.
+Why: Throws bypass Effect's error channel, cannot be caught with `catchTag`, and weaken type safety.
 
-**Correct:**
+Correct:
 ```typescript
 yield* Effect.gen(function* () {
     const user = yield* repo.findById(id)
@@ -61,9 +61,9 @@ yield* someEffect.pipe(
 )
 ```
 
-**Why:** Loses specific error information, makes debugging harder, prevents specific error handling downstream.
+Why: Loses specific error information, makes debugging harder, prevents specific error handling downstream.
 
-**Correct:**
+Correct:
 ```typescript
 yield* someEffect.pipe(
     Effect.catchTags({
@@ -80,9 +80,9 @@ const data = someValue as any
 const result = (await fetch(url)) as unknown as MyType
 ```
 
-**Why:** Completely bypasses type safety, can cause runtime errors, loses Effect's type guarantees.
+Why: Completely bypasses type safety, can cause runtime errors, loses Effect's type guarantees.
 
-**Correct:**
+Correct:
 ```typescript
 // Use Schema for parsing unknown data
 const result = yield* Schema.decodeUnknown(MyType)(someValue)
@@ -107,9 +107,9 @@ export class UserService extends Effect.Service<UserService>()("UserService", {
 }) {}
 ```
 
-**Why:** Loses Effect's error handling, can't compose with other Effects, loses tracing/metrics.
+Why: Loses Effect's error handling, can't compose with other Effects, loses tracing/metrics.
 
-**Correct:**
+Correct:
 ```typescript
 const findById = Effect.fn("UserService.findById")(
     function* (id: UserId): Effect.Effect<User, UserNotFoundError> {
@@ -125,9 +125,9 @@ console.log("Processing order:", orderId)
 console.error("Error:", error)
 ```
 
-**Why:** Not structured, not captured by Effect's logging system, lost in production telemetry.
+Why: Not structured, not captured by Effect's logging system, lost in production telemetry.
 
-**Correct:**
+Correct:
 ```typescript
 yield* Effect.log("Processing order", { orderId })
 yield* Effect.logError("Operation failed", { error: String(error) })
@@ -140,9 +140,9 @@ const apiKey = process.env.API_KEY
 const port = parseInt(process.env.PORT || "3000")
 ```
 
-**Why:** No validation, no type safety, fails silently if missing, hard to test.
+Why: No validation, no type safety, fails silently if missing, hard to test.
 
-**Correct:**
+Correct:
 ```typescript
 const config = yield* Config.all({
     apiKey: Config.redacted("API_KEY"),
@@ -159,9 +159,9 @@ const secretConfig = Config.all({
 })
 ```
 
-**Why:** `Config.secret` is deprecated. Use `Config.redacted` instead, which provides the same functionality with better naming and can wrap any config type.
+Why: `Config.secret` is deprecated. Use `Config.redacted` instead, which provides the same functionality with better naming and can wrap any config type.
 
-**Correct:**
+Correct:
 ```typescript
 import { Config, Redacted } from "effect"
 
@@ -191,9 +191,9 @@ type User = {
 }
 ```
 
-**Why:** Null/undefined handling is error-prone, loses the explicit "absence" semantics.
+Why: Null/undefined handling is error-prone, loses the explicit "absence" semantics.
 
-**Correct:**
+Correct:
 ```typescript
 const User = Schema.Struct({
     name: Schema.String,
@@ -209,9 +209,9 @@ const user = Option.getOrThrow(maybeUser)
 const name = pipe(maybeName, Option.getOrThrow)
 ```
 
-**Why:** Throws exceptions, bypasses Effect's error handling, fails at runtime instead of compile time.
+Why: Throws exceptions, bypasses Effect's error handling, fails at runtime instead of compile time.
 
-**Correct:**
+Correct:
 ```typescript
 // Handle both cases explicitly
 yield* Option.match(maybeUser, {
@@ -228,7 +228,7 @@ const upperName = Option.map(maybeName, (n) => n.toUpperCase())
 
 ## Choose the service abstraction by repo convention
 
-Keep established `Context.Tag` composition, low-level capabilities, and boundaries that intentionally avoid generated accessors. For a new business service, prefer `Effect.Service` when its generated layer and accessors reduce wiring, as described in [service patterns](service-patterns.md).
+The "Effect.Service versus Context.Tag" section of `service-patterns.md` decides between `Context.Tag` and `Effect.Service`.
 
 ```typescript
 export class UserService extends Context.Tag("UserService")<
@@ -256,14 +256,14 @@ export class UserService extends Effect.Service<UserService>()("UserService", {
 yield* someEffect.pipe(Effect.orDie)
 ```
 
-**Why:** Converts recoverable errors to defects (unrecoverable), loses error information.
+Why: Converts recoverable errors to defects (unrecoverable), loses error information.
 
-**Acceptable exceptions:**
+Acceptable exceptions:
 - Truly unrecoverable situations (invalid program state)
 - After exhausting all recovery options
 - In test setup code
 
-**Correct:**
+Correct:
 ```typescript
 // Handle errors explicitly
 yield* someEffect.pipe(
@@ -281,9 +281,9 @@ yield* effect.pipe(
 )
 ```
 
-**Why:** Loses error type information, can't discriminate between error types.
+Why: Loses error type information, can't discriminate between error types.
 
-**Correct:**
+Correct:
 ```typescript
 yield* effect.pipe(
     Effect.catchTag("SpecificError", (err) =>
@@ -303,9 +303,9 @@ const result = await someEffect.pipe(
 })
 ```
 
-**Why:** Loses Effect composition benefits, error handling becomes inconsistent.
+Why: Loses Effect composition benefits, error handling becomes inconsistent.
 
-**Correct:**
+Correct:
 ```typescript
 const program = Effect.gen(function* () {
     const data = yield* someEffect
@@ -322,9 +322,9 @@ let counter = 0
 const increment = Effect.sync(() => { counter++ })
 ```
 
-**Why:** Race conditions, not testable, not composable, breaks referential transparency.
+Why: Race conditions, not testable, not composable, breaks referential transparency.
 
-**Correct:**
+Correct:
 ```typescript
 const program = Effect.gen(function* () {
     const counter = yield* Ref.make(0)
@@ -340,9 +340,9 @@ const now = new Date()
 const timestamp = Date.now()
 ```
 
-**Why:** Not testable, introduces non-determinism, hard to mock in tests.
+Why: Not testable, introduces non-determinism, hard to mock in tests.
 
-**Correct:**
+Correct:
 ```typescript
 import { Clock } from "effect"
 

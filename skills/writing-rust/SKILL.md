@@ -7,38 +7,35 @@ description: "Use when Rust ownership, borrowing, traits, error types, async, pu
 
 ## Overview
 
-Apply this modifier when Rust's ownership, type, error, async, or unsafe rules materially constrain the design. Keep generic implementation work in the primary skill and load only the Rust reference needed for the current pressure.
+This skill is a modifier. Generic implementation work stays in the primary skill, and each run loads only the Rust reference for the current pressure.
 
 ## When to Use
 
-- Ownership and borrowing affect the API or implementation
 - Trait, generic, or typestate design is the main question
-- Error surfaces, docs, async, or unsafe boundaries need Rust-specific judgment
 
 ## When Not to Use
 
-- Use `engineering` as the primary skill for generic implementation structure
-- Use `test-design` when test selection is the primary task
-- Use `designing-data-intensive-systems` for workload or storage architecture
+- Generic implementation structure: use `engineering` as the primary skill.
+- Test selection as the primary task: use `test-design`.
+- Workload or storage architecture: use `designing-data-intensive-systems`.
 
 ## Minimal Workflow
 
-1. Inspect the current API, call sites, owned and borrowed data, error surface, and repository conventions.
-2. State the Rust-specific pressure: ownership, lifetime coupling, trait shape, state modeling, async behavior, or an unsafe boundary.
-3. Compare safe shapes that keep the invariants explicit, then prefer the one with the simplest ownership story.
-4. Make soundness, ergonomics, and API-stability tradeoffs explicit where they differ.
-5. For guidance or review, finish with the recommended API or ownership shape, the material tradeoffs, and the compiler, test, doctest, or lint evidence needed.
-6. During implementation, apply these Rust constraints as a modifier inside the primary `engineering` loop and use its fresh-verification stop condition.
+1. Inspect the current API, call sites, owned and borrowed data, error surface, and repository conventions. Done when every call site and owner the change affects is known.
+2. State the Rust-specific pressure: ownership, lifetime coupling, trait shape, state modeling, async behavior, or an unsafe boundary. Done when the pressure is tied to a named type, function, or module boundary.
+3. Compare safe shapes that keep the invariants explicit, state where their soundness, ergonomics, and API-stability tradeoffs differ, then prefer the one with the simplest ownership story. Done when the chosen shape is justified against at least one alternative.
+4. For guidance or review, finish with the recommended API or ownership shape, the material tradeoffs, and the compiler, test, doctest, or lint evidence needed.
+5. During implementation, apply these Rust constraints as a modifier inside the primary `engineering` loop and use its fresh-verification stop condition.
 
 ## Reference Routing
 
-- Read [STYLE.md](STYLE.md) for naming, visibility, and docs.
-- Read [PATTERNS.md](PATTERNS.md) for traits, builders, typestate, and wrapper patterns.
-- Read [DOCS.md](DOCS.md) for docs and doctests.
+- Read [STYLE.md](STYLE.md) when the question is code shape: control flow, matching, naming, comments, error propagation, or review-level idioms.
+- Read [PATTERNS.md](PATTERNS.md) when the main decision is type shape, ownership, trait implementations, builders, newtypes, state enums, module visibility, or impl organization.
+- Read [DOCS.md](DOCS.md) when touching public APIs, crate or module docs, examples, or `# Errors` / `# Panics` / `# Safety` sections.
 - Read [SSR.md](SSR.md) when a Rust refactor spans many sites and rust-analyzer structural search and replace is safer than manual edits.
 
 ## Failure modes
 
 - Importing patterns from other languages without Rust-specific justification
-- Hiding lifetime or ownership coupling behind “ergonomic” APIs
+- Hiding lifetime or ownership coupling behind "ergonomic" APIs
 - Letting `unsafe` sprawl across module boundaries

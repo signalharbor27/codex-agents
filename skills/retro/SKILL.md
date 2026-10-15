@@ -1,6 +1,6 @@
 ---
 name: retro
-description: "Use when the user explicitly asks for a retrospective on agent sessions or PR reviews to find environment fixes such as checks, hooks, standards, pointers, access, or pruning. Not for reviewing a code diff."
+description: "Use when the user explicitly asks for a retrospective on agent sessions or PR reviews to find environment fixes. Excludes reviewing a code diff."
 disable-model-invocation: true
 ---
 
@@ -8,21 +8,31 @@ disable-model-invocation: true
 
 ## Overview
 
-A retrospective turns evidence from past sessions and PR reviews into changes to the agent **environment**: checks, hooks, coding standards, navigation pointers, information access, tooling, and always-loaded instructions. It is not a review of product code. The output is a ranked list of candidate fixes, each with evidence and an owner. Zero lessons is a valid result.
+A retrospective turns evidence from past sessions and PR reviews into changes to the agent environment: checks, hooks, coding standards, navigation pointers, information access, tooling, and always-loaded instructions. The output is a ranked list of candidate fixes, each with evidence and an owner. Zero lessons is a valid result.
 
 Work is read-only: reading logs and PR data and writing digests and the report outside the repositories. Implementing candidates needs the user's authorization for the specific changes, except in [scheduled mode](#scheduled-mode).
 
-## Steps
+## When to Use
+
+- A T3 scheduled task starts the run, which follows [scheduled mode](#scheduled-mode).
+
+## When Not to Use
+
+- Reviewing product code or a diff: use `review-and-simplify-changes`.
+
+## Minimal Workflow
 
 1. Load the `writing-for-agents` skill when available, and read [session lessons](../writing-skills/SESSION-LESSONS.md). Together they decide where a lesson belongs and how it is phrased.
-2. Pin the **window** and **sources** before reading anything. Default: the last 7 days of top-level sessions under `~/.claude/projects` and `~/.codex/sessions`. Use the current session alone when the user says "this session". Include PR reviews in the window's repositories unless the user opts out. State the window, roots, and repositories in one line. Read [sources](references/sources.md) for extractor usage, bounded raw-log reads, and PR review queries.
-3. **Inventory** the environment that owns the fixes: global instructions, project `AGENTS.md` files, memory indexes, the skill catalog, hooks and settings, and each repository's check commands (package scripts, CI workflows, pre-commit). Record the word count of every always-loaded file. Read a destination before you recommend an edit to it.
-4. Extract bounded digests with `scripts/extract.py`. It skips automated rollouts and delegated children (sessions opened by a subagent brief) and lists them in `skipped.tsv`; pass `--include-automated` when delegation itself is under review. Raw logs are read only through the digests' `L<n>` line pointers. On a shared or production host, run it under `nice -n 19` with the default memory cap.
-5. Analyze every digest in the window. When the window holds more than about 15 sessions or 300 KB of digests, fan out read-only analysts over size-balanced batches, using [the analyst brief](references/analyst-brief.md). Personally verify each high-severity claim against its raw-log line.
+2. Pin the window and sources before reading anything. Default: the last 7 days of top-level sessions under `~/.claude/projects` and `~/.codex/sessions`. Use the current session alone when the user says "this session". Include PR reviews in the window's repositories unless the user opts out. Read [sources](references/sources.md) for extractor usage, bounded raw-log reads, and PR review queries. Done when one line states the window, roots, and repositories.
+3. Inventory the environment that owns the fixes: global instructions, project `AGENTS.md` files, memory indexes, the skill catalog, hooks and settings, and each repository's check commands (package scripts, CI workflows, pre-commit). Done when every owner is listed and every always-loaded file has its word count. Read a destination before you recommend an edit to it.
+4. Extract bounded digests with [`scripts/extract.py`](scripts/extract.py). It skips automated rollouts and delegated children (sessions opened by a subagent brief) and lists them in `skipped.tsv`; pass `--include-automated` when delegation itself is under review. Raw logs are read only through the digests' `L<n>` line pointers. On a shared or production host, run it under `nice -n 19` with the default memory cap. After changing the extractor, run its tests in `scripts/extract.test.ts` with `bun test <retro-skill>/scripts`. Done when `index.tsv` has a row for every included session in the window and every excluded rollout appears in `skipped.tsv`.
+5. Analyze every digest in the window. When the window holds more than about 15 sessions or 300 KB of digests, fan out read-only analysts over size-balanced batches, using `references/analyst-brief.md`. Personally verify each high-severity claim against its raw-log line. Done when every digest has a findings entry or a recorded zero and every high-severity claim is marked verified.
 6. When code merged in the window:
    - Collect the `## Audit items` sections of PRs merged in the window and list each unresolved item as a candidate, citing the PR.
    - Have read-only subagents run `improve-codebase-architecture` and `improve-test-suite`, asking for findings only with no plan, on the five changed subsystems with the most churn, skipping any a PR in the window records as audited by the large-change lane. A recurring finding becomes a candidate for a deterministic check or a `CODING_STANDARDS.md` rule, citing file evidence instead of a session quote.
-7. Shape each **candidate**:
+
+   Done when every audit has returned.
+7. Shape each candidate:
    - category and severity (high, med, or low, by time or risk cost)
    - one-line finding and recurrence count ("4 sessions")
    - evidence as session id, timestamp, and a short quote, marked verified or inferred
@@ -31,7 +41,7 @@ Work is read-only: reading logs and PR data and writing digests and the report o
 
    Merge duplicates across batches. Two analysts who read the same evidence count as one source. Drop candidates that would change no consequential decision, action, or completion claim; unresolved audit items stay, even when they occur once.
 8. Rank the candidates, then read the installed `correct` skill's SKILL.md and apply its method to the top recurring mistake classes (two or more sessions): take the highest fix level that works (architecture, then types, then a lint or check whose error names the fix, then a test, then docs) and record why each higher level does not. Every proposed check names a real past mistake (session and `L<n>`, or a commit) it must fail on; whoever implements it shows that failure before the check passes on the fixed code.
-9. Write `<out>/RETRO.md`, outside every repository because it quotes private sessions, with the window, the method, the always-loaded budget, candidates by severity, and a suggested order. Present the candidates to the user by severity. The step is complete when every digest has been read, every audit has returned, and every candidate names its evidence, owner, and load delta.
+9. Write `<out>/RETRO.md`, outside every repository because it quotes private sessions, with the window, the method, the always-loaded budget, candidates by severity, and a suggested order. Present the candidates to the user by severity. Done when every digest has been read, every audit has returned, and every candidate names its evidence, owner, and load delta.
 
 ## Scheduled mode
 
@@ -67,6 +77,11 @@ Place each fix in the most specific owner that holds it. A repository shared acr
 - Skills hold workflows. Every description costs catalog context, so a rarely used skill should become user-invoked or be removed.
 - Memory files carry the user's cross-cutting preferences. Subsystem incident notes belong in docs.
 
+## Reference Routing
+
+- Read [references/analyst-brief.md](references/analyst-brief.md) when the window holds more than about 15 sessions or 300 KB of digests and analysts fan out.
+- Read [scripts/extract.test.ts](scripts/extract.test.ts) after changing the extractor.
+
 ## Failure modes
 
 - Reading raw logs whole instead of through digests and line pointers
@@ -78,4 +93,6 @@ Place each fix in the most specific owner that holds it. A repository shared acr
 - Proposing a check without the past mistake it must fail on
 - Committing a project-specific rule or private detail to a repository shared across projects
 
-Source basis: Matt Pocock's `retro` skill (github.com/mattpocock/skills, `skills/engineering/retro`, commit `d81f3a1`, MIT License, Copyright (c) 2026 Matt Pocock). Adapted, not copied: categories reordered by fix priority, multi-session extraction and analyst fan-out added, and evidence, owner, and load-delta required per candidate. The extraction and batching method comes from the user's 2026-10-02 retrospective.
+## Provenance
+
+Matt Pocock's `retro` skill (github.com/mattpocock/skills, `skills/engineering/retro`, commit `d81f3a1`, MIT License, Copyright (c) 2026 Matt Pocock). Adapted, not copied: categories reordered by fix priority, multi-session extraction and analyst fan-out added, and evidence, owner, and load-delta required per candidate. The extraction and batching method comes from the user's 2026-10-02 retrospective.

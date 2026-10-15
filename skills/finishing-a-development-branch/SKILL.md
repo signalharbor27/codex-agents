@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: "Use when the user requests merging, opening a PR, preserving, discarding, or cleaning up completed branch work, or merging under a standing grant; not as an automatic implementation tail."
+description: "Use when the user requests merging, opening a PR, preserving, discarding, or cleaning up completed branch work, or merging under a standing grant. Excludes implementation completion with no requested integration step."
 ---
 
 # Finishing a development branch
@@ -11,40 +11,40 @@ Verify the branch state and carry out the authorized integration choice. Ask onl
 
 ## When to Use
 
-- Implementation is complete and the next step is merge, PR, keep, or discard
-- A worktree or branch needs explicit cleanup or preservation
+- Q reports the work merged or asks to clean it up
+- A PR watcher or command monitor for the branch expired and the PR state needs a fresh read
 
 ## When Not to Use
 
-- Mid-task execution
-- Ordinary implementation without a requested integration or cleanup step
+- Mid-task execution: continue with the current primary skill.
 
 ## Minimal Workflow
 
-1. Inspect the branch, worktree, dirty state, commits, and relevant checks. Do not present an integration option as ready unless its required checks have passed.
+1. Inspect the branch, worktree, dirty state, commits, and relevant checks. Reuse recorded proof when the tested code and relevant state are unchanged; otherwise run the missing or affected checks. Present an integration option as ready only after its required checks pass. Done when every candidate option's check status is known.
 2. Use the integration choice already authorized by the user. If none is settled, present only viable choices: merge, open a PR, keep the branch, or discard it. State what each would change.
-3. Complete authorized preparation before asking about a remaining boundary. Carry out the selected action once its required checks pass and authority covers its effects; do not ask the user to repeat a choice. Publishing, discard, and destructive cleanup need existing or explicit authority. A merge or PR request does not by itself authorize deleting the branch or worktree.
+3. Complete authorized preparation before asking about a remaining boundary. Carry out the selected action once its required checks pass and authority covers its effects, without asking the user to repeat a choice. Publishing, discard, and destructive cleanup need existing or explicit authority.
 4. Merge authority: merge without asking only when all of these hold; otherwise ask Q and name the door and blast radius.
    - A standing grant from Q covers this repository, recorded in its project instructions or in a memory entry that quotes Q.
    - The PR's Merge danger footer (from `describe-pr`) reads `two-way` and `localized`, and the review record for the PR head's tree carries the same `door` and `blast_radius`.
    - Required checks and reviews pass on the current head, and no newer instruction from Q withholds the merge.
-5. Preserve the worktree for PR and keep-as-is choices unless its cleanup is separately authorized. Finish when the selected action is complete and the resulting branch and worktree state are verified.
+5. A merge or PR request does not by itself authorize deleting the branch or worktree; keep both for PR and keep-as-is choices until cleanup is separately authorized. Done when the selected action is complete and the resulting branch and worktree state are verified.
 
 ## Merged work cleanup
 
-When Q says the work is merged or asks to clean up, that request authorizes cleanup of the agent-owned workspace. Ask no confirmation question and make no follow-up offers. After the pre-removal checks in [using-git-worktrees](../using-git-worktrees/SKILL.md#authorized-cleanup), run `bash <this skill's directory>/scripts/cleanup-merged.sh <branch>` ([script](scripts/cleanup-merged.sh)) from a checkout that stays. The script needs `wt` and `jq`. It refuses unless the branch is merged and its worktree is clean, untracked files included, and is the one `wt list` reports for the branch at its worktree-path template path (no branch mismatch). It runs only project hooks already persisted in Worktrunk's approvals and refuses on an unapproved hook. A branch with no worktree is deleted only after the merge proof. It then removes the worktree, deletes the branch and its stale remote ref, and fast-forwards a clean main checkout on the default branch; `--dry-run` previews the actions. On refusal, report the reason and keep the work.
-
-## Reference Routing
-
-- Reuse recorded proof across turns when the tested code and relevant state are unchanged. Run missing checks or repeat affected checks when code, state, or integration requirements change.
-- Use `describe-pr` when the next step is writing or updating the PR summary.
-- For authorized removal of unmerged or kept-branch workspaces, follow [using-git-worktrees](../using-git-worktrees/SKILL.md#authorized-cleanup).
+When Q says the work is merged or asks to clean up, that request authorizes cleanup of the agent-owned workspace: run the cleanup directly and end with its result, with no confirmation question or follow-up offer. After the pre-removal checks in [using-git-worktrees](../using-git-worktrees/SKILL.md#authorized-cleanup), run `bash <this skill's directory>/scripts/cleanup-merged.sh <branch>` ([script](scripts/cleanup-merged.sh)) from a checkout that stays. The script needs `wt` and `jq`. It refuses unless the branch is merged and its worktree is clean, untracked files included, and is the one `wt list` reports for the branch at its worktree-path template path (no branch mismatch). It runs only project hooks already persisted in Worktrunk's approvals and refuses on an unapproved hook. A branch with no worktree is deleted only after the merge proof. It then removes the worktree, deletes the branch and its stale remote ref, and fast-forwards a clean main checkout on the default branch; `--dry-run` previews the actions. On refusal, report the reason and keep the work.
 
 ## Watcher recovery
 
 When a PR watcher or command monitor expires, its last result is historical evidence. Read the current PR head and check state once; name any pending checks and the revision observed. Expiry alone establishes neither success nor failure.
 
-If the host exposes a PR-watch tool, inspect the existing registration and re-arm one watch for the same PR under the original monitoring request, then end the turn for its notification. Use the host's capability catalog for tool names. If that capability is unavailable, use one bounded command monitor with a stated deadline and wake-up path. At the deadline, report the pending result and stop the watch; repeated polling or duplicate monitors do not extend the request silently. For GraphQL quota failure, follow [GraphQL quota recovery](references/graphql-quota-recovery.md).
+If the host exposes a PR-watch tool, inspect the existing registration and re-arm one watch for the same PR under the original monitoring request, then end the turn for its notification. Use the host's capability catalog for tool names. If that capability is unavailable, use one bounded command monitor with a stated deadline and wake-up path. At the deadline, report the pending result and stop the watch. Repeated polling or a duplicate monitor would silently extend the request, so run neither.
+
+## Reference Routing
+
+- Read [references/graphql-quota-recovery.md](references/graphql-quota-recovery.md) when a GitHub command reports exhausted GraphQL quota.
+- Use `describe-pr` when the next step is writing or updating the PR summary.
+- Follow [using-git-worktrees](../using-git-worktrees/SKILL.md#authorized-cleanup) when removal of an unmerged or kept-branch workspace is authorized.
+- Run `bun test` on [scripts/cleanup-merged.test.ts](scripts/cleanup-merged.test.ts) when changing the cleanup script.
 
 ## Failure modes
 

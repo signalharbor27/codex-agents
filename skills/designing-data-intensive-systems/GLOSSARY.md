@@ -1,9 +1,5 @@
 # Glossary
 
-Use this glossary as a quick reference for data systems terms.
-
----
-
 ## A
 
 **ACID**: Atomicity, Consistency, Isolation, Durability. Transaction guarantees.
@@ -248,4 +244,4 @@ Use this glossary as a quick reference for data systems terms.
 
 ## Z
 
-**Zookeeper**: Coordination service for distributed systems.
+**ZooKeeper**: Coordination service for distributed systems.

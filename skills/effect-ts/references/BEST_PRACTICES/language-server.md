@@ -22,7 +22,7 @@ Add to `tsconfig.json`:
 
 ### VSCode
 
-1. Install TypeScript workspace version (ensure `typescript` is in devDependencies)
+1. Install the workspace TypeScript version, with `typescript` in devDependencies
 2. Press F1 → "TypeScript: Select TypeScript Version" → "Use Workspace Version"
 
 ### JetBrains (WebStorm, IntelliJ)
@@ -113,7 +113,7 @@ Configure in `tsconfig.json` under the plugin entry:
 | `durationStrings` | ✓ | Auto-complete Duration.decode strings |
 | `brands` | ✓ | Auto-complete Schema brand strings |
 
-### Key patterns
+### keyPatterns
 
 Configure recognized Effect-like patterns:
 
@@ -152,7 +152,7 @@ Patch TypeScript to run language service diagnostics during `tsc`:
 npx effect-language-service patch
 ```
 
-This enables CI enforcement of Effect-specific rules. Errors like floating Effects will now fail the build.
+CI then enforces Effect-specific rules: a floating Effect fails the build.
 
 To unpatch:
 
@@ -258,14 +258,14 @@ class UserNotFoundError extends Schema.TaggedError<UserNotFoundError>()(
 
 ### Language service not loading
 
-1. Ensure `typescript` is in devDependencies (not just dependencies)
+1. Put `typescript` in devDependencies, not only in dependencies
 2. Restart the TypeScript server (VSCode: Cmd+Shift+P → "TypeScript: Restart TS Server")
 3. Verify workspace TypeScript is selected
 
 ### Diagnostics not appearing
 
 1. Check `tsconfig.json` plugin configuration
-2. Ensure the file is included in the TypeScript project
+2. Check that the file is included in the TypeScript project
 3. Check for `"diagnostics": { "allEnabled": false }` in config
 
 ### Performance issues

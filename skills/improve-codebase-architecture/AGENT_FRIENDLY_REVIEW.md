@@ -1,12 +1,8 @@
 # Agent-friendly codebase review
 
-Use this rubric to review a codebase or subsystem and produce a practical architecture improvement plan.
-
-Record friction encountered while understanding the codebase as evidence.
-
 A codebase is agent-friendly when an agent can start at a real runtime or task entrypoint, reason locally through clear domain ownership and deep module interfaces, see consequential side effects, reach a trustworthy proof seam, and hand off bounded evidence without forcing the next agent to rediscover the system.
 
-This rubric collects evidence. It does not define a separate architecture doctrine. The owning skill routes to the engineering references for boundary design, state and effects, and trustworthy proof.
+Use these axes and questions to collect evidence; the engineering references own the rules for boundary design, state and effects, and trustworthy proof. Record friction you hit while understanding the codebase as evidence too.
 
 ## Review axes
 
@@ -46,13 +42,9 @@ Create or update durable documentation only when it will remain useful:
 - add a term when it resolves a real naming ambiguity
 - add an ADR when the choice is hard to reverse, surprising without context, and based on a real tradeoff
 - for local handoff, capture current behavior, desired behavior, key interfaces, acceptance criteria, and out-of-scope in the exec plan instead of a GitHub issue
-- avoid documenting implementation trivia that will go stale faster than the code
-
-A sound architecture plan leaves future agents with better names, clearer entrypoints, and fewer repeated discovery loops.
+- skip implementation trivia that will go stale faster than the code
 
 ## Delegation fit
-
-For standalone audits, delegate bounded, read-only evidence gathering when independent subsystems benefit from separate context; small or tightly coupled audits may stay local. Checks assigned through `review-and-simplify-changes` retain its required independent reviewers, who return findings without further delegation.
 
 In monorepos, split the review along real ownership and seam boundaries rather than package count alone.
 Typical tracks are frontend, backend, shared contracts or packages, and build or CI workflow.
@@ -66,11 +58,10 @@ Useful subagent tracks include:
 - duplication and boundary mapping
 
 Require each track to return a bounded evidence packet: real entrypoint, domain owner, interface crossed, consequential effects, proof seam, and residual unknowns where applicable.
-Keep main-thread ownership of synthesis, prioritization, and the final plan.
 
 ## Monorepo synthesis
 
-Combine findings into one plan with explicit cross-boundary dependencies. Use phases only when those dependencies or rollout require them.
+Combine findings into one plan with explicit cross-boundary dependencies.
 
 Where material, call out:
 
@@ -79,10 +70,8 @@ Where material, call out:
 - which shared-package fixes should come before downstream cleanup
 - which build or CI changes unblock safer parallel work later
 
-## Avoid these outcomes
+## Failure modes
 
-- greenfield rewrites by default
-- giant architecture essays
-- broad “adopt pattern X” advice without concrete problem mapping
-- forcing a single target shape when the best boundary is still genuinely ambiguous
-- test expansion that does not improve trust at a real seam
+- Giant architecture essays
+- Forcing a single target shape while the best boundary is still ambiguous
+- Test expansion that does not improve trust at a real seam

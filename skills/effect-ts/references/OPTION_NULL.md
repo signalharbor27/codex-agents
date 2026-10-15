@@ -51,7 +51,7 @@ if (Option.isSome(maybeValue)) {
 }
 ```
 
-## Avoid nested Option\<Option<T>> values
+## Normalize to Option once
 
 ```typescript
 // WRONG: Nested options from repeated normalization
@@ -84,7 +84,7 @@ const ApiUserSchema = Schema.Struct({
 // nickname will be string | null
 ```
 
-## Effect-Atom integration
+## effect-atom integration
 
 ```typescript
 // Atoms with nullable state (for React compat)

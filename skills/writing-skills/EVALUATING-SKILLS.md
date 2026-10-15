@@ -1,6 +1,6 @@
-Read this reference to validate whether a skill improves agent behavior.
+# Evaluating skills
 
-Start with the smallest prompt that passes representative routing and behavior checks. Test the model and configuration that consume the skill. Record model, reasoning effort, instruction revision, catalog, and harness version; use the same runner and cases for baseline and candidate comparisons.
+Record model, reasoning effort, instruction revision, catalog, and harness version; use the same runner and cases for baseline and candidate comparisons.
 
 Use representative prompts to evaluate:
 - routing: does the right skill fire for positive cases and stay inactive for near-negative cases? Can the model select no skill when none applies?
@@ -23,12 +23,12 @@ Apply a sentence-level no-op test to suspected process overhead: remove or vary 
 
 Structural checks should also confirm:
 - `SKILL.md` stays small enough to scan quickly
-- required outcomes, permissions, and completion conditions remain discoverable without enforcing exact headings or sentences
+- sections that serve a standard function use the standard names and order from SKILL.md, and required outcomes, permissions, and completion conditions remain discoverable in substance, without enforcing exact sentences
 - descriptions stay trigger-oriented instead of turning into workflow summaries
 - leading words such as `critical`, `exhaustive`, `read-only`, or `one-at-a-time` have behavioral evidence and are not decorative
 - repeated no-op guidance is pruned or moved behind a sharper reference pointer
 
-Use the source or consuming repository's documented validation suite when present. Check installed reference resolution too, especially sibling-skill dependencies. Do not assume repository-level scripts are distributed with an individual installed skill.
+Check installed reference resolution, especially sibling-skill dependencies.
 
 Routing classification checks skill selection and intended actions. It does not prove execution, permission handling, verification stopping, or response to steering. Use bounded execution cases for those claims: authorized continuation, read-only limits, a real approval boundary with a complete reviewable artifact and exact skill citation, proof reuse and justified rechecks, project-native commands, preservation of unrelated changes, and follow-ups that preserve the original objective. Label between-turn continuation separately from actual mid-turn steering. Judge artifacts and tool evidence; test that plausible incomplete results fail the judge.
 

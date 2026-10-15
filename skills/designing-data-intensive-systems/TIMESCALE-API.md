@@ -40,7 +40,7 @@ Statistics remain functions used with `SELECT`:
 - `hypertable_compression_stats(...)`: `hypertable_columnstore_stats(...)`.
 - `chunk_compression_stats(...)`: `chunk_columnstore_stats(...)`.
 
-Their output still uses names such as `before_compression_total_bytes` and `after_compression_total_bytes`. Do not rename result fields by analogy with function names.
+Their output still uses names such as `before_compression_total_bytes` and `after_compression_total_bytes`, so keep the old result field names even where the function name changed.
 
 ## Settings views
 

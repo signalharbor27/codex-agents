@@ -5,42 +5,46 @@ description: "Use when explaining how a codebase works or investigating why a de
 
 # Codebase investigation
 
-Answer a concrete question about current behavior or recorded design rationale. Investigation is read-only unless the user separately authorizes changes. Keep implementation with engineering, unknown failures with debugging, and architecture audits with their review owner.
+## Overview
 
-## Answer what was asked
+Answer a concrete question about current behavior or recorded design rationale. Investigation is read-only unless the user separately authorizes changes.
 
-Answer the explicit question first. Propose a design, plan, or product idea only when the user asks for one; a stated interest such as "I want something similar" is context, not a new task. When the request sets an acceptance bar, such as replicate, verify, or match a reference exactly, run to that bar or name the single blocker.
+## When Not to Use
 
-## Inventory the evidence
+- A direct location or symbol question: a local lookup usually answers it.
+- Implementation: use `engineering`.
+- Unknown failures: use `debugging`.
+- Architecture audits: use `improve-codebase-architecture`.
 
-Before answering, list every evidence source that could bear on the question, then read each one or rule it out with a reason: unavailable, outside the question, or unable to change the answer.
+## Minimal Workflow
 
-- Code: trace the entrypoint end to end through calls, data, state ownership, and external boundaries, plus the callers, consumers, tests, and configuration that change the meaning.
-- Runtime and data: logs, metrics, production or analytics data, and vendor dashboards reachable through available read-only tools or credentials. Read production data only through bounded, plain read-only queries within existing authority.
-- External documentation: the vendor's or library's docs and guides for the version in use, read in full for the relevant section. A search excerpt locates a source; it does not count as reading it.
-- History: commits, pull requests, issues, and design notes when rationale matters.
+1. Pin the question. Answer the explicit question first. Propose a design, plan, or product idea only when the user asks for one; a stated interest such as "I want something similar" is context for the answer. When the request sets an acceptance bar, such as replicate, verify, or match a reference exactly, run to that bar or name the single blocker. Done when the question and any acceptance bar are fixed.
+2. Inventory the evidence. List every source that could bear on the question, then read each one or rule it out with a reason: unavailable, outside the question, or unable to change the answer.
+   - Code: trace the entrypoint end to end through calls, data, state ownership, and external boundaries, plus the callers, consumers, tests, and configuration that change the meaning.
+   - Runtime and data: logs, metrics, production or analytics data, and vendor dashboards reachable through available read-only tools or credentials. Read production data only through bounded, plain read-only queries within existing authority.
+   - External documentation: the vendor's or library's docs and guides for the version in use, read in full for the relevant section. A search excerpt locates a source; reading it means reading that section.
+   - History: commits, pull requests, issues, and design notes when rationale matters.
 
-A direct location or symbol question usually needs only a local lookup. Substantial independent angles may justify an explorer; external documentation or historical records may justify a librarian. Give each a bounded question and required evidence. Keep synthesis with the main agent. Avoid fixed panels and delegation that adds no independent evidence.
+   Substantial independent angles may justify an explorer; external documentation or historical records may justify a librarian. Give each a bounded question and required evidence, and keep synthesis with the main agent. Done when every listed source is read or ruled out.
+3. Label each claim as one of:
+   - Current behavior supported by code or a relevant executed observation.
+   - Recorded intent supported by contemporaneous documents or discussion.
+   - Inference, with its supporting facts and remaining alternatives.
+   - Unknown or contradiction that the available sources cannot resolve.
 
-Distinguish:
+   Cite concrete paths and symbols for code claims, and permalinks or identifiers for external records. Include the relevant revision or date when a source may describe a different state. Reading a test establishes its expectations; claim it passes only with applicable execution evidence. Done when every claim carries a label and a citation.
+4. Report. Lead with the answer, then the shortest supporting trace and any material caveat. End with an evidence line: what was read (files, doc pages with versions, queries, data sources) and what was ruled out and why. Report a skimmed or partial read as partial. Preserve unresolved contradictions. Name the next source or observation only when it could materially resolve the remaining uncertainty. Done when the report leads with the answer and ends with the evidence line.
 
-- Current behavior supported by code or a relevant executed observation.
-- Recorded intent supported by contemporaneous documents or discussion.
-- Inferences, with their supporting facts and remaining alternatives.
-- Unknowns or contradictions that the available sources cannot resolve.
+## Reference Routing
 
-Cite concrete paths and symbols for code claims, and permalinks or identifiers for external records. Include the relevant revision or date when a source may describe a different state. Reading a test establishes its expectations; claim it passes only with applicable execution evidence.
+- Read [historical-evidence.md](references/historical-evidence.md) when the answer depends on historical rationale, disputed intent, or previous failed approaches.
+- Read [teaching.md](references/teaching.md) when the user asks for a walkthrough or teaching explanation.
 
-## Conditional depth
+## Failure modes
 
-- For historical rationale, disputed intent, or previous failed approaches, read [historical-evidence.md](references/historical-evidence.md).
-- For a requested walkthrough or teaching explanation, read [teaching.md](references/teaching.md).
-
-## Completion
-
-Done when every inventoried source is read or ruled out and each claim is supported or labeled as inference or unknown. Lead with the answer, then the shortest supporting trace and any material caveat. End with an evidence line: what was read (files, doc pages with versions, queries, data sources) and what was ruled out and why. Report a skimmed or partial read as partial.
-
-Preserve unresolved contradictions. Do not turn a plausible explanation into recorded intent or a repair recommendation into an authorized edit. Name the next source or observation only when it could materially resolve the remaining uncertainty.
+- Turning a plausible explanation into recorded intent
+- Turning a repair recommendation into an authorized edit
+- Fixed delegation panels, or delegation that adds no independent evidence
 
 ## Provenance
 

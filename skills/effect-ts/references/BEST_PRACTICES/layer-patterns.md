@@ -2,7 +2,7 @@
 
 ## Dependencies in Effect.Service
 
-Declare stable dependencies owned by an `Effect.Service` in its `dependencies` array. Compose them externally when implementations vary by request, environment, or test, or when the repository keeps construction external. This follows the ownership rules in [service patterns](service-patterns.md).
+The "Service with dependencies" section of `service-patterns.md` decides which dependencies an `Effect.Service` declares and which are composed externally. The examples below show the composition each choice produces.
 
 ### Correct pattern
 
@@ -103,7 +103,7 @@ const AppLive = Layer.mergeAll(
 
 ## Prefer Layer.mergeAll to nested provides
 
-**Use `Layer.mergeAll`** for composing layers at the same level:
+Compose layers at the same level with `Layer.mergeAll`:
 
 ```typescript
 // CORRECT - Flat composition
@@ -142,7 +142,7 @@ const AppLive = UserService.Default.pipe(
 
 ## Layer.provideMerge for sequential composition
 
-**Use `Layer.provideMerge`** when chaining layers that need incremental composition. Unlike `Layer.provide`, `provideMerge` merges the output into the current layer, producing flatter types.
+Chain layers that need incremental composition with `Layer.provideMerge`, which produces flatter types.
 
 ```typescript
 // CORRECT - Layer.provideMerge chains for incremental composition
@@ -161,7 +161,7 @@ const MainLive = DatabaseLive.pipe(
 )
 ```
 
-**Key difference:** `Layer.provide(A, B)` provides B to A but outputs only A's services. `Layer.provideMerge(A, B)` provides B to A and outputs both A's and B's services merged together.
+`Layer.provide(A, B)` provides B to A but outputs only A's services. `Layer.provideMerge(A, B)` provides B to A and outputs both A's and B's services merged together.
 
 ## Layer deduplication
 
@@ -180,7 +180,7 @@ const AppLive = RepoLive.pipe(
 )
 ```
 
-**`Effect.provide` does NOT deduplicate:**
+`Effect.provide` does not deduplicate:
 
 ```typescript
 // WRONG - Each provide creates a new instance
@@ -287,15 +287,15 @@ This pattern:
 - Separates configuration from implementation
 - Returns `ConfigError` for missing/invalid config
 - Allows different configs per environment
-- Integrates cleanly with `Layer.mergeAll` and `Layer.provideMerge`
+- Composes with `Layer.mergeAll` and `Layer.provideMerge`
 
 ## Layer naming conventions
 
 Use suffixes to identify the layer type:
 
-- `ServiceLive` - Production implementation
-- `ServiceTest` - Test/mock implementation
-- `ServiceLayer` - Generic layer (rare)
+- `ServiceLive`: production implementation
+- `ServiceTest`: test or mock implementation
+- `ServiceLayer`: generic layer (rare)
 
 ```typescript
 // Production

@@ -93,11 +93,9 @@ const program = OrderService.create(input).pipe(
 
 ## Effect.fn for tracing
 
-Use `Effect.fn` for service methods when the repo relies on Effect tracing or consistent span names. Plain effect-valued functions remain appropriate for small private helpers, established uninstrumented code, or boundaries instrumented elsewhere. `Effect.fn` provides automatic tracing with meaningful span names.
+The "Effect.fn for automatic tracing" section of `observability-patterns.md` decides when a service method gets an `Effect.fn` span, how to name it, and what to annotate. These examples apply it to service methods.
 
 ### Naming convention
-
-Use `ServiceName.methodName` format for span names:
 
 ```typescript
 const findById = Effect.fn("UserService.findById")(function* (id: UserId) {
@@ -117,8 +115,6 @@ const processPayment = Effect.fn("PaymentService.processPayment")(
 
 ### Annotating spans
 
-Add useful context to spans without adding noise:
-
 ```typescript
 // CORRECT - Important business identifiers
 yield* Effect.annotateCurrentSpan("userId", userId)
@@ -136,7 +132,7 @@ yield* Effect.annotateCurrentSpan("step", "completing")
 
 ## When Context.Tag is acceptable
 
-Use `Context.Tag` for runtime-injected infrastructure, compatibility with established service composition, or boundaries that intentionally avoid generated accessors. For new business services, prefer `Effect.Service` when its generated layer and accessors reduce wiring. The examples below cover infrastructure.
+The rule in [Effect.Service versus Context.Tag](#effectservice-versus-contexttag) decides. Runtime-injected infrastructure is the common `Context.Tag` case, and the examples below cover it.
 
 ### Cloudflare Worker bindings
 
@@ -186,7 +182,7 @@ const DatabaseLive = PgClient.layer({
 
 ## Single responsibility
 
-Each service should have a focused responsibility:
+Give each service one focused responsibility:
 
 ```typescript
 // CORRECT - Focused services

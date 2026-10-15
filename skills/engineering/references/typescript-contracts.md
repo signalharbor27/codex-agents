@@ -1,6 +1,6 @@
 # TypeScript contracts
 
-Load this when schema ownership, inference, semantic IDs, assertions, or exhaustiveness affect the contract. Follow the repository's schema, brand, and Effect conventions; avoid introducing a second validation system.
+Follow the repository's schema, brand, and Effect conventions. Reuse the existing validation system; avoid introducing another.
 
 - Infer types from the schema that owns runtime validation when the existing library supports it. Keep separate transport and domain types when they express different contracts.
 - Brand a primitive when confusing its meaning creates a real error, such as passing an order ID where a user ID belongs. Keep validation and construction with its owner. A brand alone does not validate a runtime value.

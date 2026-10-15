@@ -1,15 +1,13 @@
 # Effect Atom patterns
 
-Effect Atom is a reactive state-management library for Effect-TS. It provides atoms (reactive containers), automatic dependency tracking, and React integration.
-
 ## Core concepts
 
-- **Atoms**: Reactive state containers with automatic dependency tracking
-- **Result**: Handles async/effectful computations with initial, success, and failure states
-- **Finalizers**: Built-in cleanup for resources and event listeners
-- **Families**: Dynamic atom creation for per-entity state
+- Atoms are reactive state containers with automatic dependency tracking.
+- `Result` represents an async or effectful computation in its initial, success, or failure state.
+- Finalizers clean up resources and event listeners.
+- Families create atoms dynamically for per-entity state.
 
-## Creating Atoms
+## Creating atoms
 
 ### Basic atoms
 
@@ -22,8 +20,6 @@ const countAtom = Atom.make(0)
 // With keepAlive - persists when no components subscribe
 const persistentCountAtom = Atom.make(0).pipe(Atom.keepAlive)
 ```
-
-**Rule:** Use `Atom.keepAlive` for global state that should persist across component unmounts.
 
 ### Derived atoms
 
@@ -51,10 +47,7 @@ const scrollYAtom = Atom.make((get) => {
 }).pipe(Atom.keepAlive)
 ```
 
-Side-effect atoms must:
-- Use `get.setSelf` to update the atom's own value
-- Always add finalizers with `get.addFinalizer()` to clean up side effects
-- Finalizers run when the atom is rebuilt or disposed
+A side-effect atom must update its own value with `get.setSelf` and register a finalizer with `get.addFinalizer()` for every side effect. Finalizers run when the atom is rebuilt or disposed.
 
 ### Atom.transform for self-updating derived state
 
@@ -104,7 +97,7 @@ const modalAtomFamily = Atom.family((type: ModalType) =>
 )
 ```
 
-**Use families for:**
+Use families for:
 - Per-resource state (users, channels, documents)
 - Modal instances
 - Form state per entity
@@ -171,7 +164,7 @@ function App() {
 }
 ```
 
-## React Mutation Patterns
+## React mutation patterns
 
 ### Deriving loading state from result.waiting
 
@@ -194,7 +187,7 @@ const handleSubmit = async () => {
 <Button disabled={isLoading}>{isLoading ? "Loading..." : "Submit"}</Button>
 ```
 
-The `Result` then remains the single source of truth for loading state, stays synchronized with the mutation lifecycle, and removes manual resets and `finally` blocks.
+Loading state then lives only in the `Result`, follows the mutation lifecycle, and needs no manual reset or `finally` block.
 
 ### Dialog components own their mutations
 
@@ -272,7 +265,7 @@ For automatic invalidation:
 - After the mutation succeeds, all atoms with matching keys re-execute
 - Replaces manual patterns like calling `refreshPaywalls()` after mutations
 
-## Working with Effects and Results
+## Effects and results
 
 ### Effectful atoms return Result
 
@@ -290,7 +283,7 @@ const userAtom = Atom.make(
 
 ### Handling results with Result.builder (recommended)
 
-**Use `Result.builder`** for rendering Result types. It provides a chainable API with granular error handling and type narrowing.
+Render `Result` values with `Result.builder`. Its chainable API narrows types and handles each error case separately.
 
 ```typescript
 import { Result, useAtomValue } from "@effect-atom/atom-react"
@@ -308,7 +301,7 @@ function UserProfile() {
 
 ### Result.builder with tagged errors
 
-**Key advantage**: Handle specific error types with `onErrorTag`:
+`onErrorTag` handles one tagged error type and removes it from the remaining error type:
 
 ```typescript
 function ResourceEmbed({ url }: { url: string }) {
@@ -442,7 +435,7 @@ const themeAtom = Atom.kvs({
 
 ## Anti-patterns
 
-### FORBIDDEN: Creating Atoms Inside Components
+### Define atoms outside components
 
 ```typescript
 // WRONG - creates new atom on every render
@@ -461,7 +454,7 @@ function Counter() {
 }
 ```
 
-### FORBIDDEN: Imperative Updates from React Components
+### Update atoms through hooks in React components
 
 ```typescript
 // WRONG - doesn't trigger React re-renders
@@ -492,12 +485,12 @@ export const useModal = (type: string) => {
 }
 ```
 
-**When imperative updates ARE acceptable:**
+Imperative updates are acceptable for:
 - Event listeners outside React (keyboard shortcuts)
 - Effects running on atom changes
 - Non-UI state (analytics, logging)
 
-### FORBIDDEN: Missing Finalizers
+### Register a finalizer for every listener
 
 ```typescript
 // WRONG - memory leak!
@@ -516,7 +509,7 @@ const scrollAtom = Atom.make((get) => {
 })
 ```
 
-### FORBIDDEN: Missing keepAlive for Global State
+### Keep global state alive
 
 ```typescript
 // WRONG - state resets when component unmounts
@@ -526,7 +519,7 @@ export const modalStateAtom = Atom.make({ isOpen: false })
 export const modalStateAtom = Atom.make({ isOpen: false }).pipe(Atom.keepAlive)
 ```
 
-### FORBIDDEN: Ignoring Result Types
+### Handle every Result state
 
 ```typescript
 // WRONG - doesn't handle loading/error states
@@ -542,7 +535,7 @@ return Result.builder(userResult)
     .render()
 ```
 
-### FORBIDDEN: Updating State During Render
+### Update state outside render
 
 ```typescript
 // WRONG - side effect during render
@@ -565,7 +558,7 @@ function Component() {
 }
 ```
 
-### FORBIDDEN: useState for Mutation Loading State
+### Derive mutation loading state from the Result
 
 ```typescript
 // WRONG - manual loading state management
@@ -598,7 +591,7 @@ function DeleteDialog({ id }: { id: string }) {
 }
 ```
 
-### FORBIDDEN: Mutations in Parent Components
+### Let the dialog own its mutation
 
 ```typescript
 // WRONG - parent manages the mutation
@@ -634,7 +627,7 @@ const userNameAtom = Atom.map(appStateAtom, (state) => state.user.name)
 const userName = useAtomValue(userNameAtom)
 ```
 
-### When to Use keepAlive
+### When to use keepAlive
 
 Use `Atom.keepAlive` for:
 - Global application state

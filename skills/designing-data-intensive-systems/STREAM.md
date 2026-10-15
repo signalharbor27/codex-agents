@@ -1,17 +1,5 @@
 # Stream processing
 
-Read this reference when event flow, CDC, event sourcing, low-latency processing, or exactly-once and replay claims drive the design.
-
-## Topics
-- Event streams
-- Message brokers
-- Change data capture
-- Event sourcing
-- Stream processing patterns
-- Fault tolerance
-
----
-
 ## Event streams
 
 An event records an immutable fact at a point in time.
@@ -29,8 +17,6 @@ A bounded stream can be processed as a batch, which makes batch processing a spe
 | Retention | Often kept | Often deleted after processing |
 | Ordering | Often important | May not matter |
 
----
-
 ## Message brokers
 
 ### Direct messaging
@@ -44,26 +30,26 @@ This couples their availability and pace:
 
 ### Message queue (JMS/AMQP style)
 
-**Characteristics**:
+Characteristics:
 - Messages deleted after ACK
 - No ordering guarantee (typically)
 - Work queue pattern (each message processed once)
 
-**Examples**: RabbitMQ, ActiveMQ, SQS.
+Examples: RabbitMQ, ActiveMQ, SQS.
 
-**Use case**: Task distribution, load balancing.
+Use case: Task distribution, load balancing.
 
 ### Log-based broker
 
-**Characteristics**:
+Characteristics:
 - Append-only log
 - Messages retained (configurable)
 - Offset-based consumption
 - Consumer groups for parallelism
 
-**Examples**: Kafka, Kinesis, Pulsar.
+Examples: Kafka, Kinesis, Pulsar.
 
-**Partitioning**:
+Partitioning:
 - Topic split into partitions
 - Each partition is ordered log
 - Partition assigned to one consumer in group
@@ -79,22 +65,20 @@ This couples their availability and pace:
 | Fan-out | Explicit routing | Consumer groups |
 | Backpressure | Block producer | Consumer controls pace |
 
----
-
 ## Change data capture (CDC)
 
 Change data capture publishes database changes as an event stream.
 
 ### Implementation methods
 
-**Trigger-based**: Database triggers write to event table.
+Trigger-based: Database triggers write to event table.
 - Simple but high overhead.
 
-**Log-based**: Parse write-ahead log (WAL).
+Log-based: Parse write-ahead log (WAL).
 - Lower overhead, exactly matches DB state.
 - Examples: Debezium, Maxwell, pg_logical.
 
-**Query-based**: Poll for changes.
+Query-based: Poll for changes.
 - Requires timestamp/version column.
 - May miss rapid changes.
 
@@ -106,7 +90,7 @@ Database → CDC Connector → Message Broker → Consumers
     └─ Primary (writes) ─────────────────────→ Derived views
 ```
 
-**Benefits**:
+Benefits:
 - Derived data always consistent with source
 - Consumers decoupled from database
 - Can rebuild derived data by replaying
@@ -118,21 +102,19 @@ To include data that predates the CDC stream:
 2. Record log position at snapshot time
 3. Stream changes from that position
 
----
-
 ## Event sourcing
 
 Event sourcing stores state changes as an event sequence rather than storing only the latest state.
 
 ### Traditional and event-sourced state
 
-**Traditional (state-based)**:
+Traditional (state-based):
 ```sql
 UPDATE accounts SET balance = 90 WHERE id = 1
 -- Previous balance lost
 ```
 
-**Event sourced**:
+Event sourced:
 ```
 Event: AccountDebited { account_id: 1, amount: 10, timestamp: ... }
 -- All history preserved
@@ -144,7 +126,7 @@ Event: AccountDebited { account_id: 1, amount: 10, timestamp: ... }
 Events → Fold/Aggregate → Current State
 ```
 
-**Read path**:
+Read path:
 1. Load events for entity
 2. Apply each event to build state
 3. (Or: Read from materialized snapshot)
@@ -169,27 +151,25 @@ Events → Fold/Aggregate → Current State
 
 ### Commands and events
 
-**Commands**: Intent, may be rejected. "WithdrawMoney"
+Commands: Intent, may be rejected. "WithdrawMoney"
 
-**Events**: Facts, already happened. "MoneyWithdrawn"
+Events: Facts, already happened. "MoneyWithdrawn"
 
-**Flow**: Command → Validate → Event → Store → Project
-
----
+Flow: Command → Validate → Event → Store → Project
 
 ## Stream processing patterns
 
 ### Stream-table duality
 
-**Stream**: Changelog of table over time.
-**Table**: Point-in-time snapshot of stream.
+- Stream: changelog of a table over time.
+- Table: point-in-time snapshot of a stream.
 
 ```
 Table ←─ materialize ─ Stream
        ─ changelog ──→
 ```
 
-**Operations**:
+Operations:
 - Stream + Stream → Stream (join windows)
 - Stream + Table → Stream (enrichment)
 - Table + Table → Table (join)
@@ -198,7 +178,7 @@ Table ←─ materialize ─ Stream
 
 Transform each event independently.
 
-**Examples**: Filter, map, transform.
+Examples: Filter, map, transform.
 
 ```python
 # Filter
@@ -212,9 +192,9 @@ events.map(lambda e: {..., total: e.price * e.quantity})
 
 Maintain state across events.
 
-**Examples**: Aggregations, joins, sessionization.
+Examples: Aggregations, joins, sessionization.
 
-**State storage**:
+State storage:
 - In-memory (fast, lost on failure)
 - Local disk (RocksDB)
 - Remote (higher latency)
@@ -238,20 +218,18 @@ Session (5 min gap): [events until 5 min silence]
 
 ### Event time and processing time
 
-**Event time**: When event occurred (in event).
+Event time: When event occurred (in event).
 
-**Processing time**: When event processed (wall clock).
+Processing time: When event processed (wall clock).
 
 Event time and processing time diverge when events arrive out of order.
 
-**Watermarks**: Declare "no more events before time T".
+Watermarks: Declare "no more events before time T".
 
-**Late events**: 
+Late events:
 - Discard
 - Update aggregation (retractions)
 - Side output for separate handling
-
----
 
 ## Stream joins
 
@@ -265,7 +243,7 @@ clicks.join(impressions)
     .within(1 hour)
 ```
 
-**State required**: Buffer events until window closes.
+State required: Buffer events until window closes.
 
 ### Stream-table join (enrichment)
 
@@ -276,7 +254,7 @@ orders.join(products)
     .where(order.product_id == product.id)
 ```
 
-**Table materialized from**:
+Table materialized from:
 - Another stream (CDC)
 - Periodic snapshot
 - External database lookup (slow)
@@ -285,9 +263,7 @@ orders.join(products)
 
 Both sides are materialized streams.
 
-**Output**: Stream of join result changes.
-
----
+Output: Stream of join result changes.
 
 ## Fault tolerance
 
@@ -295,46 +271,44 @@ Both sides are materialized streams.
 
 Retry on failure. May produce duplicates.
 
-**Implementation**: ACK after processing, retry if no ACK.
+Implementation: ACK after processing, retry if no ACK.
 
 ### At-most-once
 
 Don't retry. May lose events.
 
-**Implementation**: ACK immediately, no retry.
+Implementation: ACK immediately, no retry.
 
 ### Effectively exactly-once
 
 The processing result has no duplicate effects and no event loss. Reaching that result requires special handling.
 
-**Approaches**:
+Approaches:
 
-**1. Idempotent writes**
+Idempotent writes:
 - Natural idempotency (SET key=value)
 - Deduplication table (event_id → processed)
 
-**2. Transactional output**
+Transactional output:
 - Write output + update offset atomically
 - Kafka transactions, Flink exactly-once sinks
 
-**3. Checkpointing**
+Checkpointing:
 - Periodically snapshot state
 - On failure, restore from checkpoint
 - Replay from checkpoint offset
 
 ### Microbatch and continuous processing
 
-**Microbatch** (Spark Streaming):
+Microbatch (Spark Streaming):
 - Small batches processed as batch jobs
 - Natural checkpointing boundaries
 - Higher latency (batch interval)
 
-**Continuous** (Flink, Kafka Streams):
+Continuous (Flink, Kafka Streams):
 - Event-by-event processing
 - Lower latency
 - More complex checkpointing
-
----
 
 ## Architectures
 
@@ -348,7 +322,7 @@ Raw Events → Stream Processing → Derived Views
      └───── Replay for fixes ────────┘
 ```
 
-**Requirements**:
+Requirements:
 - Retain raw events long enough
 - Reprocessing fast enough
 
@@ -362,12 +336,12 @@ Service A ──event──→ Broker ──event──→ Service B
                          └──event──→ Service C
 ```
 
-**Benefits**:
+Benefits:
 - Loose coupling
 - Temporal decoupling
 - Audit trail built-in
 
-**Challenges**:
+Challenges:
 - Eventual consistency
 - Debugging distributed flows
 - Schema evolution
@@ -380,8 +354,8 @@ Command Query Responsibility Segregation.
 Commands → Write Model → Events → Read Model → Queries
 ```
 
-**Separate models for**:
+Separate models for:
 - Writes (optimized for validation, consistency)
 - Reads (optimized for query patterns)
 
-**Often combined with**: Event sourcing.
+Often combined with: Event sourcing.

@@ -1,9 +1,6 @@
 # Rust coding style
 
-> Read this when the active question is code shape: control flow, matching, naming, comments, or review-level idioms.
-> Keep repo-local conventions ahead of any generic preference in this file.
-
-Follow these rules for idiomatic Rust.
+Repo-local conventions take precedence over any generic preference in this file.
 
 ## Control flow: use `for` loops
 
@@ -128,14 +125,14 @@ let canonical_path = input_path.canonicalize()?;
 let config_path = canonical_path.join("config.toml");
 ```
 
-## Comments: do not write them
+## Comments: let the code explain itself
 
-- Do not add inline comments that explain the code.
+- Let names, types, and functions carry the explanation; write no inline comments that explain the code.
 - Replace section dividers (`// --- Section ---`) with clearer functions or modules.
 - Put deferred work in the issue tracker rather than TODO comments.
 - Remove commented-out code; version control already preserves it.
 
-Public items are the exception: they require doc comments (`///`) that follow [DOCS.md](DOCS.md).
+Public items are the exception: they require doc comments (`///`) that follow `DOCS.md`.
 
 ```rust
 // DON'T
@@ -163,7 +160,7 @@ fn helper() { }
 
 ## Type safety: newtypes over primitives
 
-Wrap strings/integers in newtypes for semantic meaning.
+The Newtype section of `PATTERNS.md` owns the rule; this example shows it at a call site.
 
 ```rust
 // DO
@@ -225,7 +222,7 @@ match status {
 
 Use a wildcard when the remaining variants intentionally share behavior, an external enum is non-exhaustive, or the ignored remainder is immaterial at this boundary. Keep the arm narrow and make the intent clear when it is not obvious; follow existing repo conventions rather than escalating a routine implementation choice.
 
-## Pattern matching: avoid the `matches!` macro
+## Pattern matching: full `match` over `matches!`
 
 Use full `match` expressions. Full matches provide better compiler diagnostics when the matched type changes.
 

@@ -1,7 +1,5 @@
 # Compatibility and delivery
 
-Load this for public contracts, SDK/schema changes, mixed-version deploys, migrations, rollout, or rollback.
-
 ## Find the observable contract
 
 Inventory consumers and persisted artifacts before changing:
@@ -35,10 +33,10 @@ For schema changes, distinguish branch-local migration cleanup from migrations a
 
 ## Agent guardrails
 
-Do not create compatibility shims without an identified consumer and removal condition. Do not run every gate by ritual; select gates that prove the changed contract and repository health.
+Add a compatibility shim only for an identified consumer, with a removal condition. Select the gates that prove the changed contract and repository health instead of running every gate by ritual.
 
-## Source basis
+## Provenance
 
 - Jez Humble and David Farley, *Continuous Delivery*: small batches, deployability, rollback, and automated evidence.
-- Martin Fowler, “Parallel Change”: expand-and-contract evolution.
+- Martin Fowler, "Parallel Change": expand-and-contract evolution.
 - *Accelerate* by Nicole Forsgren, Jez Humble, and Gene Kim: small changes and fast, reliable delivery.

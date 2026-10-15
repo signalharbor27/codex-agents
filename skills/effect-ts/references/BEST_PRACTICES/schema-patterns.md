@@ -24,9 +24,9 @@ export type ProductId = Schema.Schema.Type<typeof ProductId>
 ### Branding convention
 
 When introducing brands, follow the repo's current naming convention. If none exists, `@Namespace/EntityName` is a clear default:
-- `@App/UserId` - Main application entities
-- `@Billing/InvoiceId` - Billing domain entities
-- `@External/StripeCustomerId` - External system IDs
+- `@App/UserId`: main application entities
+- `@Billing/InvoiceId`: billing domain entities
+- `@External/StripeCustomerId`: external system IDs
 
 ### Creating branded values
 
@@ -58,7 +58,7 @@ export const EmailAddress = Schema.String.pipe(Schema.pattern(/^[^\s@]+@[^\s@]+\
 
 ## Schema.Struct for domain types
 
-**Prefer Schema.Struct** over TypeScript interfaces for domain types:
+Prefer `Schema.Struct` over TypeScript interfaces for domain types:
 
 ```typescript
 // CORRECT - Schema.Struct
@@ -106,7 +106,7 @@ export type UpdateUserInput = Schema.Schema.Type<typeof UpdateUserInput>
 
 ## Schema.transform and transformOrFail
 
-**Use transforms** instead of manual parsing:
+Use `Schema.transform` or `Schema.transformOrFail` instead of manual parsing:
 
 ```typescript
 // Transform string to Date

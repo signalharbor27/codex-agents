@@ -1,7 +1,5 @@
 # TDD
 
-Load this only for explicit TDD or when the chosen development loop uses a cheap, trustworthy failing test.
-
 Work through one vertical loop:
 
 1. Name one observable behavior.
@@ -22,4 +20,6 @@ Red flags:
 - production is distorted solely to expose internals;
 - the test is rewritten to fit the implementation without reconciling the intended behavior.
 
-Source basis: Kent Beck, *Test-Driven Development: By Example*, and Freeman/Pryce, *Growing Object-Oriented Software, Guided by Tests*.
+## Provenance
+
+Kent Beck, *Test-Driven Development: By Example*, and Freeman/Pryce, *Growing Object-Oriented Software, Guided by Tests*.

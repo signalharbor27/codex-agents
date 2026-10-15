@@ -1,7 +1,5 @@
 # Root-cause tracing
 
-Load this when a bad value or state must be followed through several callers or components.
-
 1. Start at the first observed invalid state, not the final crash handler.
 2. Identify the caller or prior transition that supplied it.
 3. Add a temporary tagged probe or assertion at that boundary.
@@ -21,4 +19,6 @@ When several attempted fixes fail, list the assumption they share and test it be
 
 If the hypothesis predicts leaked resources, compare creation, release, and live ownership over the failing interval. Balanced counts reject only the leak that this census can observe; they do not rule out stale references, incorrect reuse, or timing defects. Choose another discriminating observation when the premise predicts something else.
 
-Source basis: Andreas Zeller, *Why Programs Fail*, and David Agans, *Debugging*, especially scientific hypothesis testing and tracing causes instead of symptoms.
+## Provenance
+
+Andreas Zeller, *Why Programs Fail*, and David Agans, *Debugging*, especially scientific hypothesis testing and tracing causes instead of symptoms.

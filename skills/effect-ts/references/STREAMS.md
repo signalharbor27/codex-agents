@@ -1,6 +1,6 @@
 # Stream patterns
 
-Streams are lazy, pull-based value sequences that may be infinite. Consume them carefully.
+Streams are lazy, pull-based value sequences that may be infinite.
 
 ## Creating streams
 
@@ -45,7 +45,7 @@ const first = yield* Stream.runHead(stream)  // Returns Option<A>
 yield* Stream.runDrain(stream)
 ```
 
-## Bound consumption for safety
+## Bounding consumption
 
 ```typescript
 // WRONG: Hangs forever on infinite stream

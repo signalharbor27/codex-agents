@@ -1,7 +1,5 @@
 # Browser E2E
 
-Load this for browser flows, selectors, visual evidence, or Playwright-style end-to-end work.
-
 ## Keep the test narrow
 
 - Cover a critical user journey or browser-only integration, not every rule.
@@ -18,6 +16,6 @@ A screenshot alone is not a test. Pair it with an assertion, a reviewed baseline
 
 ## Failure evidence
 
-Capture the smallest useful trace, screenshot, console/network error, and final observed state. Avoid retries that hide deterministic failures. Quarantine is temporary and must preserve an owner and removal condition.
+Capture the smallest useful trace, screenshot, console/network error, and final observed state. Let deterministic failures fail; a retry that hides one is a defect. Quarantine is temporary and must preserve an owner and removal condition.
 
-When API details are version-sensitive, consult the installed Playwright version’s current official documentation.
+When API details are version-sensitive, consult the installed Playwright version's current official documentation.

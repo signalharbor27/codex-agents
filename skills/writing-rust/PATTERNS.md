@@ -1,7 +1,5 @@
 # Data modeling and implementation patterns
 
-> Read this when the main decision is type shape, ownership, trait boundaries, or impl organization. Compare alternatives against the current constraint rather than importing a pattern by habit.
-
 ## Choosing data structures
 
 ### Struct
@@ -289,7 +287,7 @@ impl RequestBuilder {
 
 - Organize by ownership and domain boundaries
 - Use `pub(crate)` over `pub` when possible
-- Keep APIs small; avoid leaking internal types
+- Keep APIs small and internal types private
 
 ```rust
 // lib.rs

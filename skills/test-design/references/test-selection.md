@@ -1,7 +1,5 @@
 # Test selection
 
-Load this when the proof layer, doubles, oracle, or case matrix is consequential.
-
 ## Pick the seam
 
 - Pure domain rule: unit or property test.
@@ -27,4 +25,6 @@ Partition inputs and state transitions; test boundaries and representative inval
 
 Expected values must come from a source capable of disagreeing with production logic. Prefer literal examples, specifications, invariants, trusted fixtures, or an independent implementation. Add cases that close material gaps in setup or falsification; reuse existing evidence when it already does.
 
-Source basis: Gerard Meszaros, *xUnit Test Patterns*; Lee Copeland, *A Practitioner’s Guide to Software Test Design*; and Freeman/Pryce, *Growing Object-Oriented Software, Guided by Tests*.
+## Provenance
+
+Gerard Meszaros, *xUnit Test Patterns*; Lee Copeland, *A Practitioner's Guide to Software Test Design*; and Freeman/Pryce, *Growing Object-Oriented Software, Guided by Tests*.

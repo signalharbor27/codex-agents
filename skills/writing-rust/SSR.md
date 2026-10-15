@@ -1,8 +1,5 @@
 # rust-analyzer structural search and replace (SSR)
 
-> Read this when a Rust refactor spans many sites and compiler-assisted, semantic replacement is safer than manual edits.
-> Prefer SSR after the target pattern and verification path are explicit.
-
 Use SSR for repeated semantic transformations after one target pattern and its verification path are clear. It matches AST structure and semantic meaning, including type resolution and path equivalence.
 
 ## When to use
@@ -19,8 +16,8 @@ Use SSR for repeated semantic transformations after one target pattern and its v
 ```
 
 Placeholders capture matched code:
-- `$name` - matches any expression/type/pattern in that position
-- `${name:constraint}` - matches with constraints
+- `$name`: matches any expression/type/pattern in that position
+- `${name:constraint}`: matches with constraints
 
 ## Common patterns
 
@@ -133,7 +130,7 @@ Actions appear: "Apply SSR in file" or "Apply SSR in workspace"
 rust-analyzer ssr 'foo($a, $b) ==>> bar($b, $a)'
 ```
 
-## Key behaviors
+## Matching behavior
 
 Paths resolve semantically, so `foo::Bar` matches `Bar` when `Bar` is imported from `foo`.
 
@@ -145,7 +142,7 @@ Comments inside matched ranges are preserved.
 
 ## Macro handling
 
-SSR can match code inside macro expansions, but with restriction: **all matched tokens must originate from the same source**.
+SSR can match code inside macro expansions, with one restriction: **all matched tokens must originate from the same source**.
 
 ```rust
 macro_rules! my_macro {
@@ -157,7 +154,7 @@ macro_rules! my_macro {
 my_macro!(bar);  // "bar" comes from call site
 ```
 
-The expanded code is `foo(bar, 42)`. Searching for `foo($a, $b)` would **NOT** match because `$a` would capture `bar` (call site) but `$b` would capture `42` (definition site) - these cross the macro boundary.
+The expanded code is `foo(bar, 42)`. Searching for `foo($a, $b)` does not match: `$a` would capture `bar` (call site) and `$b` would capture `42` (definition site), so the match crosses the macro boundary.
 
 ### What SSR can do with macros
 

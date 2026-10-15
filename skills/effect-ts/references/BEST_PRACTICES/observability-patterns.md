@@ -2,11 +2,7 @@
 
 ## Structured logging with Effect.log
 
-Within Effect-native code, prefer the repo's logging abstraction. Use `Effect.log` when the Effect runtime owns log levels, telemetry, or test capture. `console.log` remains reasonable for short-lived local scripts, temporary debugging, or code outside the Effect runtime; remove temporary debug output before completion. `Effect.log` provides:
-- Structured data
-- Log levels
-- Integration with telemetry systems
-- Testability
+Within Effect-native code, prefer the repo's logging abstraction. Use `Effect.log`, which emits structured data, when the Effect runtime owns log levels, telemetry, or test capture. `console.log` remains reasonable for short-lived local scripts, temporary debugging, or code outside the Effect runtime; remove temporary debug output before completion.
 
 ### Basic logging
 
@@ -53,7 +49,7 @@ const processOrder = Effect.fn("OrderService.processOrder")(function* (input: Or
 
 ## Effect.fn for automatic tracing
 
-Use `Effect.fn` for service methods that should create named spans under the repo's observability policy. Plain functions are appropriate when tracing is disabled, a higher boundary already owns the span, or the helper is too small to justify another span. `Effect.fn` creates spans with proper names:
+Use `Effect.fn` for service methods that should create named spans under the repo's observability policy, or when the repo relies on consistent span names. Plain effect-valued functions are appropriate when tracing is disabled, a higher boundary already owns the span, the code is established and uninstrumented, or the helper is too small to justify another span. A named `Effect.fn("name")(body)` creates a span named by that string each time the returned Effect runs; the unnamed `Effect.fn(body)` form creates none:
 
 ```typescript
 // Creates span: "UserService.findById"
@@ -100,16 +96,17 @@ const processOrder = Effect.fn("OrderService.process")(function* (orderId: Order
 
 ### What to annotate
 
-**Do annotate:**
+Annotate:
 - Entity IDs (orderId, userId, etc.)
-- Important business values (amounts, statuses)
+- Business values that matter (amounts, statuses)
 - Error context when failing
 
-**Don't annotate:**
+Leave out:
 - Step-by-step progress
 - Individual item details
 - Internal implementation state
-- Sensitive data (PII, secrets)
+
+**Never** annotate sensitive data such as PII or secrets.
 
 ## Metrics
 
@@ -136,7 +133,7 @@ const processOrder = Effect.fn("OrderService.process")(function* (input: OrderIn
 })
 ```
 
-### Counter with Tags
+### Counter with tags
 
 ```typescript
 const httpRequests = Metric.counter("http_requests_total", {
@@ -207,7 +204,7 @@ const ServerLive = Layer.unwrapEffect(
 )
 ```
 
-### Config with Validation
+### Config with validation
 
 ```typescript
 const dbConfig = Config.all({
@@ -229,7 +226,7 @@ const dbConfig = Config.all({
 })
 ```
 
-### Redacted Config
+### Redacted config
 
 ```typescript
 // For sensitive values that shouldn't be logged
@@ -250,7 +247,7 @@ const program = Effect.gen(function* () {
 })
 ```
 
-### Config with Nested Structure
+### Nested config
 
 ```typescript
 const appConfig = Config.all({

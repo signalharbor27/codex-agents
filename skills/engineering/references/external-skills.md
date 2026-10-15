@@ -1,6 +1,6 @@
 # External skills
 
-Installed unmodified and hidden from automatic routing. When a pressure below is present, read the installed `<name>` skill's SKILL.md by path (`~/.agents/skills/<name>/SKILL.md`) and apply its method inside the current skill's workflow. Our skills own the workflow and our instructions win on conflict: authority, approval, scope, and Git rules never loosen because an external skill says so. Each line is trigger, then skill.
+Installed unmodified and hidden from automatic routing. When a pressure below is present, read the installed `<name>` skill's SKILL.md by path (`~/.agents/skills/<name>/SKILL.md`) and apply its method inside the current skill's workflow. Our skills own the workflow and our instructions win on conflict: authority, approval, scope, and Git rules never loosen because an external skill says so.
 
 ## Engineering
 
@@ -19,13 +19,13 @@ Installed unmodified and hidden from automatic routing. When a pressure below is
 
 ## Debugging
 
-- Any defect: reproduce, trace to the root cause, and fix it there instead of guarding the symptom: `principle-fix-root-causes`
+- Any defect (reproduce, trace to the root cause, and fix it there instead of guarding the symptom): `principle-fix-root-causes`
 - Two or more fixes sharing one premise failed the same gate: `principle-attack-the-premise`
 
 ## Testing and proof
 
 - Writing, changing, or keeping a test: `principle-test-behavior-not-implementation`
-- Before declaring done: check the real artifact, not a proxy: `principle-prove-it-works`
+- Before declaring done (check the real artifact, not a proxy): `principle-prove-it-works`
 - Trusting, reporting, or acting on a measured number: `principle-explain-the-number`
 - Running a benchmark or reporting a measured speedup or regression: `benchmark-checklist`
 

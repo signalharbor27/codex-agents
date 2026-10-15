@@ -1,7 +1,5 @@
 # Proof
 
-Load this only when the trustworthy proof is not obvious, the change has material failure modes, or you start parallel, long-running, or resource-heavy scratch runs.
-
 ## Choose the cheapest trustworthy seam
 
 Start from the claim, then select the lowest-cost evidence that can falsify it:
@@ -36,9 +34,9 @@ On hosts shared with production, run resource-pressure proofs in CPU- and memory
 
 Run focused proof and the smallest required surrounding checks. Read the output and inspect the final diff. Reuse earlier evidence after confirming the tested code, inputs, dependencies, and relevant runtime state are unchanged. A new turn alone does not invalidate proof. Repeat or broaden checks for affected edits, failures, changed state, missing evidence, or unresolved risks. Report what passed and any material proof gaps.
 
-An existing reproduction, replay, or runtime observation may supply the regression signal. Add a persistent test when it adds durable protection; avoid checks that merely repeat implementation details.
+An existing reproduction, replay, or runtime observation may supply the regression signal. Add a persistent test when it adds durable protection; a check that only repeats implementation details adds none.
 
-## Source basis
+## Provenance
 
 - Gerard Meszaros, *xUnit Test Patterns*: test doubles, smells, and maintainable verification.
 - Steve Freeman and Nat Pryce, *Growing Object-Oriented Software, Guided by Tests*: tests through meaningful boundaries.

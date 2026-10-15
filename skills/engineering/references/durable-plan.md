@@ -1,6 +1,6 @@
 # Durable plan
 
-Load this only after the user requests or authorizes an in-repo plan that must survive sessions or agents. Keep ordinary plans inline.
+Keep ordinary plans inline; this file applies only to an in-repo plan the user requested or authorized.
 
 Suggested target-repo locations:
 
@@ -34,4 +34,4 @@ Distinguish running, completed, failed, and lost attempts. Before retrying a los
 6. Update the plan when a decision, frontier, slice status, scope, or blocker changes. Link to authoritative ADRs, issues, diffs, or documents instead of copying their detail.
 7. Create an ADR only for a surprising, durable choice that is hard to reverse.
 
-The plan is ready for execution when each dispatched slice has an owner, resolved implementation blockers, agreed shared contracts, observable acceptance criteria, and verification. Parallel groups need compatible write ownership; keep acceptance that depends on unfinished integration open until the final end-to-end proof passes. Do not turn uncertainty into premature tickets or the plan into a file-by-file script, architecture essay, issue-tracker workflow, or substitute for code review. Commit it only when the user requested that artifact or it has agreed team value.
+The plan is ready for execution when each dispatched slice has an owner, resolved implementation blockers, agreed shared contracts, observable acceptance criteria, and verification. Parallel groups need compatible write ownership; keep acceptance that depends on unfinished integration open until the final end-to-end proof passes. The plan stays at the level of slices and decisions; a file-by-file script, architecture essay, issue-tracker workflow, or substitute for code review is outside it. Commit it only when the user requested that artifact or it has agreed team value.

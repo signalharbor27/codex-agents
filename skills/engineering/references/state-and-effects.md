@@ -1,7 +1,5 @@
 # State and effects
 
-Load this for money, durable state, external effects, webhooks, jobs, retries, concurrency, or recovery.
-
 ## Model the operation
 
 Before editing, write the shortest useful state/effect map:
@@ -34,12 +32,12 @@ Prefer database constraints, compare-and-swap transitions, leases, or provider i
 
 ## Agent guardrails
 
-- Do not add queues, sagas, outboxes, or state machines when one transaction or synchronous call is sufficient.
-- Do not claim exactly-once delivery; design idempotent effects and at-least-once handling where applicable.
-- Do not hide partial failure behind generic success responses.
+- Use one transaction or synchronous call when it is sufficient; add queues, sagas, outboxes, or state machines only when it is not.
+- Design idempotent effects and at-least-once handling where applicable; never claim exactly-once delivery.
+- Report partial failure explicitly instead of behind a generic success response.
 - Add logs/metrics only for states operators must distinguish or recover.
 
-## Source basis
+## Provenance
 
 - Martin Kleppmann, *Designing Data-Intensive Applications*: consistency, concurrency, idempotence, and failure reasoning.
 - Michael Nygard, *Release It!*: stability patterns and production failure modes.

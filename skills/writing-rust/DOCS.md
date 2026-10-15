@@ -1,9 +1,6 @@
 # Rust documentation conventions (RFC 1574)
 
-> Read this when touching public APIs, crate or module docs, examples, or `# Errors` / `# Panics` / `# Safety` sections.
-> Treat these rules as interface work, not post-hoc polish.
-
-Follow these rules for doc comments (`///`) on public Rust items.
+Follow these rules for doc comments (`///`) on public Rust items. Write the docs as part of the API change.
 
 ## Summary sentence
 
@@ -43,7 +40,7 @@ Use `//!` only for crate-level and module-level docs at the top of the file.
 
 ## Section headings
 
-Use these exact headings (always plural):
+Use these exact headings, in the plural form for Examples, Errors, and Panics; Safety and Undefined Behavior stay as written:
 
 ```rust
 /// Summary sentence.
@@ -158,7 +155,7 @@ pub fn divide(dividend: i32, divisor: i32) -> i32 {
 
 ## Safety section
 
-Required for `unsafe` functions.
+A `# Safety` section is required for `unsafe` functions.
 
 ```rust
 /// Dereferences a raw pointer.

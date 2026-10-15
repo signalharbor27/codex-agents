@@ -1,16 +1,5 @@
 # Batch processing
 
-Read this reference when bounded recomputation, offline pipelines, large joins, or the relative simplicity of batch processing drives the design.
-
-## Topics
-- Batch and stream processing
-- MapReduce
-- Dataflow engines
-- Join algorithms
-- Fault tolerance
-
----
-
 ## Batch and stream processing
 
 | Aspect | Batch | Stream |
@@ -20,12 +9,10 @@ Read this reference when bounded recomputation, offline pipelines, large joins, 
 | Processing | Full dataset available | Incremental |
 | Fault recovery | Rerun from start | Checkpoints |
 
-**Applying the Unix philosophy**:
+Applying the Unix philosophy:
 - Keep inputs immutable.
 - Produce complete outputs without modifying inputs.
 - Compose programs by passing one program's output to another.
-
----
 
 ## MapReduce
 
@@ -35,9 +22,9 @@ Read this reference when bounded recomputation, offline pipelines, large joins, 
 Input → Map → Shuffle → Reduce → Output
 ```
 
-1. **Map**: Process each record independently, emit key-value pairs
-2. **Shuffle**: Group by key, sort
-3. **Reduce**: Aggregate all values for each key
+1. Map: Process each record independently, emit key-value pairs
+2. Shuffle: Group by key, sort
+3. Reduce: Aggregate all values for each key
 
 ### Example: word count
 
@@ -66,17 +53,15 @@ Its costs are repeated materialization and high latency:
 
 ### MapReduce workflows
 
-**Chained jobs**: Output of one job → input of next.
+Chained jobs: Output of one job → input of next.
 
 Each chained job writes to the distributed filesystem, so long workflows pay repeated I/O costs.
 
-**Workflow schedulers** (Oozie, Airflow): Manage job dependencies.
-
----
+Workflow schedulers (Oozie, Airflow): Manage job dependencies.
 
 ## Dataflow engines
 
-**Examples**: Spark, Flink, Tez.
+Examples: Spark, Flink, Tez.
 
 ### Improvements over MapReduce
 
@@ -89,28 +74,26 @@ Each chained job writes to the distributed filesystem, so long workflows pay rep
 
 ### Spark RDDs
 
-**Resilient Distributed Datasets**:
+Resilient Distributed Datasets:
 - Immutable, partitioned collections
 - Lazy evaluation
 - Track lineage for fault tolerance
 
-**Transformations** (lazy):
+Transformations (lazy):
 - map, filter, flatMap
 - groupByKey, reduceByKey
 - join, cogroup
 
-**Actions** (trigger execution):
+Actions (trigger execution):
 - collect, count, save
 
 ### Fault tolerance
 
-**MapReduce**: Re-run failed task from HDFS input.
+MapReduce: Re-run failed task from HDFS input.
 
-**Spark**: Recompute from lineage (parents in DAG).
+Spark: Recompute from lineage (parents in DAG).
 
-**Checkpointing**: Materialize intermediate state for long lineages.
-
----
+Checkpointing: Materialize intermediate state for long lineages.
 
 ## Join algorithms
 
@@ -125,7 +108,7 @@ Dataset B (sorted): [b1, b2, b3, ...]
 Walk through both, emit matches
 ```
 
-**MapReduce implementation**:
+MapReduce implementation:
 - Map: Emit (join_key, record) with tag for dataset
 - Shuffle: Group by join_key
 - Reduce: Match records from both datasets
@@ -137,9 +120,9 @@ When one dataset is small:
 2. Broadcast to all partitions
 3. Each mapper looks up in hash table
 
-**No shuffle needed**: Very efficient.
+No shuffle needed: Very efficient.
 
-**Requirement**: Small dataset fits in memory.
+Requirement: Small dataset fits in memory.
 
 ### Partitioned hash join (shuffle hash join)
 
@@ -147,7 +130,7 @@ When one dataset is small:
 2. Build hash table for one partition
 3. Probe with other partition
 
-**Each partition independent**: Parallelizable.
+Each partition independent: Parallelizable.
 
 ### Choose a join strategy
 
@@ -163,20 +146,18 @@ Both datasets large, not co-located?
   → Sort-merge better if multiple joins on same key
 ```
 
----
-
 ## MapReduce patterns
 
 ### Skewed joins
 
-**Problem**: One key has many more records (celebrity problem).
+Problem: One key has many more records (celebrity problem).
 
-**Solution 1 - Salted keys**:
+Solution 1, salted keys:
 1. Add random suffix to hot keys
 2. Replicate other side for each suffix
 3. Join, then aggregate
 
-**Solution 2 - Two-pass**:
+Solution 2, two-pass:
 1. First pass: Sample to identify hot keys
 2. Second pass: Broadcast hot keys, shuffle rest
 
@@ -184,7 +165,7 @@ Both datasets large, not co-located?
 
 Sort within each reduce key by secondary attribute.
 
-**Implementation**:
+Implementation:
 1. Composite key: (primary_key, secondary_key)
 2. Partition by primary_key only
 3. Sort by composite key
@@ -202,15 +183,13 @@ def combiner(word, counts):
     emit(word, sum(counts))  # Local aggregation
 ```
 
-**Requirement**: Aggregation must be associative and commutative.
-
----
+Requirement: Aggregation must be associative and commutative.
 
 ## Output and side effects
 
 ### Write output
 
-**HDFS output**: Write to temp directory, atomic rename on success.
+HDFS output: Write to temp directory, atomic rename on success.
 
 For database output, generate files and bulk-load them. Do not write directly: task retries can duplicate effects.
 
@@ -218,28 +197,24 @@ For database output, generate files and bulk-load them. Do not write directly: t
 
 Failed tasks may retry, so use deterministic output paths and names that a retry can safely replace.
 
----
-
 ## Batch processing principles
 
 ### Derived data
 
-**Principle**: Batch jobs produce derived datasets from raw data.
+Principle: Batch jobs produce derived datasets from raw data.
 
-**Benefits**:
+Benefits:
 - Can regenerate if logic changes
 - Can reprocess historical data
 - Raw data is source of truth
 
 ### Recovery from human error
 
-**Immutable inputs**: Can always reprocess.
+Immutable inputs: Can always reprocess.
 
-**Explicit outputs**: Mistakes don't corrupt source data.
+Explicit outputs: Mistakes don't corrupt source data.
 
-**Versioned outputs**: Can compare versions, rollback.
-
----
+Versioned outputs: Can compare versions, rollback.
 
 ## Beyond MapReduce
 
@@ -262,10 +237,10 @@ Raw Data → Batch Layer → Batch Views ─┐
     └───→ Speed Layer → Real-time Views┘
 ```
 
-**Batch layer**: Complete, accurate, high latency.
-**Speed layer**: Approximate, low latency.
-**Serving layer**: Merge results.
+- Batch layer: complete, accurate, high latency.
+- Speed layer: approximate, low latency.
+- Serving layer: merges results.
 
 The main cost is maintaining two implementations of the same business logic.
 
-**Alternative (Kappa)**: Stream only, with reprocessing capability.
+Alternative (Kappa): Stream only, with reprocessing capability.

@@ -1,6 +1,6 @@
 # Merge danger classification
 
-Read this when writing or updating the Merge danger footer. Classify from the final diff and what merging and deploying it does, not from its size. A one-line template change that emails every customer is a one-way door.
+Classify from the final diff and what merging and deploying it does, not from its size. A one-line template change that emails every customer is a one-way door.
 
 ## Footer
 

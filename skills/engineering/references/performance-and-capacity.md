@@ -1,7 +1,5 @@
 # Performance and capacity
 
-Load this for hot paths, latency comparisons or research, latency/throughput targets, resource limits, or capacity work.
-
 ## Latency comparisons
 
 Before calculating, record the event IDs, source files or columns, start and end clock boundaries, units, sample window, formula, exclusions, and one worked row. Check that the samples measure the same interval and that their clocks are comparable. Match IDs when comparing the same events; report unmatched rows and sample sizes.
@@ -36,9 +34,9 @@ Across repeated attempts, keep a terse record of the bottleneck hypothesis, test
 
 ## Agent guardrails
 
-Do not introduce caching, concurrency, batching, denormalization, or custom data structures from intuition alone. Do not benchmark a toy path that omits the real bottleneck. Record the command, dataset, environment, and before/after result.
+Introduce caching, concurrency, batching, denormalization, or custom data structures only on measured evidence. Benchmark the real path, including its bottleneck, instead of a toy path. Record the command, dataset, environment, and before/after result.
 
-## Source basis
+## Provenance
 
 - Brendan Gregg, *Systems Performance*: workload characterization, USE method, measurement, and profiling.
 - Google, *Site Reliability Engineering*: service-level objectives, saturation, capacity, and load testing.

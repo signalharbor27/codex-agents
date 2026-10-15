@@ -2,7 +2,7 @@
 
 ## RpcGroup for API organization
 
-**Use `RpcGroup.make`** to organize related RPC endpoints:
+Group related RPC endpoints with `RpcGroup.make`:
 
 ```typescript
 import { Rpc, RpcGroup } from "@effect/rpc"
@@ -53,8 +53,8 @@ export const UserRpc = RpcGroup.make("User", {
 
 ### Query versus mutation
 
-- **Rpc.query**: Read operations that are idempotent and cacheable
-- **Rpc.mutation**: Write operations that may have side effects
+- `Rpc.query` for idempotent, cacheable reads
+- `Rpc.mutation` for writes that may have side effects
 
 ```typescript
 // Query - safe to retry, can be cached
@@ -150,7 +150,7 @@ export const ProtectedUserRpc = UserRpc.middleware(AuthMiddleware)
 
 ## Workflow definition
 
-**Use `Workflow.make`** with explicit idempotency keys:
+Define each workflow with `Workflow.make` and an explicit idempotency key:
 
 ```typescript
 import { Workflow } from "@effect/cluster"

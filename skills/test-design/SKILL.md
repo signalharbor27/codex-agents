@@ -8,31 +8,29 @@ description: "Use when tests are the main deliverable or uncertainty, including 
 ## Overview
 
 Design the smallest test set that can falsify the important behavior.
-Keep routine implementation proof in `engineering`. Use this skill when the test shape is the deliverable or the main uncertainty.
 
 ## When to Use
 
-- Explicit TDD or test-first feature work
+- Test-first feature work
 - Selecting unit, integration, contract, property, state-machine, or end-to-end proof
 - Designing assertions, fixtures, or real/fake/mock boundaries
 - Adding focused tests for known behavior or legacy characterization
 
 ## When Not to Use
 
-- Use `debugging` first when the failure or failing boundary is unknown
-- Use `engineering` when test choice is routine support for an understood change
-- Use `improve-test-suite` for a repo- or subsystem-wide test-suite audit
+- Unknown failure or failing boundary: use `debugging` first.
+- Test choice as routine support for an understood change: use `engineering`.
+- A repo- or subsystem-wide test-suite audit: use `improve-test-suite`.
 
 ## Minimal Workflow
 
 1. State the behavior claim, the failure risk, and the public or stable seam that can falsify it.
-2. Inspect existing coverage, repository commands, incident history, and the real dependency boundary before adding tests.
+2. Inspect existing coverage, repository commands, incident history, and the real dependency boundary before adding tests. Done when you know which existing tests already cover the claim.
 3. Choose the cheapest layer that can fail for the target behavior. Prefer focused contract or integration proof over broad E2E and internal mock choreography.
-4. Apply the [proof guidance](../engineering/references/proof.md) to ground setup and expected results, and establish how the test rejects a plausible broken implementation for material behavior.
-5. Keep the boundary under test real. Fake slow or uncontrollable collaborators; mock only an understood external protocol, never the behavior being trusted.
-6. Select only relevant cases: happy path, boundary partitions, invalid input, state transition, duplicate/retry, partial failure, permission denial, concurrency, or recovery.
-7. For TDD, complete one vertical red-green-refactor slice at a time and observe the expected failure before production edits. Continue through the requested behavior; the first green slice does not end a larger task.
-8. Run the focused tests and relevant surrounding gate. Finish when the target claim can fail for the right reason, coverage added or replaced by this task has no needless duplication, and material proof gaps are stated. Reuse earlier results only after confirming the tested code and relevant state are unchanged.
+4. Apply the [proof guidance](../engineering/references/proof.md) to keep the boundary under test real, choose doubles, ground setup and expected results, and establish how the test rejects a plausible broken implementation for material behavior. Mock only an understood external protocol, never the behavior being trusted.
+5. Select only relevant cases: happy path, boundary partitions, invalid input, state transition, duplicate/retry, partial failure, permission denial, concurrency, or recovery.
+6. For TDD, complete one vertical red-green-refactor slice at a time and observe the expected failure before production edits. Continue through the requested behavior; the first green slice does not end a larger task.
+7. Run the focused tests and relevant surrounding gate. Done when the target claim can fail for the right reason, coverage added or replaced by this task has no needless duplication, and material proof gaps are stated. Reuse earlier results only after confirming the tested code and relevant state are unchanged.
 
 ## Reference Routing
 

@@ -1,7 +1,5 @@
 # Legacy change
 
-Load this when behavior is poorly understood, under-tested, tightly coupled, migration-sensitive, or requires repeated mechanical edits.
-
 ## Preserve before improving
 
 1. Name the behavior that must remain unchanged.
@@ -14,7 +12,7 @@ Treat unfamiliar code as load-bearing until callers, stored data, operational us
 
 ## Decision rules
 
-- Characterize valuable behavior, not every incidental detail.
+- Characterize behavior that users, callers, or operators depend on, not every incidental detail.
 - Preserve incident tests and odd compatibility behavior until their consumers are disproven.
 - Add a seam only when it enables observation or replacement needed by this change.
 - Keep cleanup separate from behavior changes when combining them would hide causality.
@@ -26,10 +24,10 @@ Validate one representative edit and its proof before automating the repetition.
 
 ## Agent guardrails
 
-Do not replace difficult code with plausible new code, infer intent from names alone, or delete “legacy” paths after a single repository search. Evidence must include the relevant callers, runtime/config paths, stored data, or rollout state.
+Evolve difficult code through the steps above instead of replacing it with plausible new code. Base inferred intent and any deletion of a "legacy" path on evidence from the relevant callers, runtime/config paths, stored data, or rollout state; names alone and a single repository search fall short.
 
-## Source basis
+## Provenance
 
 - Michael Feathers, *Working Effectively with Legacy Code*: characterization tests, seams, sprout/wrap techniques, and dependency breaking.
 - Martin Fowler, *Refactoring*: small behavior-preserving transformations.
-- Chesterton’s Fence: understand the protected purpose before removing an established structure.
+- Chesterton's Fence: understand the protected purpose before removing an established structure.

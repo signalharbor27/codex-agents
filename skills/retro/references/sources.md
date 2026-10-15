@@ -35,7 +35,7 @@ Open a raw log only when a digest hints at a problem: the user correcting, repea
 
 ## PR reviews
 
-Use GitHub REST through `gh api`; the shared GraphQL quota is often exhausted. When a command reports exhausted GraphQL quota, follow the GraphQL quota recovery reference of the `finishing-a-development-branch` skill.
+Use GitHub REST through `gh api`; the shared GraphQL quota is often exhausted. When a command reports exhausted GraphQL quota, follow `finishing-a-development-branch/references/graphql-quota-recovery.md`.
 
 ```bash
 gh api 'repos/<owner>/<repo>/pulls?state=closed&sort=updated&direction=desc&per_page=50' \

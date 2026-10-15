@@ -1,7 +1,5 @@
 # Security
 
-Load this for auth, permissions, secrets, attacker-controlled input, abuse, replay, or sensitive data.
-
 ## Draw the trust boundary
 
 Name:
@@ -28,11 +26,11 @@ Consider concrete abuse relevant to the feature: tenant crossing, IDOR, forged e
 
 ## Agent guardrails
 
-Do not add generic security infrastructure without a present threat. Do not “fail open” to preserve UX on a privileged path. When security depends on a library or service version, verify its current documented contract.
+Add security infrastructure only for a present threat. A privileged path fails closed even at a UX cost; never "fail open" to preserve UX. When security depends on a library or service version, verify its current documented contract.
 
 For command guards, bind the decision to the executed operation and its target: parse command arguments and payload boundaries, then resolve whether the target is production, disposable, or unknown. SQL quoted in a source edit or PR body is data; an SQL client executing that payload is an operation. Preserve denial for unsafe production execution and uncertain execution targets. Cover harmless edits and disposable targets alongside actual production SQL in the guard's own regression fixtures.
 
-## Source basis
+## Provenance
 
 - OWASP ASVS and OWASP Cheat Sheet Series: boundary validation, access control, secrets, SSRF, and webhook guidance.
-- Jerome Saltzer and Michael Schroeder, “The Protection of Information in Computer Systems”: least privilege, complete mediation, and fail-safe defaults.
+- Jerome Saltzer and Michael Schroeder, "The Protection of Information in Computer Systems": least privilege, complete mediation, and fail-safe defaults.

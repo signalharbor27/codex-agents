@@ -1,6 +1,6 @@
 # Error patterns
 
-## Why explicit error types?
+## Why explicit error types
 
 Generic errors such as `BadRequestError` or `NotFoundError` look convenient but create ambiguity:
 
@@ -119,12 +119,7 @@ export class SessionExpiredError extends Schema.TaggedError<SessionExpiredError>
 
 ## Schema.TaggedError for schema-driven errors
 
-Follow the error representation already established by the repo. Prefer `Schema.TaggedError` when an error crosses RPC, HTTP, persistence, or another schema-driven boundary and needs serialization or annotations. For local-only failures, `Data.TaggedError`, a tagged value, or the repo's existing error type may be simpler. `Schema.TaggedError` provides:
-
-1. **Serialization** - Errors can be sent over RPC/network
-2. **Type safety** - `_tag` discriminator enables `catchTag`
-3. **Consistent structure** - All errors have predictable shape
-4. **HTTP status mapping** - Via `HttpApiSchema.annotations`
+Follow the error representation already established by the repo. Prefer `Schema.TaggedError` when an error crosses RPC, HTTP, persistence, or another schema-driven boundary and needs serialization or annotations. For local-only failures, `Data.TaggedError`, a tagged value, or the repo's existing error type may be simpler. A `Schema.TaggedError` serializes over RPC and the network, carries the `_tag` discriminator that `catchTag` narrows on, gives every error a predictable shape, and maps HTTP status through `HttpApiSchema.annotations`.
 
 ### Basic error definition
 
@@ -171,7 +166,7 @@ export class ForbiddenError extends Schema.TaggedError<ForbiddenError>()(
 ### Required fields
 
 Errors that cross a human-readable or network boundary should usually have:
-- `message: Schema.String` - Human-readable description
+- `message: Schema.String`, a human-readable description
 - Relevant context fields that are safe for that boundary (IDs, etc.)
 - Optional `cause: Schema.optional(Schema.String)` for error chains
 
@@ -233,7 +228,7 @@ const processOrder = Effect.fn("OrderService.processOrder")(function* (input: Or
 })
 ```
 
-### Why not catchAll?
+### Why not catchAll
 
 ```typescript
 // WRONG - Loses type information
@@ -376,7 +371,7 @@ yield* Activity.make({
 
 ## HTTP status codes without generic errors
 
-**Map HTTP status codes at the error level, not by creating generic error classes.** Each explicit error can have its own HTTP status.
+Map HTTP status codes on each explicit error instead of creating generic error classes. Each explicit error can have its own HTTP status, and several can share one.
 
 ```typescript
 // ✅ CORRECT - Domain errors with HTTP status annotations
@@ -424,7 +419,7 @@ Effect.catchTags({
 
 ### When generic errors are acceptable
 
-Generic errors are only acceptable for **truly unrecoverable internal errors** where:
+Generic errors are acceptable only for unrecoverable internal errors where:
 - The frontend can only show "Something went wrong"
 - No user action can fix it
 - You're hiding internal details for security

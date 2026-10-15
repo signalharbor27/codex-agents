@@ -1,8 +1,8 @@
 # Effect-Atom reference
 
-Effect-Atom provides reactive state management for Effect. Its atoms are reactive state containers that integrate with Effect and React.
+effect-atom adds reactive state management to Effect. Its atoms are state containers that integrate with Effect and React.
 
-**Source code:** https://github.com/tim-smart/effect-atom (open in browser)
+Source: [tim-smart/effect-atom](https://github.com/tim-smart/effect-atom)
 
 ## Core API
 

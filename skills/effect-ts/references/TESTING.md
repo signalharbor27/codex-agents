@@ -1,12 +1,10 @@
 # Testing Effect-TS with Vitest
 
-Use this guide to write deterministic Effect-TS tests, especially with `@effect/vitest`.
-
 ## `it.effect` uses `TestClock`
 
-`@effect/vitest`'s `it.effect` runs your test with a **TestContext** (including **`TestClock`**).
+`@effect/vitest`'s `it.effect` runs your test with a `TestContext`, including `TestClock`.
 
-- Time starts at **0**.
+- Time starts at 0.
 - Time advances only when the test advances it.
 - `Effect.sleep(...)`, `Schedule.spaced(...)`, retry backoff, and polling loops stall until you call `TestClock.adjust(...)`.
 
@@ -14,9 +12,7 @@ Use `it.live` when the test requires wall-clock time.
 
 ## Use the Effect clock instead of Date.now()
 
-Production code that calls `Date.now()` is difficult or impossible to test deterministically with `TestClock`.
-
-Prefer Effect's clock service:
+`TestClock` cannot control production code that calls `Date.now()`. Prefer Effect's clock service:
 
 ```ts
 import { Clock, Effect } from "effect";
@@ -51,9 +47,7 @@ If the test must use real timers, such as for Node timer integration, run the wh
 
 ## Testing retries, backoff, and scheduled loops
 
-Retry schedules and `Schedule.spaced(...)` don't progress under `TestClock` unless you advance time.
-
-Use this pattern:
+Fork the effect, advance the clock, then join:
 
 ```ts
 import { Effect, Fiber, TestClock } from "effect";
@@ -80,7 +74,7 @@ Most Effect test hangs come from one of these sources:
 - A scoped resource that never gets finalized because the scope never closes
 
 - Prefer bounded consumption: `Stream.take(stream, n)` / `Stream.takeUntil(...)`.
-- If you fork a fiber, ensure it is interrupted on all paths:
+- Interrupt every forked fiber on all paths:
   - `yield* Fiber.interrupt(fiber)`
   - or run it inside a `Scope` and let scope finalizers do the cleanup.
 - Consider `Effect.timeout(...)` / `Effect.timeoutFail(...)` around anything that could block.
@@ -97,8 +91,8 @@ This does not guarantee that the forked fibers have reached the code you intend 
 `Effect.fork` creates a fiber and schedules it, but the scheduler may not run it until later. If you open the gate too early:
 
 - each fiber can observe the gate as already-open
-- your “concurrent” test can become **effectively sequential**
-- assertions like “underlying effect executed once” can fail intermittently even though the implementation is correct
+- your "concurrent" test can become effectively sequential
+- assertions like "underlying effect executed once" can fail intermittently even though the implementation is correct
 
 ### Deterministic sharing: one cache, two suspended callers
 
@@ -146,21 +140,8 @@ Validated with `effect@3.22.2`, `@effect/vitest@0.30.0`, and `vitest@3.2.4`. Che
 
 ## Use it.scoped for scoped resources
 
-If your test (or the code under test) uses `Effect.acquireRelease`, `Stream.asyncScoped`, resourceful Layers, etc.,
-prefer `it.scoped` / `it.scopedLive` so finalizers are guaranteed to run when the test completes.
+If your test (or the code under test) uses `Effect.acquireRelease`, `Stream.asyncScoped`, resourceful Layers, or similar, prefer `it.scoped` / `it.scopedLive` so finalizers are guaranteed to run when the test completes.
 
 ## Stay within the test runtime
 
-Avoid calling `Effect.runPromise(...)` (or similar “run” APIs) _inside_ an `it.effect` program to drive internal logic.
-It can accidentally run work on a different runtime (e.g. a live clock), defeating `TestClock` determinism.
-
-Prefer staying inside the Effect you're already running:
-
-- pass `Effect`s around and `yield*` them
-- if you truly need a Promise boundary, do it at the test boundary, not mid-program
-
-## Quick choices
-
-- Uses timeouts/sleeps/retries/polling? → `it.effect` + `TestClock.adjust(...)`
-- Needs wall clock / Node timers / real delays? → `it.live` (or `it.scopedLive`)
-- Allocates resources that must be finalized? → `it.scoped` / `it.scopedLive`
+Inside an `it.effect` program, pass `Effect`s around and `yield*` them instead of calling `Effect.runPromise(...)` or a similar "run" API to drive internal logic. A nested run can execute on a different runtime, such as one with a live clock, and lose `TestClock` determinism. When a Promise boundary is unavoidable, put it at the test boundary, not mid-program.
