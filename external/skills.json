@@ -6,7 +6,7 @@
       "subpath": "pstack",
       "hidden": true,
       "skills": [
-        "architect", "arena", "interrogate", "swarm", "blast-radius", "correct", "benchmark-checklist", "bro",
+        "architect", "arena", "interrogate", "blast-radius", "correct", "benchmark-checklist", "bro",
         "figure-it-out", "show-me-your-work", "typescript-best-practices",
         "principle-attack-the-premise", "principle-boundary-discipline", "principle-build-the-lever",
         "principle-encode-lessons-in-structure", "principle-exhaust-the-design-space", "principle-experience-first",

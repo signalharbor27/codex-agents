@@ -193,7 +193,6 @@ const pstackLines: [line: string, picks: [role: string, provider?: Provider][]][
   ["reflect judgment, divergent, synthesizer", [["judge"]]],
   ["arena runners", [["architect"]]],
   ["arena cross-judge pool", [["judge"]]],
-  ["swarm workers", [["explorer"]]],
   ["architect runners", [["architect"]]],
   ["interrogate reviewers", [["reviewer"], ["design_reviewer"]]],
 ]
