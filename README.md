@@ -184,7 +184,7 @@ Live evaluations require `--allow-live` and an explicit case or `--all`. Their d
 
 ## Sources
 
-The verification and investigation skills, plus selected engineering references, draw on [pstack](https://github.com/cursor/plugins/tree/6ed0f7a9504f577d7529064103cecce9be7dfc5e/pstack/skills) and are adapted for Codex. Other pstack skills, including `bro`, install unmodified as [external skills](#external-skills). Engineering references name the software-design sources behind their guidance.
+The verification and investigation skills, plus selected engineering references, draw on [pstack](https://github.com/cursor/plugins/tree/6ed0f7a9504f577d7529064103cecce9be7dfc5e/pstack/skills) and are adapted for Codex. Other pstack skills, including `bro`, `interrogate`, and the formal-verification skills, install unmodified as [external skills](#external-skills). The bounded review rounds in `review-and-simplify-changes` adapt pstack's `shipping` and `autopilot-full` verification and `bugbot-triage`, and the loop cap in Matt Pocock's [code-review](https://github.com/mattpocock/skills) and software-factory guidance. Engineering references name the software-design sources behind their guidance.
 
 Prompt and skill guidance:
 

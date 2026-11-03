@@ -135,7 +135,7 @@ describe("role rendering", () => {
     expect(rule).toStartWith("---\ndescription: pstack per-role model choices (overrides skill defaults)\nalwaysApply: true\n---\n")
     expect(rule).toContain("~/.agents/briefs/<role>.md")
     expect(rule).toContain("\narena runners: claude-opus-5-5-high, gpt-6-astra-high (architect)\n")
-    expect(rule).toContain("\ninterrogate reviewers: gpt-6.1-sol-high (reviewer), claude-opus-5-5-medium (design_reviewer)\n")
+    expect(rule).toContain("\ninterrogate reviewers: gpt-6.1-sol-high (verifier), claude-opus-5-5-medium (implementer)\n")
     expect(rule).toContain("\nfeature, refactoring: claude-opus-5-5-medium (implementer)\n")
     const lines = rule.split("\n").filter(line => /^[a-z].*: /.test(line) && !line.startsWith("description:") && !line.startsWith("alwaysApply:"))
     expect(lines.length).toBeGreaterThan(0)

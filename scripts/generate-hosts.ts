@@ -194,7 +194,7 @@ const pstackLines: [line: string, picks: [role: string, provider?: Provider][]][
   ["arena runners", [["architect"]]],
   ["arena cross-judge pool", [["judge"]]],
   ["architect runners", [["architect"]]],
-  ["interrogate reviewers", [["reviewer"], ["design_reviewer"]]],
+  ["interrogate reviewers", [["verifier"], ["implementer"]]],
 ]
 
 /** The model rule pstack's skills read from ~/.cursor/rules/pstack-models.mdc, generated so they run on our seats. A value is `<model>-<effort>` slugs followed by the role whose brief launches them. */

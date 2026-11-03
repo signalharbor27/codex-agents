@@ -22,7 +22,7 @@ A `CODING_STANDARDS.md` at the repository root adds project rules or overrides t
   - **Fix once**: an `origin: new` Standards finding that names its standard. The fix wave applies it and the verifier confirms it; one the verifier cannot confirm becomes a lead, and a `fix: audit` one goes to Q with its proposed scope.
   - **Lead**: anything without that evidence, such as a smell, a style preference, or a speculative risk. List it once, one line, in the review notes or PR body; it is terminal and never reopens a round.
   - **Audit item**: every `origin: touched` finding, whatever its fix tag. List it under `## Audit items` in the PR body when a PR exists, otherwise in the handoff; it is terminal and gets no edit in this change.
-- **Risk findings**: a finding on security, privacy, auth, billing, data loss or retention, migrations or schema, or concurrency and idempotency is never downgraded to a lead for lack of a repro. Settle it with evidence; an unsettled one goes to `oracle` and `judge`, or to Q.
+- **Risk findings**: a finding on security, privacy, auth, billing, data loss or retention, migrations or schema, or concurrency and idempotency is never downgraded to a lead for lack of a repro. Settle it with evidence, such as an `interrogate` run; an unsettled one goes to `oracle` and `judge`, or to Q.
 - Name the standard behind every Standards finding. A preference that no standard covers belongs in synthesis as a proposed standard, not as a finding.
 
 ## Module design
