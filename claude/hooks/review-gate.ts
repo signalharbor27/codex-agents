@@ -18,7 +18,7 @@ import { homedir } from "node:os"
 import { join, resolve as resolvePath } from "node:path"
 import { type Command, commands, gh, ghApi } from "./shell.ts"
 
-export const recordSyntax = "bash <review skill dir>/scripts/record-review.sh <base-ref> --reviewed <rev> --reviewers <role,...> --open-findings <n> [--door one-way|two-way --blast-radius localized|service|customers|data] [--copy-humanized]"
+export const recordSyntax = "bash <review skill dir>/scripts/record-review.sh <base-ref> --reviewed <rev> --reviewers <role,...> --open-findings <n> --rounds <n> --leads <n> [--door one-way|two-way --blast-radius localized|service|customers|data] [--copy-humanized]"
 
 /** A command that publishes a PR for review, with whatever names its target. */
 export type Publish = {

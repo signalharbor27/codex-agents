@@ -48,7 +48,7 @@ export const roles: Record<string, Role> = {
     color: "purple",
   },
   design_reviewer: {
-    description: "Use on the first full review pass for a second-family review focused on abstractions, boundaries, and simplification. Excludes fix deltas and mechanical checks.",
+    description: "Use in round 1 of a large, one-way, or hot-path change review for a second-family review focused on abstractions, boundaries, and simplification. Excludes fix deltas and mechanical checks.",
     seats: [opus("medium")],
     authority: "read-only",
     skills: ["review-agent"],
@@ -105,7 +105,7 @@ export const roles: Record<string, Role> = {
     color: "purple",
   },
   refiner: {
-    description: "Use when independent review reported clear Standards fixes to apply in a separate context before delta review. Excludes judgment calls, new behavior, and review of its own edits.",
+    description: "Use when independent review reported clear Standards fixes to apply in a separate context before verification. Excludes judgment calls, new behavior, and review of its own edits.",
     seats: [opus("medium")],
     authority: "write",
     skills: [],
@@ -121,7 +121,7 @@ export const roles: Record<string, Role> = {
     color: "red",
   },
   verifier: {
-    description: "Use when completed implementation needs command-backed acceptance evidence. Excludes source-only review, test design, and repairs.",
+    description: "Use when completed implementation or a review fix wave needs command-backed acceptance evidence. Excludes source-only review, test design, and repairs.",
     seats: [sol("high")],
     authority: "run",
     skills: [],

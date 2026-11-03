@@ -1,6 +1,6 @@
 # Coding standards
 
-Apply these when judging a diff or proposing a standard. Each standard names what to flag, the fix, and where it stops applying. Judge every touched file in full, plus the change's direct effects; scope and tags are defined under [Classify each finding](#classify-each-finding). Report a violation as a Standards finding that cites the standard's name, location, evidence, and fix.
+Apply these when judging a diff or proposing a standard. Each standard names what to flag, the fix, and where it stops applying. Judge every touched file in full, plus the change's direct effects; scope and tags are defined under [Classify each finding](#classify-each-finding). Report a violation as a Standards finding that cites the standard's name, location, evidence, and fix; pre-existing code in touched files gets one line per finding.
 
 ## Repo extension
 
@@ -15,10 +15,14 @@ A `CODING_STANDARDS.md` at the repository root adds project rules or overrides t
 - **Origin**: `origin: new` when the diff adds or changes the code; `origin: touched` when the code predates the diff in a touched file. Large-change audit findings in untouched files of a touched subsystem count as `origin: touched`.
 - **Fix tag**, one per Standards finding:
   - `fix: clear`: the edit preserves behavior, stays within the touched files and their direct tests, changes no exported or public signature or contract, and has one remedy the cited standard names. `refiner` applies it.
-  - `fix: audit`: the fix needs an untouched file, a cross-module redesign, or a public contract change, or would exceed the touched-origin budget below.
+  - `fix: audit`: the fix needs an untouched file, a cross-module redesign, or a public contract change.
   - `fix: judgement`: the remedy is open; the main agent decides.
-- **Touched-origin caps**: clear touched-origin fixes together may add at most as many changed lines as the original diff, or 200 lines if that is smaller; retag the rest `fix: audit` and bundle them into one audit item. In the one-way-door and hot-path review lanes, every touched-origin finding is `fix: audit`.
-- **Audit items**: a `fix: audit` finding with `origin: touched` is complete once it is listed under `## Audit items` in the PR body when a PR exists, otherwise in the handoff. That listed state is terminal: it is not an open finding and does not count toward `--open-findings`. New code must meet the standards, so a `fix: audit` finding with `origin: new` stays open until it is fixed or Q explicitly defers it.
+- **Disposition**, one per finding; severity orders findings, disposition decides what blocks:
+  - **Blocker**: the finding carries a failing run at the reviewed snapshot, a cited trace to a broken Intent requirement or contract, or a doc line the change made wrong. It stays open until a verifier confirms the fix or Q defers it.
+  - **Fix once**: an `origin: new` Standards finding that names its standard. The fix wave applies it and the verifier confirms it; one the verifier cannot confirm becomes a lead, and a `fix: audit` one goes to Q with its proposed scope.
+  - **Lead**: anything without that evidence, such as a smell, a style preference, or a speculative risk. List it once, one line, in the review notes or PR body; it is terminal and never reopens a round.
+  - **Audit item**: every `origin: touched` finding, whatever its fix tag. List it under `## Audit items` in the PR body when a PR exists, otherwise in the handoff; it is terminal and gets no edit in this change.
+- **Risk findings**: a finding on security, privacy, auth, billing, data loss or retention, migrations or schema, or concurrency and idempotency is never downgraded to a lead for lack of a repro. Settle it with evidence; an unsettled one goes to `oracle` and `judge`, or to Q.
 - Name the standard behind every Standards finding. A preference that no standard covers belongs in synthesis as a proposed standard, not as a finding.
 
 ## Module design

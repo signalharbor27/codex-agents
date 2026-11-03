@@ -16,6 +16,7 @@ When a skill names Cursor `Task`, `subagent_type`, or `pstack-models.mdc`, read 
 - Concurrent actors writing one file, branch, key, or state object: `principle-separate-before-serializing-shared-state`
 - Placing validation, error handling, or framework adapters: `principle-boundary-discipline`
 - The same instruction written twice, or a recurring correction: `principle-encode-lessons-in-structure`
+- A mistake class that keeps recurring and needs a check that fails on it: `correct`
 - What a change could break beyond the diff: `blast-radius`
 - Reading or editing `.ts` or `.tsx` files: `typescript-best-practices`
 

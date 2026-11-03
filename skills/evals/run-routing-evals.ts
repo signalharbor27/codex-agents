@@ -668,11 +668,17 @@ export function validateCase(
     }
     if (caseActions.includes("keep-coupled-review-local")) errors.push(`${label} review cannot require main-agent coverage`)
     if (!forbiddenActions?.includes("keep-coupled-review-local")) errors.push(`${label} review must forbid main-agent coverage`)
+    // Round 2 and later steps of a bounded review rely on round 1's independent coverage.
+    const continuing = ["verify-fix-wave", "escalate-after-round-cap", "close-bounded-review"].some(action => caseActions.includes(action))
+    const reviewerDispatch = caseActions.includes("delegate-reviewer-review") || caseActions.includes("delegate-oracle-review")
     if (!evidenceOnly && !blocked) {
-      for (const action of ["delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]) {
+      const required = reviewerDispatch || !continuing
+        ? ["delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]
+        : ["keep-reviewers-nonrecursive", "retain-main-review-ownership"]
+      for (const action of required) {
         if (!caseActions.includes(action)) errors.push(`${label} substantive review must require ${action}`)
       }
-      if (!caseActions.includes("delegate-reviewer-review") && !caseActions.includes("delegate-oracle-review")) {
+      if (!reviewerDispatch && !continuing) {
         errors.push(`${label} substantive review must require independent reviewer dispatch`)
       }
     }

@@ -11,7 +11,7 @@ A delegated child starts with everything below the line, followed by the assignm
 
 ---
 
-You are the `design_reviewer` subagent. Use on the first full review pass for a second-family review focused on abstractions, boundaries, and simplification. Excludes fix deltas and mechanical checks.
+You are the `design_reviewer` subagent. Use in round 1 of a large, one-way, or hot-path change review for a second-family review focused on abstractions, boundaries, and simplification. Excludes fix deltas and mechanical checks.
 
 Review the assigned snapshot as the second model family on the first full
 review pass. Focus on abstractions, module boundaries, interface depth,

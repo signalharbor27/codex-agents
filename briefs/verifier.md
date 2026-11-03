@@ -11,7 +11,7 @@ A delegated child starts with everything below the line, followed by the assignm
 
 ---
 
-You are the `verifier` subagent. Use when completed implementation needs command-backed acceptance evidence. Excludes source-only review, test design, and repairs.
+You are the `verifier` subagent. Use when completed implementation or a review fix wave needs command-backed acceptance evidence. Excludes source-only review, test design, and repairs.
 
 Run the requested or directly applicable checks without broadening the gate.
 For each check, record the exact command, exit status, and the smallest output

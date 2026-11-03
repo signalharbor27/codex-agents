@@ -384,7 +384,10 @@ describe("progressive review contract", () => {
     expect(compareResult(routingCase, { ...result, actions: [...result.actions, "review-entire-intended-diff"] })).toEqual([
       "forbidden action review-entire-intended-diff",
     ])
-    for (const action of ["review-delta-since-last-snapshot", "trace-affected-contracts", "carry-unresolved-findings-forward", "retain-main-review-ownership", "confirm-final-review-coverage"]) {
+    expect(compareResult(routingCase, { ...result, actions: [...result.actions, "delta-review-by-non-author"] })).toEqual([
+      "forbidden action delta-review-by-non-author",
+    ])
+    for (const action of ["review-delta-since-last-snapshot", "verify-fix-wave", "carry-unresolved-findings-forward", "retain-main-review-ownership", "confirm-final-review-coverage"]) {
       expect(compareResult(routingCase, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([
         `missing required action ${action}`,
       ])
@@ -482,10 +485,19 @@ describe("independent review role selection", () => {
     expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
   })
 
-  test("every substantive pass requires independent review including initial, fix, and integration passes", () => {
+  test("every substantive pass requires independent review, and later rounds require a verifier, an escalation, or a close", () => {
     const excluded = new Set(["delegated-mechanical-review-evidence", "delegated-review-command-evidence", "review-no-independent-capacity"])
-    const cases = fixture.cases.filter(entry => entry.primary_skill === "review-and-simplify-changes" && !excluded.has(entry.id))
-    for (const entry of cases) {
+    const substantive = fixture.cases.filter(entry => entry.primary_skill === "review-and-simplify-changes" && !excluded.has(entry.id))
+    const continuingActions = ["verify-fix-wave", "escalate-after-round-cap", "close-bounded-review"]
+    const reviews = (entry: RoutingCase) => entry.required_actions.includes("delegate-reviewer-review") || entry.required_actions.includes("delegate-oracle-review")
+    for (const entry of substantive.filter(entry => !reviews(entry))) {
+      const step = continuingActions.find(action => entry.required_actions.includes(action))
+      expect({ id: entry.id, step }).toEqual({ id: entry.id, step: expect.any(String) })
+      const incomplete = { ...entry, required_actions: entry.required_actions.filter(value => !continuingActions.includes(value)) }
+      expect(validateCase(incomplete, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(), resultSchema))
+        .toContain("cases[0] substantive review must require independent reviewer dispatch")
+    }
+    for (const entry of substantive.filter(reviews)) {
       const result = {
         ...resultFor(entry),
         ...Object.fromEntries(Object.entries(entry.expectations).map(([key, value]) => [key, Array.isArray(value) ? value[0] : value])),
@@ -1075,18 +1087,21 @@ describe("retro-week contracts", () => {
   } as RoutingResult)
   const validate = (value: RoutingCase) => validateCase(value, 0, new Set(fixture.engineering_skills), new Set(fixture.skill_references), new Set(fixture.explicit_only_skills), resultSchema)
 
-  test("clear Standards findings must go to the refiner, then a non-author delta review, not a full repeat", () => {
+  test("clear Standards findings must go to the refiner, then the round-2 verifier, not a full repeat", () => {
     for (const id of ["refiner-clear-standards-findings", "refiner-mixed-with-defect-fix"]) {
       const routingCase = entry(id)
       const withoutRefiner = { ...resultFor(routingCase), actions: routingCase.required_actions.filter(action => action !== "dispatch-refiner-for-clear-standards-fixes") }
       expect(compareResult(routingCase, withoutRefiner)).toEqual(["missing required action dispatch-refiner-for-clear-standards-fixes"])
-      const withoutDelta = { ...resultFor(routingCase), actions: routingCase.required_actions.filter(action => action !== "delta-review-by-non-author") }
-      expect(compareResult(routingCase, withoutDelta)).toEqual(["missing required action delta-review-by-non-author"])
+      const withoutVerifier = { ...resultFor(routingCase), actions: routingCase.required_actions.filter(action => action !== "verify-fix-wave") }
+      expect(compareResult(routingCase, withoutVerifier)).toEqual(["missing required action verify-fix-wave"])
       const fullRepeat = { ...resultFor(routingCase), actions: [...routingCase.required_actions, "review-entire-intended-diff"] }
       expect(compareResult(routingCase, fullRepeat)).toEqual(["forbidden action review-entire-intended-diff"])
       const folded = { ...resultFor(routingCase), actions: [...routingCase.required_actions, "fold-clear-fixes-into-other-writer"] }
       expect(compareResult(routingCase, folded)).toEqual(["forbidden action fold-clear-fixes-into-other-writer"])
     }
+    const clearOnly = entry("refiner-clear-standards-findings")
+    expect(compareResult(clearOnly, { ...resultFor(clearOnly), actions: [...clearOnly.required_actions, "delta-review-by-non-author"] }))
+      .toEqual(["forbidden action delta-review-by-non-author"])
   })
 
   test("judgement-only findings and read-only reviews never dispatch the refiner", () => {
@@ -1097,19 +1112,34 @@ describe("retro-week contracts", () => {
     }
   })
 
-  test("touched-file debt goes to the refiner when clear and to an audit item when it spans modules", () => {
-    const clear = entry("touched-file-clear-refactor")
-    expect(compareResult(clear, { ...resultFor(clear), actions: clear.required_actions.filter(action => action !== "dispatch-refiner-for-clear-standards-fixes") }))
-      .toEqual(["missing required action dispatch-refiner-for-clear-standards-fixes"])
-    expect(compareResult(clear, { ...resultFor(clear), actions: [...clear.required_actions, "list-audit-item-without-fixing"] }))
-      .toEqual(["forbidden action list-audit-item-without-fixing"])
-    for (const id of ["touched-file-audit-item", "touched-file-budget-audit-item"]) {
+  test("touched-file debt becomes an audit item even when its fix is clear", () => {
+    for (const id of ["touched-file-clear-refactor", "touched-file-audit-item", "touched-file-budget-audit-item"]) {
       const audit = entry(id)
       expect(compareResult(audit, { ...resultFor(audit), actions: [...audit.required_actions, "dispatch-refiner-for-clear-standards-fixes"] }))
         .toEqual(["forbidden action dispatch-refiner-for-clear-standards-fixes"])
       expect(compareResult(audit, { ...resultFor(audit), actions: audit.required_actions.filter(action => action !== "list-audit-item-without-fixing") }))
         .toEqual(["missing required action list-audit-item-without-fixing"])
     }
+  })
+
+  test("review rounds stop: leads close the review, a verifier failure earns one targeted re-review, and the cap goes to Q", () => {
+    const leads = entry("leads-only-review-closes")
+    for (const action of ["dispatch-refiner-for-clear-standards-fixes", "delta-review-by-non-author", "review-entire-intended-diff"]) {
+      expect(compareResult(leads, { ...resultFor(leads), actions: [...leads.required_actions, action] })).toEqual([`forbidden action ${action}`])
+    }
+    expect(compareResult(leads, { ...resultFor(leads), actions: leads.required_actions.filter(action => action !== "close-bounded-review") }))
+      .toEqual(["missing required action close-bounded-review"])
+    const failed = entry("verifier-fail-targeted-review")
+    expect(compareResult(failed, { ...resultFor(failed), actions: failed.required_actions.filter(action => action !== "delta-review-by-non-author") }))
+      .toEqual(["missing required action delta-review-by-non-author"])
+    expect(compareResult(failed, { ...resultFor(failed), actions: [...failed.required_actions, "review-entire-intended-diff"] }))
+      .toEqual(["forbidden action review-entire-intended-diff"])
+    const capped = entry("round-cap-escalates")
+    expect(compareResult(capped, { ...resultFor(capped), actions: [...capped.required_actions, "delta-review-by-non-author"] }))
+      .toEqual(["forbidden action delta-review-by-non-author"])
+    expect(compareResult(capped, { ...resultFor(capped), actions: capped.required_actions.filter(action => action !== "escalate-after-round-cap") }))
+      .toEqual(["missing required action escalate-after-round-cap"])
+    expect(compareResult(capped, { ...resultFor(capped), stop: "after-verification" })).not.toEqual([])
   })
 
   test("an audit-sized finding in new code stays open instead of becoming a terminal audit item", () => {

@@ -1,6 +1,6 @@
 # Generated from roles/ by scripts/generate-hosts.ts. Edit the source, then regenerate.
 name = "verifier"
-description = "Use when completed implementation needs command-backed acceptance evidence. Excludes source-only review, test design, and repairs."
+description = "Use when completed implementation or a review fix wave needs command-backed acceptance evidence. Excludes source-only review, test design, and repairs."
 model = "gpt-6.1-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"

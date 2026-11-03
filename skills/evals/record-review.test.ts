@@ -31,11 +31,11 @@ const withRepo = (body: (repo: string) => void, objectFormat: "sha1" | "sha256" 
 
 const sha = (repo: string, rev = "HEAD") => git(repo, "rev-parse", rev)
 /** Valid flags for the commit at HEAD, pinned by its full sha. */
-const okFor = (repo: string) => ["--reviewed", sha(repo), "--reviewers", "reviewer", "--open-findings", "0"]
+const okFor = (repo: string) => ["--reviewed", sha(repo), "--reviewers", "reviewer", "--open-findings", "0", "--rounds", "1", "--leads", "0"]
 
 describe("record-review.sh", () => {
   test("writes the contract record for the HEAD tree under the common git dir", () => withRepo(repo => {
-    const result = record(repo, "HEAD~1", "--reviewed", sha(repo), "--reviewers", "reviewer,fast_reviewer", "--open-findings", "0", "--door", "two-way", "--blast-radius", "localized", "--copy-humanized")
+    const result = record(repo, "HEAD~1", "--reviewed", sha(repo), "--reviewers", "reviewer,fast_reviewer", "--open-findings", "0", "--rounds", "2", "--leads", "3", "--door", "two-way", "--blast-radius", "localized", "--copy-humanized")
     expect(result.stderr).toBe("")
     expect(result.status).toBe(0)
     const tree = git(repo, "rev-parse", "HEAD^{tree}")
@@ -49,6 +49,8 @@ describe("record-review.sh", () => {
       reviewed_at: expect.stringMatching(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/),
       reviewers: ["reviewer", "fast_reviewer"],
       open_findings: 0,
+      rounds: 2,
+      leads: 3,
       copy_humanized: "yes",
       door: "two-way",
       blast_radius: "localized",
@@ -56,7 +58,7 @@ describe("record-review.sh", () => {
   }))
 
   test("defaults copy_humanized to n/a, door and blast_radius to null, and records open findings", () => withRepo(repo => {
-    const json = JSON.parse(readFileSync(record(repo, "main", "--reviewed", sha(repo), "--reviewers", "reviewer", "--open-findings", "2").stdout.trim(), "utf8"))
+    const json = JSON.parse(readFileSync(record(repo, "main", "--reviewed", sha(repo), "--reviewers", "reviewer", "--open-findings", "2", "--rounds", "1", "--leads", "0").stdout.trim(), "utf8"))
     expect(json).toMatchObject({ copy_humanized: "n/a", open_findings: 2, door: null, blast_radius: null })
   }))
 
@@ -140,6 +142,10 @@ describe("record-review.sh", () => {
       without("--reviewed"),
       without("--open-findings"),
       without("--reviewers"),
+      without("--rounds"),
+      without("--leads"),
+      ok.with(7, "0"),
+      ok.with(9, "-1"),
       ok.with(3, "Reviewer"),
       ok.with(5, "x"),
       [...ok, "--door", "two-way"],

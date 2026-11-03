@@ -1,6 +1,6 @@
 ---
 name: design_reviewer
-description: "Use on the first full review pass for a second-family review focused on abstractions, boundaries, and simplification. Excludes fix deltas and mechanical checks."
+description: "Use in round 1 of a large, one-way, or hot-path change review for a second-family review focused on abstractions, boundaries, and simplification. Excludes fix deltas and mechanical checks."
 model: claude-opus-5-5
 effort: medium
 disallowedTools: Edit, Write, NotebookEdit, Agent

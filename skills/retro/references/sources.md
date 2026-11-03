@@ -54,3 +54,13 @@ Signals:
 - CI failures fixed by follow-up pushes: a check that should run locally first.
 
 Cite PR evidence as `<repo>#<n>`, the comment timestamp, and a short quote.
+
+## Review records
+
+Each repository's `$(git rev-parse --git-common-dir)/agent-review/*.json` holds one record per reviewed tree, with `rounds`, `leads`, and `open_findings`.
+
+```bash
+jq -r 'select(.reviewed_at >= "<since>") | [.reviewed_at, .rounds, .leads, .open_findings, (.reviewers | join(","))] | @tsv' "$(git rev-parse --git-common-dir)"/agent-review/*.json
+```
+
+Report the median and maximum rounds and the lead count for the window. A record past two rounds, or a lead class that recurs, is a candidate for a check or a standards change.

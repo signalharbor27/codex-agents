@@ -13,7 +13,7 @@ const run = (cwd: string, cmd: string[]) => {
   return result.stdout.trim()
 }
 const record = (repo: string, openFindings = 0) =>
-  run(repo, ["bash", recordScript, "HEAD", "--reviewed", run(repo, ["git", "rev-parse", "HEAD"]), "--reviewers", "reviewer", "--open-findings", String(openFindings)])
+  run(repo, ["bash", recordScript, "HEAD", "--reviewed", run(repo, ["git", "rev-parse", "HEAD"]), "--reviewers", "reviewer", "--open-findings", String(openFindings), "--rounds", "1", "--leads", "0"])
 const commit = (repo: string, text: string) => {
   writeFileSync(join(repo, "a.txt"), text)
   run(repo, ["git", "commit", "-qam", text])

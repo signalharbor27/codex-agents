@@ -4,8 +4,8 @@
 
 - Use `reviewer` for delegated correctness, contract, Standards/Intent, or architectural judgment.
 - Use `fast_reviewer` for bounded mechanical evidence such as unused code, dependency cycles, or stale comments. It does not substitute for substantive review.
-- Use `refiner` only to apply accepted `fix: clear` Standards findings of either origin. It never reviews; its edits go to the delta review in the loop.
-- Use `verifier` for command-backed acceptance evidence. A passing command does not close source-review findings or uncovered requirements; honor the task's mutation limits when choosing checks.
+- Use `refiner` only to apply accepted `fix: clear` Standards findings. It never reviews; the round-2 verifier checks its edits.
+- Use `verifier` for command-backed evidence, including round 2. Its pass closes fixed IDs it confirmed; it cannot close uncovered requirements. Honor the task's mutation limits when choosing checks.
 - `design_reviewer`, `oracle`, and `judge` have their own sections below.
 
 Per the lane chosen in `SKILL.md`, add relevant mechanical checks when capacity permits, and give each affected risk track explicit invariants and failure paths to inspect:
@@ -17,7 +17,7 @@ Per the lane chosen in `SKILL.md`, add relevant mechanical checks when capacity 
 - Destructive migrations, data recovery, rollback guarantees, or compatibility while old and new versions coexist.
 - A material correctness dispute that remains unresolved after ordinary review despite concrete competing evidence.
 
-For the large-change lane, brief one `design_reviewer` for `improve-codebase-architecture` and one `reviewer` for `improve-test-suite`, each with the skill's host path, the touched subsystems as the boundary, read-only authority, and the Standards scope and tags. Each returns supported findings, not a plan, and does not delegate.
+For the large-change lane, brief one `design_reviewer` for `improve-codebase-architecture` and one `reviewer` for `improve-test-suite`, each with the skill's host path, the touched subsystems as the boundary, read-only authority, and the Standards scope and tags. Each returns supported findings, not a plan, and does not delegate. Pre-existing problems they find are audit items.
 
 Choose risk tracks from changed behavior and contracts. Directory names or display wording alone do not create financial or security review work. A task explicitly limited to mechanical evidence or command execution uses its corresponding role and does not establish substantive review coverage.
 
@@ -29,7 +29,7 @@ Use `oracle` when the lane in `SKILL.md` calls for it, when the user explicitly 
 
 ## Run the `design_reviewer` pass
 
-When the lane in `SKILL.md` calls for it, launch one `design_reviewer`, the second model family's review, on the first full pass alongside the `reviewer` subagents, with the same pinned snapshot, Intent digest, both Standards paths, and the `review-agent` path. Assign it abstractions, boundaries, interface depth, duplicated knowledge, needless layers, and simplification; it reports any correctness defect it finds as well. It supplements the `reviewer` coverage and cannot replace it; if its named model cannot run or the pass fails, report design coverage as blocked.
+When the lane in `SKILL.md` calls for it, launch one `design_reviewer`, the second model family's review, in round 1 alongside the `reviewer` subagents, with the same pinned snapshot, Intent digest, both Standards paths, and the `review-agent` path. Assign it abstractions, boundaries, interface depth, duplicated knowledge, needless layers, and simplification; it reports any correctness defect it finds as well. It supplements the `reviewer` coverage and cannot replace it; if its named model cannot run or the pass fails, report design coverage as blocked.
 
 ## Run the blast-radius pass
 
@@ -39,16 +39,21 @@ On a one-way door or hot path, brief the one-way `reviewer` (or a separate `revi
 
 Discover active subagent capacity before dispatch. Start independent reviewers together when slots are available; otherwise run bounded waves. Dispatch reviewers in the background and keep working on independent tasks: verification gates, PR description, UI evidence, the next slice. Collect every result before commit or handoff.
 
-Reviewers return after their assigned pass. The parent coordinates fixes; `verifier` runs acceptance checks. For follow-ups, send the fixes and affected contracts back to the selected `reviewer` while its context helps, and preserve valid earlier coverage. Start a fresh reviewer when old work dominates that context or when material risk or invalidated assumptions justify independent review; give it the current delta, unresolved findings, and a concise record of valid coverage.
+Reviewers return after their assigned round. The parent coordinates fixes.
+
+## Brief the round-2 verifier
+
+Give the `verifier` the pinned snapshot, the fix delta, each blocker and fix-once ID with its location and repro or check, and the affected gates. It returns pass or fail per ID, the gate results, and any edit outside the listed findings. A targeted `reviewer`, when step 4 calls for one, gets the same delta, the open IDs, and the round-1 coverage record; it reviews only that scope.
 
 ## Delegate the selected track
 
 - Give defect reviewers the host's `review-agent` skill and read it before dispatch. When the reviewer does not preload it, pass the host's actual path. If the host lacks it, give an available reviewer equivalent read-only instructions from this brief.
 - Assign reviewers who did not implement the changes or fixes they judge. A verifier supplies command evidence separately.
-- Supply intent, applicable rules, exact base and reviewed snapshot, the current target, owned paths or concern, prior findings and dispositions, and required evidence. For follow-ups, provide the delta since the previous reviewed snapshot and enough original context to verify fixes and affected contracts. Keep review inputs stable or isolate a snapshot; later writes remain unreviewed.
+- Supply intent, applicable rules, exact base and reviewed snapshot, the current target, owned paths or concern, prior findings with their IDs and dispositions, and required evidence. Keep review inputs stable or isolate a snapshot; later writes remain unreviewed.
 - Include the original requested outcome, consequential interpretations, material contracts and assumptions, and what the supplied proof establishes or leaves uncertain. Give reviewers paths or excerpts from original evidence so they can challenge the implementer's summary. Distinguish an experiment's limits from conclusions about the requested outcome.
 - Include the assigned checklist topics, both Standards paths (`references/coding-standards.md` at its host path and the repo-root `CODING_STANDARDS.md` when present, repo winning on conflict), and relevant skill/reference paths in each brief. Standards scope and finding tags follow `coding-standards.md` under "Classify each finding". Require complete coverage of that track, with findings or an explicit account of checks completed and proof gaps.
 - Require each substantive reviewer to classify the change's Merge danger (door and blast radius) from `describe-pr/references/merge-danger.md` at its host path and report it with the deciding effect, independent of any PR footer.
-- Require inspection of the complete assigned diff and affected callers and tests. Return every concrete, actionable defect introduced by the target change, including a fix that failed to resolve an earlier defect. Confirm scenarios from code and distinguish intentional behavior from regressions. Continue after the first finding; omit speculative concerns and style nits.
+- Require inspection of the complete assigned diff and affected callers and tests. Return every cited defect the target change introduced, including a fix that failed to resolve an earlier defect. Confirm scenarios from code and distinguish intentional behavior from regressions. Continue after the first finding.
+- Require two reports, defects and Standards/Intent, each under about 400 words. Each finding cites its evidence: a failing run, a requirement or contract, a doc line, or a named standard. List uncited concerns as one-line leads after the findings.
 - Reviewers stay read-only and do not delegate or invoke the orchestration gate. Use the built-in's severity-ordered findings format when available. Each finding gives file and symbol, checklist topic or standard, issue, recommended fix, confidence, evidence, and validation needed; each Standards finding also carries its `origin` and `fix` tags. `No findings.` is valid after completing the assigned coverage; retain its proof gaps.
 - The built-in owns defect review. Explicitly assign simplification and Standards/Intent checks to suitable subagents too, including missing requirements that have no changed line to cite. Collect their coverage separately; the main agent accounts for it. A defect-only `No findings.` does not close these topics.

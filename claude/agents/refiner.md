@@ -1,6 +1,6 @@
 ---
 name: refiner
-description: "Use when independent review reported clear Standards fixes to apply in a separate context before delta review. Excludes judgment calls, new behavior, and review of its own edits."
+description: "Use when independent review reported clear Standards fixes to apply in a separate context before verification. Excludes judgment calls, new behavior, and review of its own edits."
 model: claude-opus-5-5
 effort: medium
 disallowedTools: Agent
@@ -20,6 +20,6 @@ preserve their changes.
 Run focused checks that cover each edited file, such as the formatter, type
 check, and affected tests. Return changed files with the finding each edit
 addresses, exact commands and results, skipped findings with reasons, and
-residual judgment calls. A different read-only reviewer checks your edits:
+residual judgment calls. A separate verifier checks your edits:
 do not review or approve them yourself, invoke review-and-simplify-changes,
 stage, commit, push, or spawn agents. The parent owns commits.

@@ -1,6 +1,6 @@
 # Skill evals
 
-The validator checks inventory, invocation metadata, frontmatter, description and line limits, local links, one-level references, agent profile names/descriptions, and fixture/schema contracts. Prose and headings may change without breaking static checks. The fixture has 84 routing cases, including `primary_skill: "none"` routes. Each of the 18 skill descriptions has positive and near-negative coverage mapped to cases in `invocation_coverage`. A skill is explicit-only when its `agents/openai.yaml` sets `allow_implicit_invocation: false`; its `SKILL.md` must then set `disable-model-invocation: true` (the Claude Code equivalent), and the validator rejects a mismatch in either direction.
+The validator checks inventory, invocation metadata, frontmatter, description and line limits, local links, one-level references, agent profile names/descriptions, and fixture/schema contracts. Prose and headings may change without breaking static checks. The fixture has 87 routing cases, including `primary_skill: "none"` routes. Each of the 18 skill descriptions has positive and near-negative coverage mapped to cases in `invocation_coverage`. A skill is explicit-only when its `agents/openai.yaml` sets `allow_implicit_invocation: false`; its `SKILL.md` must then set `disable-model-invocation: true` (the Claude Code equivalent), and the validator rejects a mismatch in either direction.
 
 ```bash
 bash skills/evals/check-skill-surface.sh

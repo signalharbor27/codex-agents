@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Records a completed review of the committed HEAD tree and prints the record path.
-# Usage: record-review.sh <base-ref> --reviewed <rev> --reviewers <role,...> --open-findings <n>
+# Usage: record-review.sh <base-ref> --reviewed <rev> --reviewers <role,...> --open-findings <n> --rounds <n> --leads <n>
 #          [--door one-way|two-way --blast-radius localized|service|customers|data] [--copy-humanized]
 # Run it from the reviewed checkout; <rev> is the full object id of the commit (or
 # tree) the reviewers read, and its tree must equal HEAD's.
 set -euo pipefail
 
 usage() {
-  echo "usage: record-review.sh <base-ref> --reviewed <rev> --reviewers <role,...> --open-findings <n> [--door one-way|two-way --blast-radius localized|service|customers|data] [--copy-humanized]" >&2
+  echo "usage: record-review.sh <base-ref> --reviewed <rev> --reviewers <role,...> --open-findings <n> --rounds <n> --leads <n> [--door one-way|two-way --blast-radius localized|service|customers|data] [--copy-humanized]" >&2
   exit 2
 }
 bad() {
@@ -21,6 +21,8 @@ shift
 reviewed=""
 reviewers=""
 open_findings=""
+rounds=""
+leads=""
 door=""
 blast_radius=""
 copy_humanized="n/a"
@@ -29,6 +31,8 @@ while [[ $# -gt 0 ]]; do
     --reviewed) [[ $# -ge 2 ]] || usage; reviewed="$2"; shift 2 ;;
     --reviewers) [[ $# -ge 2 ]] || usage; reviewers="$2"; shift 2 ;;
     --open-findings) [[ $# -ge 2 ]] || usage; open_findings="$2"; shift 2 ;;
+    --rounds) [[ $# -ge 2 ]] || usage; rounds="$2"; shift 2 ;;
+    --leads) [[ $# -ge 2 ]] || usage; leads="$2"; shift 2 ;;
     --door) [[ $# -ge 2 ]] || usage; door="$2"; shift 2 ;;
     --blast-radius) [[ $# -ge 2 ]] || usage; blast_radius="$2"; shift 2 ;;
     --copy-humanized) copy_humanized="yes"; shift ;;
@@ -45,6 +49,8 @@ esac
 [[ "$reviewers" =~ ^[a-z_]+(,[a-z_]+)*$ ]] ||
   bad "--reviewers needs comma-separated role names such as reviewer,fast_reviewer"
 [[ "$open_findings" =~ ^[0-9]{1,9}$ ]] || bad "--open-findings needs a non-negative integer of at most 9 digits"
+[[ "$rounds" =~ ^[1-9][0-9]{0,8}$ ]] || bad "--rounds needs the number of review rounds run, at least 1"
+[[ "$leads" =~ ^[0-9]{1,9}$ ]] || bad "--leads needs a non-negative integer of at most 9 digits"
 [[ -z "$door" || "$door" =~ ^(one-way|two-way)$ ]] || bad "--door must be one-way or two-way"
 [[ -z "$blast_radius" || "$blast_radius" =~ ^(localized|service|customers|data)$ ]] ||
   bad "--blast-radius must be localized, service, customers, or data"
@@ -82,8 +88,8 @@ reviewed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 mkdir -p "$dir"
 record="$dir/$tree.json"
 tmp="$(mktemp "$dir/.record.XXXXXX")"
-printf '{"tree":"%s","head":"%s","base":"%s","reviewed_at":"%s","reviewers":[%s],"open_findings":%d,"copy_humanized":"%s","door":%s,"blast_radius":%s}\n' \
-  "$tree" "$head" "$base" "$reviewed_at" "$roles" "$((10#$open_findings))" "$copy_humanized" \
+printf '{"tree":"%s","head":"%s","base":"%s","reviewed_at":"%s","reviewers":[%s],"open_findings":%d,"rounds":%d,"leads":%d,"copy_humanized":"%s","door":%s,"blast_radius":%s}\n' \
+  "$tree" "$head" "$base" "$reviewed_at" "$roles" "$((10#$open_findings))" "$((10#$rounds))" "$((10#$leads))" "$copy_humanized" \
   "$(json_or_null "$door")" "$(json_or_null "$blast_radius")" >"$tmp"
 mv "$tmp" "$record"
 echo "$record"
