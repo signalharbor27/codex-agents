@@ -387,7 +387,7 @@ describe("progressive review contract", () => {
     expect(compareResult(routingCase, { ...result, actions: [...result.actions, "delta-review-by-non-author"] })).toEqual([
       "forbidden action delta-review-by-non-author",
     ])
-    for (const action of ["review-delta-since-last-snapshot", "verify-fix-wave", "carry-unresolved-findings-forward", "retain-main-review-ownership", "confirm-final-review-coverage"]) {
+    for (const action of ["verify-fix-wave", "retain-main-review-ownership"]) {
       expect(compareResult(routingCase, { ...result, actions: result.actions.filter(value => value !== action) })).toEqual([
         `missing required action ${action}`,
       ])
@@ -395,7 +395,7 @@ describe("progressive review contract", () => {
   })
 
   test("main-agent review cannot satisfy independent reviewer selection", () => {
-    const routingCase = entry("follow-up-review-delta")
+    const routingCase = entry("follow-up-review-missing-snapshot")
     const result = resultFor(routingCase)
     result.actions = result.actions.filter(action => action !== "select-minimum-useful-reviewers")
     result.actions.push("keep-coupled-review-local")
@@ -406,7 +406,7 @@ describe("progressive review contract", () => {
   })
 
   test("missing reviewer selection and arbitrary delegation still fail", () => {
-    const routingCase = entry("follow-up-review-delta")
+    const routingCase = entry("follow-up-review-missing-snapshot")
     const result = resultFor(routingCase)
     result.actions = result.actions.filter(action => action !== "select-minimum-useful-reviewers")
     expect(compareResult(routingCase, result)).toEqual(["missing required action select-minimum-useful-reviewers"])
@@ -452,7 +452,7 @@ describe("progressive review contract", () => {
     expect(validate({ ...routingCase, forbidden_actions: "review-entire-intended-diff" })).toContain("cases[0].forbidden_actions must be a string array")
     expect(validate({ ...routingCase, forbidden_actions: ["review-entire-intended-diff", "review-entire-intended-diff"] })).toContain("cases[0].forbidden_actions must not contain duplicates")
     expect(validate({ ...routingCase, forbidden_actions: ["unknown-review-action"] })).toContain("cases[0] references unknown action unknown-review-action")
-    expect(validate({ ...routingCase, forbidden_actions: ["review-delta-since-last-snapshot"] })).toContain("cases[0] both requires and forbids action review-delta-since-last-snapshot")
+    expect(validate({ ...routingCase, forbidden_actions: ["verify-fix-wave"] })).toContain("cases[0] both requires and forbids action verify-fix-wave")
     expect(validate({ ...routingCase, unexpected: true }).some(error => error.includes("optional forbidden_actions, optional_references, optional_modifier_skills only"))).toBe(true)
   })
 
@@ -485,10 +485,10 @@ describe("independent review role selection", () => {
     expect(compareResult(entry, { ...result, actions: [...result.actions, "delegate-oracle-review"] })).toEqual(["forbidden action delegate-oracle-review"])
   })
 
-  test("every substantive pass requires independent review, and later rounds require a verifier, an escalation, or a close", () => {
+  test("every substantive pass requires independent review, and later rounds require a verifier, a targeted reviewer, an escalation, or a close", () => {
     const excluded = new Set(["delegated-mechanical-review-evidence", "delegated-review-command-evidence", "review-no-independent-capacity"])
     const substantive = fixture.cases.filter(entry => entry.primary_skill === "review-and-simplify-changes" && !excluded.has(entry.id))
-    const continuingActions = ["verify-fix-wave", "escalate-after-round-cap", "close-bounded-review"]
+    const continuingActions = ["verify-fix-wave", "escalate-after-round-cap", "close-bounded-review", "delta-review-by-non-author"]
     const reviews = (entry: RoutingCase) => entry.required_actions.includes("delegate-reviewer-review") || entry.required_actions.includes("delegate-oracle-review")
     for (const entry of substantive.filter(entry => !reviews(entry))) {
       const step = continuingActions.find(action => entry.required_actions.includes(action))
@@ -1150,13 +1150,17 @@ describe("retro-week contracts", () => {
       .toEqual(["missing required action carry-unresolved-findings-forward"])
   })
 
-  test("a review may pin scope or evaluate handed-over findings first, but nothing else replaces pinning", () => {
+  test("a review may pin scope or evaluate handed-over findings first, and only a later round may start by inspecting state", () => {
+    const first = entry("small-coupled-review")
+    const unpinned = { ...first, required_actions: first.required_actions.filter(action => action !== "pin-review-scope") }
+    expect(validate({ ...unpinned, expectations: { ...first.expectations, first_action: ["pin-review-scope", "evaluate-feedback"] } })).toEqual([])
+    expect(validate({ ...unpinned, expectations: { ...first.expectations, first_action: ["evaluate-feedback"] } })).toContain("cases[0] review must pin scope")
+    expect(validate({ ...unpinned, expectations: { ...first.expectations, first_action: ["pin-review-scope", "inspect-current-state"] } })).toContain("cases[0] review must pin scope")
     const clear = entry("touched-file-clear-refactor")
     expect(clear.required_actions).not.toContain("pin-review-scope")
     expect(validate(clear)).toEqual([])
-    expect(compareResult(clear, { ...resultFor(clear), first_action: "evaluate-feedback" })).toEqual([])
+    expect(compareResult(clear, { ...resultFor(clear), first_action: "inspect-current-state" })).toEqual([])
     expect(validate({ ...clear, expectations: { ...clear.expectations, first_action: ["evaluate-feedback"] } })).toContain("cases[0] review must pin scope")
-    expect(validate({ ...clear, expectations: { ...clear.expectations, first_action: ["pin-review-scope", "inspect-current-state"] } })).toContain("cases[0] review must pin scope")
   })
 
   test("only a large change runs the architecture and test-suite audits", () => {

@@ -662,15 +662,16 @@
       "prompt": "Continue the review of this WIP implementation. The full intended diff was reviewed in round 1 at snapshot R1, with findings F1 to F3 accepted as blockers. Since R1, only the fixes for those three findings and their tests changed; the fixes add no behavior, redesign no boundary, and change about 40 lines. The original reviewer and a verifier are available and wrote none of the fixes. Earlier coverage remains valid. Finish the review under the existing authorization; do not commit.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-delta-since-last-snapshot", "carry-unresolved-findings-forward", "retain-main-review-ownership", "confirm-final-review-coverage", "verify-before-completion", "keep-reviewers-nonrecursive", "verify-fix-wave"],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
+      "required_actions": ["retain-main-review-ownership", "keep-reviewers-nonrecursive", "verify-fix-wave"],
       "forbidden_actions": ["delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "delta-review-by-non-author"],
       "expectations": {
-        "first_action": "pin-review-scope",
-        "mutation": "requested-repo-writes",
-        "question": "only-if-blocked",
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
+        "mutation": ["none", "requested-repo-writes"],
+        "question": ["none", "only-if-blocked"],
         "stop": "after-verification"
-      }
+      },
+      "optional_references": ["review-and-simplify-changes/references/coding-standards.md"]
     },
     {
       "id": "follow-up-review-missing-snapshot",
@@ -1142,10 +1143,10 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["engineering/references/boundary-design.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "dispatch-refiner-for-clear-standards-fixes", "review-delta-since-last-snapshot", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "confirm-final-review-coverage", "verify-before-completion", "verify-fix-wave"],
+      "required_actions": ["dispatch-refiner-for-clear-standards-fixes", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "verify-fix-wave"],
       "forbidden_actions": ["fold-clear-fixes-into-other-writer", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "delta-review-by-non-author"],
       "expectations": {
-        "first_action": "pin-review-scope",
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
         "mutation": "requested-repo-writes",
         "question": ["none", "only-if-blocked"],
         "stop": "after-verification"
@@ -1158,10 +1159,10 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["engineering/references/boundary-design.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "dispatch-refiner-for-clear-standards-fixes", "review-delta-since-last-snapshot", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "confirm-final-review-coverage", "verify-before-completion", "verify-fix-wave"],
+      "required_actions": ["dispatch-refiner-for-clear-standards-fixes", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "verify-fix-wave"],
       "forbidden_actions": ["fold-clear-fixes-into-other-writer", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review"],
       "expectations": {
-        "first_action": "pin-review-scope",
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
         "mutation": "requested-repo-writes",
         "question": ["none", "only-if-blocked"],
         "stop": "after-verification"
@@ -1259,10 +1260,10 @@
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md", "engineering/references/boundary-design.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "review-delta-since-last-snapshot", "verify-fix-wave"],
+      "required_actions": ["keep-reviewers-nonrecursive", "retain-main-review-ownership", "verify-fix-wave"],
       "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review"],
       "expectations": {
-        "first_action": "pin-review-scope",
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
         "mutation": ["requested-repo-writes", "none"],
         "question": ["only-if-blocked", "required-before-unapproved-action"],
         "stop": ["after-verification", "findings", "wait-for-answer"]
@@ -1289,12 +1290,12 @@
       "prompt": "Continue the review of this WIP implementation. The intended diff changes 60 lines: it adds a bulk-discount rule to pricing.ts and one test to pricing.test.ts, and was reviewed in full at snapshot R1 by an independent reviewer. Both open findings are Standards findings with origin: touched, in code that predates the diff. pricing.ts has an unexported formatPrice helper whose body only forwards to currency.format, called by two functions in the same file. pricing.test.ts has a test asserting that TAX_RATE equals 0.2. No defects, Intent gaps, or other findings are open, and a refiner is available. Existing authorization covers local fixes; do not commit.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
-      "optional_references": ["engineering/references/boundary-design.md", "engineering/references/proof.md"],
-      "required_actions": ["select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "confirm-final-review-coverage", "verify-before-completion", "list-audit-item-without-fixing", "close-bounded-review"],
+      "expected_references": ["review-and-simplify-changes/references/coding-standards.md"],
+      "optional_references": ["engineering/references/boundary-design.md", "engineering/references/proof.md", "review-and-simplify-changes/references/delegated-review.md"],
+      "required_actions": ["retain-main-review-ownership", "list-audit-item-without-fixing", "close-bounded-review"],
       "forbidden_actions": ["delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "run-large-change-audits", "dispatch-refiner-for-clear-standards-fixes", "delta-review-by-non-author"],
       "expectations": {
-        "first_action": ["pin-review-scope", "evaluate-feedback"],
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
         "mutation": ["none", "requested-repo-writes"],
         "question": ["none", "only-if-blocked"],
         "stop": ["after-verification", "findings", "after-requested-scope"]
@@ -1324,10 +1325,10 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["engineering/references/boundary-design.md"],
-      "required_actions": ["select-minimum-useful-reviewers", "account-for-all-review-topics", "list-audit-item-without-fixing", "review-delta-since-last-snapshot", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "verify-fix-wave"],
+      "required_actions": ["list-audit-item-without-fixing", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "verify-fix-wave"],
       "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "run-large-change-audits"],
       "expectations": {
-        "first_action": "pin-review-scope",
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
         "mutation": ["none", "requested-repo-writes"],
         "question": ["none", "only-if-blocked"],
         "stop": ["after-verification", "findings", "after-requested-scope"]
@@ -1340,10 +1341,10 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["engineering/references/proof.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "list-audit-item-without-fixing", "review-delta-since-last-snapshot", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "verify-fix-wave"],
+      "required_actions": ["list-audit-item-without-fixing", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "verify-fix-wave"],
       "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "run-large-change-audits"],
       "expectations": {
-        "first_action": "pin-review-scope",
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
         "mutation": ["none", "requested-repo-writes"],
         "question": ["none", "only-if-blocked"],
         "stop": ["after-verification", "findings", "after-requested-scope"]
@@ -1356,13 +1357,13 @@
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
       "optional_references": ["engineering/references/boundary-design.md", "describe-pr/references/merge-danger.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "carry-unresolved-findings-forward", "review-delta-since-last-snapshot", "verify-fix-wave"],
+      "required_actions": ["keep-reviewers-nonrecursive", "retain-main-review-ownership", "carry-unresolved-findings-forward", "verify-fix-wave"],
       "forbidden_actions": ["list-audit-item-without-fixing", "dispatch-refiner-for-clear-standards-fixes", "delegate-oracle-review", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "run-large-change-audits"],
       "expectations": {
-        "first_action": ["pin-review-scope", "evaluate-feedback"],
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
         "mutation": ["none", "requested-repo-writes", "after-user-choice"],
         "question": ["only-if-blocked", "required-before-unapproved-action"],
-        "stop": ["wait-for-answer", "after-verification", "findings"]
+        "stop": ["wait-for-answer", "after-verification", "findings", "blocked"]
       }
     },
     {
@@ -1371,10 +1372,10 @@
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
       "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "review-delta-since-last-snapshot", "delta-review-by-non-author", "delegate-reviewer-review", "delegate-standards-intent-simplification", "carry-unresolved-findings-forward", "keep-reviewers-nonrecursive", "retain-main-review-ownership"],
+      "required_actions": ["review-delta-since-last-snapshot", "delta-review-by-non-author", "carry-unresolved-findings-forward", "keep-reviewers-nonrecursive", "retain-main-review-ownership"],
       "forbidden_actions": ["review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "delegate-oracle-review"],
       "expectations": {
-        "first_action": ["pin-review-scope", "evaluate-feedback"],
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
         "mutation": ["none", "requested-repo-writes"],
         "question": ["none", "only-if-blocked", "required-before-unapproved-action"],
         "stop": ["after-verification", "blocked", "wait-for-answer"]
@@ -1385,30 +1386,32 @@
       "prompt": "Continue the review of this WIP implementation. Round 1 reviewed the full intended diff at snapshot R1. After the fix wave, round 2 ran at snapshot R2: the verifier's repro for blocker F2 still fails, and a targeted reviewer confirmed the fix is incomplete. No other finding is open, and Q has not authorized another round. Existing authorization covers local fixes; do not commit.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "escalate-after-round-cap", "carry-unresolved-findings-forward", "keep-reviewers-nonrecursive", "retain-main-review-ownership"],
+      "expected_references": [],
+      "required_actions": ["escalate-after-round-cap", "carry-unresolved-findings-forward", "retain-main-review-ownership"],
       "forbidden_actions": ["review-entire-intended-diff", "delta-review-by-non-author", "keep-coupled-review-local", "delegate-design-reviewer-review", "delegate-oracle-review"],
       "expectations": {
-        "first_action": ["pin-review-scope", "evaluate-feedback"],
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
         "mutation": ["none", "after-user-choice"],
         "question": ["only-if-blocked", "required-before-unapproved-action"],
         "stop": ["blocked", "wait-for-answer"]
-      }
+      },
+      "optional_references": ["review-and-simplify-changes/references/delegated-review.md", "review-and-simplify-changes/references/coding-standards.md"]
     },
     {
       "id": "leads-only-review-closes",
       "prompt": "Finish the review of this WIP diff. Round 1 reviewed the full intended diff at snapshot R1 and returned no defects, Intent gaps, or cited Standards findings, only two uncited leads: a preferred variable name and an optional helper extraction that no standard names. Required checks pass at R1, and nothing changed since. Existing authorization covers local fixes; do not commit.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
-      "expected_references": ["review-and-simplify-changes/references/coding-standards.md", "review-and-simplify-changes/references/delegated-review.md"],
-      "required_actions": ["pin-review-scope", "select-minimum-useful-reviewers", "account-for-all-review-topics", "list-lead-without-fixing", "close-bounded-review", "keep-reviewers-nonrecursive", "retain-main-review-ownership", "verify-before-completion"],
+      "expected_references": ["review-and-simplify-changes/references/coding-standards.md"],
+      "required_actions": ["list-lead-without-fixing", "close-bounded-review", "retain-main-review-ownership"],
       "forbidden_actions": ["dispatch-refiner-for-clear-standards-fixes", "delta-review-by-non-author", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "delegate-oracle-review"],
       "expectations": {
-        "first_action": ["pin-review-scope", "evaluate-feedback"],
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
         "mutation": ["none", "requested-repo-writes"],
         "question": ["none", "only-if-blocked"],
         "stop": ["after-verification", "after-requested-scope", "findings"]
-      }
+      },
+      "optional_references": ["review-and-simplify-changes/references/delegated-review.md"]
     }
   ]
 }

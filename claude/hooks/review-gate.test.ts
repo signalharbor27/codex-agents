@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { spawnSync } from "node:child_process"
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { denyReason, handle, publishOf, recordSyntax, type ResolvePrHead } from "./review-gate.ts"
@@ -283,6 +283,26 @@ describe("hook subprocess", () => {
       const result = hook(input)
       expect(result).toMatchObject({ exitCode: 0, stdout: "" })
       expect(result.stderr.trim().split("\n")).toHaveLength(1)
+    }
+  })
+})
+
+describe("record command docs", () => {
+  // Flags outside brackets in the script's usage line are required; every documented command must carry them.
+  const usage = spawnSync("bash", [recordScript], { encoding: "utf8" }).stderr
+  const required = usage.replace(/\[[^\]]*\]/g, "").match(/--[a-z-]+/g) ?? []
+  const docs = ["../../README.md", "../../skills/review-and-simplify-changes/SKILL.md"].map(path => join(import.meta.dir, path))
+
+  test("the usage line names the flags the script rejects when missing", () => {
+    expect(required).toEqual(["--reviewed", "--reviewers", "--open-findings", "--rounds", "--leads"])
+  })
+
+  test("README, the review skill, and the gate's deny message document every required flag", () => {
+    const commandsIn = (text: string) => text.match(/record-review\.sh <base-ref>[^`]*/g) ?? []
+    for (const [name, text] of [...docs.map(path => [path, readFileSync(path, "utf8")] as const), ["recordSyntax", recordSyntax] as const]) {
+      const found = commandsIn(text)
+      expect({ name, documented: found.length > 0 }).toEqual({ name, documented: true })
+      for (const command of found) expect({ name, missing: required.filter(flag => !command.includes(`${flag} `)) }).toEqual({ name, missing: [] })
     }
   })
 })

@@ -4,7 +4,7 @@
 
 - Use `reviewer` for delegated correctness, contract, Standards/Intent, or architectural judgment.
 - Use `fast_reviewer` for bounded mechanical evidence such as unused code, dependency cycles, or stale comments. It does not substitute for substantive review.
-- Use `refiner` only to apply accepted `fix: clear` Standards findings. It never reviews; the round-2 verifier checks its edits.
+- Use `refiner` only to apply accepted `fix: clear` Standards findings with `origin: new`. It never reviews; the round-2 verifier checks its edits.
 - Use `verifier` for command-backed evidence, including round 2. Its pass closes fixed IDs it confirmed; it cannot close uncovered requirements. Honor the task's mutation limits when choosing checks.
 - `design_reviewer`, `oracle`, and `judge` have their own sections below.
 

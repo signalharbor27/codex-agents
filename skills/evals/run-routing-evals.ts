@@ -662,19 +662,21 @@ export function validateCase(
     ].every(action => forbiddenActions?.includes(action))
     const single = caseActions.includes("honor-single-track-scope") || evidenceOnly
     const blocked = caseActions.includes("report-blocked-review-coverage")
-    if (!blocked && broad === single) errors.push(`${label} review must select adaptive coverage or explicit single-track`)
+    // Round 2 and later steps of a bounded review rely on round 1's independent coverage.
+    const continuing = ["verify-fix-wave", "escalate-after-round-cap", "close-bounded-review", "delta-review-by-non-author"].some(action => caseActions.includes(action))
+    if (!blocked && !continuing && broad === single) errors.push(`${label} review must select adaptive coverage or explicit single-track`)
     if (broad && !caseActions.includes("account-for-all-review-topics")) {
       errors.push(`${label} adaptive review must account for all review topics`)
     }
     if (caseActions.includes("keep-coupled-review-local")) errors.push(`${label} review cannot require main-agent coverage`)
     if (!forbiddenActions?.includes("keep-coupled-review-local")) errors.push(`${label} review must forbid main-agent coverage`)
-    // Round 2 and later steps of a bounded review rely on round 1's independent coverage.
-    const continuing = ["verify-fix-wave", "escalate-after-round-cap", "close-bounded-review"].some(action => caseActions.includes(action))
     const reviewerDispatch = caseActions.includes("delegate-reviewer-review") || caseActions.includes("delegate-oracle-review")
     if (!evidenceOnly && !blocked) {
       const required = reviewerDispatch || !continuing
         ? ["delegate-standards-intent-simplification", "keep-reviewers-nonrecursive", "retain-main-review-ownership"]
-        : ["keep-reviewers-nonrecursive", "retain-main-review-ownership"]
+        : ["verify-fix-wave", "delta-review-by-non-author"].some(action => caseActions.includes(action))
+          ? ["keep-reviewers-nonrecursive", "retain-main-review-ownership"]
+          : ["retain-main-review-ownership"]
       for (const action of required) {
         if (!caseActions.includes(action)) errors.push(`${label} substantive review must require ${action}`)
       }
@@ -694,7 +696,7 @@ export function validateCase(
     // A continuing review may start by evaluating the open findings it was handed instead of re-pinning scope.
     const firstAction = isRecord(value.expectations) ? value.expectations.first_action : undefined
     const pinsFirst = firstAction === "pin-review-scope" ||
-      (Array.isArray(firstAction) && firstAction.includes("pin-review-scope") && firstAction.every(item => item === "pin-review-scope" || item === "evaluate-feedback"))
+      (Array.isArray(firstAction) && firstAction.includes("pin-review-scope") && firstAction.every(item => item === "pin-review-scope" || item === "evaluate-feedback" || (continuing && item === "inspect-current-state")))
     if (!caseActions.includes("pin-review-scope") && !pinsFirst) errors.push(`${label} review must pin scope`)
     if (single && !caseActions.includes("keep-task-read-only")) {
       errors.push(`${label} single-track review must remain read-only`)
