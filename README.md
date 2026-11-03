@@ -122,13 +122,52 @@ Skills load when their invocation conditions match the task. They can also be re
 
 Start with the relevant entrypoint, such as [engineering/SKILL.md](skills/engineering/SKILL.md). It links to detailed guidance for the task. Substantial engineering starts with a working path through the system, then continues through the remaining vertical slices.
 
+### From idea to merge-ready PR
+
+```mermaid
+flowchart TD
+    I[Idea from Q] --> S{Kind of task?}
+    S -- unknown failure --> DB["debugging<br/>repro first, then root cause"]
+    S -- tests are the job --> TD[test-design]
+    S -- change or feature --> E["engineering<br/>owner, outcome, refs line"]
+    DB --> E
+    TD --> E
+    E --> Amb{"Unclear choice that<br/>changes the result?"}
+    Amb -- yes --> GM["grill-me or to-questionnaire, then Q"]
+    GM --> Sh
+    Amb -- no --> Sh{Shape settled?}
+    Sh -- "one-way or cross-boundary" --> AR["feature-shape: two architects,<br/>judge, one contract"]
+    Sh -- uncertain fact --> PT["prototype (throwaway)"]
+    PT --> AR
+    Sh -- yes --> WT
+    AR --> WT["using-git-worktrees<br/>isolated branch"]
+    WT --> IM["implementer slices, tracer bullet first"]
+    IM --> PF["proof.md: tests, project-verification,<br/>formal verification for ordering and state bugs"]
+    PF --> R1["review-and-simplify-changes round 1<br/>cited findings with IDs"]
+    R1 --> FX["one fix wave"]
+    FX --> R2["round 2: verifier reruns checks and repros<br/>targeted reviewer only on failure,<br/>new behavior, redesign, or large diff"]
+    R2 -- blocker still open --> QQ["Needs Q, no round 3"]
+    R2 -- pass --> HZ["humanizer on user-visible copy,<br/>record-review with rounds and leads"]
+    HZ --> PRB["describe-pr, open PR<br/>finishing-a-development-branch"]
+    PRB --> BOT{CI and bot comments}
+    BOT -- comments --> RC["receiving-code-review<br/>same bar, dismiss from the third pass"]
+    RC -- real fix --> V2["verifier on the fix"]
+    V2 --> BOT
+    BOT -- CI failure --> DB2["debugging, fix, verifier"]
+    DB2 --> BOT
+    BOT -- "green, verifier pass on this patch" --> MR["Merge-ready<br/>merge only under a standing grant;<br/>one-way doors go to Q"]
+    MR -.-> RT["weekly retro: a recurring finding<br/>becomes a check (pstack correct)"]
+```
+
+Risk findings (security, auth, billing, data, migrations, concurrency) never become leads; an `interrogate` run, `oracle` with a `judge`, or Q settles them.
+
 ### Review before completion
 
 Every implementation handoff or intended commit requires independent subagent review through `review-and-simplify-changes`, including small changes. Reviewers apply the review-only [coding standards](skills/review-and-simplify-changes/references/coding-standards.md) (module design, test lies, comments); a repo-root `CODING_STANDARDS.md` extends or overrides them, and implementer briefs leave them out. The review lane scales reviewers to the diff's risk. One-way doors (the triggers in [merge-danger.md](skills/describe-pr/references/merge-danger.md)) and hot paths add a `design_reviewer`, both `oracle` seats with a `judge`, and require a blast-radius pass that proves the one fact the change is safe because of. Reviewers classify Merge danger independently; the more severe value of each wins (one-way over two-way; localized < service < customers < data) and goes into the review record. A finding blocks only with evidence (a failing run, a broken requirement or contract, or a doc the change made wrong); uncited concerns are one-line leads, and pre-existing debt in touched files is listed under `## Audit items` in the PR body for the weekly `retro`, never fixed in the same change. Clear Standards fixes on new code go to `refiner`, and judgement calls stay with the main agent. A diff that adds a subsystem or changes more than about 500 source lines also gets a `design_reviewer` running `improve-codebase-architecture` and a `reviewer` running `improve-test-suite`, scoped to the touched subsystems.
 
 `describe-pr` ends every PR body with a Merge danger footer (`Door: one-way|two-way`, `Blast radius: localized|service|customers|data`). Agents merge without asking only under a standing grant from Q that names the repo (project instructions or a memory entry quoting Q), when the footer and the review record both say two-way and localized, and checks and reviews pass on the current head. Everything else, including every one-way door, goes to Q. When Q says the work is merged, `skills/finishing-a-development-branch/scripts/cleanup-merged.sh [--dry-run] <branch>` removes the agent-owned worktree, deletes the branch and its stale remote ref, and fast-forwards a clean main checkout. It needs `wt` and `jq`, runs only hooks with persisted Worktrunk approvals, and refuses dirty, untracked, unmerged, or host-owned workspaces (any worktree other than the one `wt list` reports at the branch's template path). A branch with no worktree is deleted only after the merge proof.
 
-Review runs two rounds: a full review of the intended diff, one fix wave, then a `verifier` that reruns the checks and each blocker's repro. A targeted re-review joins only when the verifier fails or the fixes changed behavior. Blockers still open after round 2 go to Q. The main agent coordinates the rounds; its own review cannot satisfy the independent-review requirement.
+Review runs two rounds: a full review of the intended diff, one fix wave, then a `verifier` that reruns the checks and each blocker's repro. A targeted re-review joins only when the verifier fails or the fixes add new behavior, redesign a boundary, or change more than about 200 lines. Blockers still open after round 2 go to Q. The main agent coordinates the rounds; its own review cannot satisfy the independent-review requirement.
 
 ## Claude Code
 
