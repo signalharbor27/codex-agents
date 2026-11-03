@@ -22,6 +22,10 @@
     ],
     "ask": [
       "Bash(sudo *)"
+    ],
+    "additionalDirectories": [
+      "/srv/data/workspaces",
+      "/srv/data/tmp/ubuntu"
     ]
   },
   "disableClaudeAiConnectors": true,
