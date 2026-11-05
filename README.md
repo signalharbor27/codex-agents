@@ -135,14 +135,14 @@ flowchart TD
     E --> Amb{"Unclear choice that<br/>changes the result?"}
     Amb -- yes --> GM["grill-me or to-questionnaire, then Q"]
     GM --> Sh
-    Amb -- no --> Sh{Shape settled?}
+    Amb -- no --> Sh{Shape gate}
     Sh -- "one-way or cross-boundary" --> AR["feature-shape: two architects,<br/>judge, one contract"]
     Sh -- uncertain fact --> PT["prototype (throwaway)"]
     PT --> AR
-    Sh -- yes --> WT
+    Sh -- "local, two-way" --> WT
     AR --> WT["using-git-worktrees<br/>isolated branch"]
     WT --> IM["implementer slices, tracer bullet first"]
-    IM --> PF["proof.md: tests, project-verification,<br/>formal verification for ordering and state bugs"]
+    IM --> PF["proof.md: tests, formal verification for ordering and state bugs<br/>verification gate: verifier runs the project recipe,<br/>project-verification adds one when none covers it"]
     PF --> R1["review-and-simplify-changes round 1<br/>cited findings with IDs"]
     R1 --> FX["one fix wave"]
     FX --> R2["round 2: verifier reruns checks and repros<br/>targeted reviewer only on failure,<br/>new behavior, redesign, or large diff"]

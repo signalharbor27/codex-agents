@@ -1445,6 +1445,7 @@
         "engineering/references/feature-shape.md"
       ],
       "required_actions": [
+        "draft-architect-contract",
         "inspect-before-editing",
         "verify-before-completion"
       ],
@@ -1467,6 +1468,7 @@
         "project-verification/references/authoring.md"
       ],
       "required_actions": [
+        "run-project-verification-recipe",
         "inspect-before-editing",
         "verify-before-completion"
       ],
