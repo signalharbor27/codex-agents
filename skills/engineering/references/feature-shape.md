@@ -20,7 +20,7 @@ For a larger feature, order slices by risk and learning, not by technical layer.
 
 ## Draft the contract with architects
 
-Engineering's shape gate sends one-way and cross-boundary changes here. A two-way cross-boundary change uses one `architect` seat: it drafts the contract from step 1's grounding in step 4's form, and steps 2 and 3 are skipped. Other slices skip this section; their implementers work from the brief as below.
+Engineering's shape gate sends one-way and cross-boundary changes here. A two-way cross-boundary change uses one `architect` seat, which writes the final contract straight from step 1's grounding, with the contents step 4 lists and nothing to graft; skip steps 2 and 3. Other slices skip this section; their implementers work from the brief as below.
 
 1. Write the grounding: requested outcome, entrypoints, callers, contracts, invariants, constraints, and existing proof, with paths. Write a rubric of 3-6 criteria that decide the shape, such as invariant ownership, interface size, caller ergonomics, migration safety, or testability through the real seam.
 2. Launch both `architect` seats in parallel with the same grounding and rubric and a separate output path each, as the role's brief describes. Point them at the installed `codebase-design` and `domain-modeling` skills as vocabulary for their drafts. Done when both drafts exist at their output paths.

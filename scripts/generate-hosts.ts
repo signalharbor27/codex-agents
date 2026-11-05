@@ -150,7 +150,7 @@ export function renderBriefs(roles: Record<string, Role>, instructions: Map<stri
       "<!-- Generated from roles/ by scripts/generate-hosts.ts. Edit the source, then regenerate. -->",
       `# ${name}`,
       "",
-      role.seats.length > 1 ? "Launch both seats in parallel with the same assignment; a `judge` reconciles them." : "Launch this seat:",
+      role.seats.length > 1 ? "Launch both seats in parallel with the same assignment, and a `judge` reconciles them, unless the calling skill asks for one seat; then launch the seat native to your host." : "Launch this seat:",
       ...seats,
       "",
       `Every \`delegate_task\` call passes \`runtimeMode: "${modes.runtimeMode}"\` and \`interactionMode: "${modes.interactionMode}"\`.`,

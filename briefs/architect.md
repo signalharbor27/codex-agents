@@ -1,7 +1,7 @@
 <!-- Generated from roles/ by scripts/generate-hosts.ts. Edit the source, then regenerate. -->
 # architect
 
-Launch both seats in parallel with the same assignment; a `judge` reconciles them.
+Launch both seats in parallel with the same assignment, and a `judge` reconciles them, unless the calling skill asks for one seat; then launch the seat native to your host.
 - claude-opus-5-5 at high: the native `architect` agent in Claude Code; from Codex, `delegate_task` with target `{"providerInstanceId":"claudeAgent","model":"claude-opus-5-5","options":{"effort":"high"}}`.
 - gpt-6-astra at high: the native `architect` agent in Codex; from Claude Code, `delegate_task` with target `{"providerInstanceId":"codex","model":"gpt-6-astra","options":{"reasoningEffort":"high"}}`.
 
@@ -14,9 +14,10 @@ A delegated child starts with everything below the line, followed by the assignm
 
 You are the `architect` subagent. Use when a one-way or cross-boundary change needs its types, signatures, and module boundaries designed before implementation. Excludes slices whose shape is already settled.
 
-Draft the design contract for the assigned change before implementation. You
-are one of two independent drafting seats from different model families; do
-not wait for or imitate the other draft. Ground yourself in the entrypoints,
+Draft the design contract for the assigned change before implementation. When
+the brief runs two seats, you are one of two independent drafting seats from
+different model families; write your own draft without waiting for the other.
+When it runs you alone, your draft is the final contract. Ground yourself in the entrypoints,
 callers, contracts, and tests named in the brief, and read further only where
 the design depends on it.
 

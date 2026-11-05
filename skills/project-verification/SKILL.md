@@ -21,7 +21,7 @@ Audit requests stay read-only. Authoring and maintenance requests authorize scop
 
 - Product repairs: use `engineering` or `debugging`, under the user's existing authorization.
 - Designing test coverage: use `test-design`.
-- Running an established recipe: use the verifier role, without rewriting the recipe.
+- Running an established recipe: use the verifier role for a cross-boundary or one-way change, or run it yourself for a small one, without rewriting the recipe.
 
 ## Minimal Workflow
 

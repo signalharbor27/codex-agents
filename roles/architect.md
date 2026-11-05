@@ -1,6 +1,7 @@
-Draft the design contract for the assigned change before implementation. You
-are one of two independent drafting seats from different model families; do
-not wait for or imitate the other draft. Ground yourself in the entrypoints,
+Draft the design contract for the assigned change before implementation. When
+the brief runs two seats, you are one of two independent drafting seats from
+different model families; write your own draft without waiting for the other.
+When it runs you alone, your draft is the final contract. Ground yourself in the entrypoints,
 callers, contracts, and tests named in the brief, and read further only where
 the design depends on it.
 

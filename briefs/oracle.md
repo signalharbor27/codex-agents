@@ -1,7 +1,7 @@
 <!-- Generated from roles/ by scripts/generate-hosts.ts. Edit the source, then regenerate. -->
 # oracle
 
-Launch both seats in parallel with the same assignment; a `judge` reconciles them.
+Launch both seats in parallel with the same assignment, and a `judge` reconciles them, unless the calling skill asks for one seat; then launch the seat native to your host.
 - claude-fable-5-1 at high: the native `oracle` agent in Claude Code; from Codex, `delegate_task` with target `{"providerInstanceId":"claudeAgent","model":"claude-fable-5-1","options":{"effort":"high"}}`.
 - gpt-6-astra at high: the native `oracle` agent in Codex; from Claude Code, `delegate_task` with target `{"providerInstanceId":"codex","model":"gpt-6-astra","options":{"reasoningEffort":"high"}}`.
 
