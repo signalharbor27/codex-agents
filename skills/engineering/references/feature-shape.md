@@ -20,7 +20,7 @@ For a larger feature, order slices by risk and learning, not by technical layer.
 
 ## Draft the contract with architects
 
-Every one-way or cross-boundary change runs this step, even when its shape looks settled. Other slices skip it; their implementers work from the brief as below.
+Engineering's shape gate sends every one-way or cross-boundary change here. Other slices skip this step; their implementers work from the brief as below.
 
 1. Write the grounding: requested outcome, entrypoints, callers, contracts, invariants, constraints, and existing proof, with paths. Write a rubric of 3-6 criteria that decide the shape, such as invariant ownership, interface size, caller ergonomics, migration safety, or testability through the real seam.
 2. Launch both `architect` seats in parallel with the same grounding and rubric and a separate output path each, as the role's brief describes. Point them at the installed `codebase-design` and `domain-modeling` skills as vocabulary for their drafts. Done when both drafts exist at their output paths.
