@@ -120,7 +120,7 @@ Skills load when their invocation conditions match the task. They can also be re
 - `writing-skills`: skill descriptions, instructions, references, and evaluations.
 - `retro` (user-invoked only): turns agent sessions and PR reviews into ranked environment fixes (checks, standards, pointers, access, pruning). It skips T3 delegated children and applies pstack's `correct` method to recurring mistakes. Run from a T3 `schedule_task`, it implements accepted fixes on a local Worktrunk branch with a private `RETRO.md` report outside the repository for Q to review, and never pushes or opens a PR.
 
-Start with the relevant entrypoint, such as [engineering/SKILL.md](skills/engineering/SKILL.md). It links to detailed guidance for the task. Substantial engineering starts with a working path through the system, then continues through the remaining vertical slices.
+Start with the relevant entrypoint, such as [engineering/SKILL.md](skills/engineering/SKILL.md). It links to detailed guidance for the task. Substantial engineering starts with a working path through the system, then continues through the remaining vertical slices. Every change, small ones included, passes three gates in `engineering` and records them on a `gates:` line: grill (any unresolved user-owned choice goes to the `grill-me` interview), shape (one-way or cross-boundary changes get the architect contract), and verification (the project's recipe runs for the changed behavior, and `project-verification` adds one when none covers it).
 
 ### From idea to merge-ready PR
 

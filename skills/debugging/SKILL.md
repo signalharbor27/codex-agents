@@ -30,7 +30,7 @@ Diagnosis-only requests stop at evidence. Fix requests, including failure report
 4. Locate the failing boundary. Rank a small set of falsifiable hypotheses and test the highest-signal one with one variable changed. Repeat until one hypothesis survives a discriminating test.
 5. Trace the cause backward until it explains both the failure and the working comparison. State the violated behavior or contract, not merely the crashing line.
 6. If the request is diagnosis-only, stop with evidence, ruled-out hypotheses, and the next discriminating check.
-7. If a fix is authorized, use the existing reproduction or add a regression signal at the observable seam. Add a persistent test when it gives durable protection beyond existing evidence. Make the smallest repair that removes the cause, without unrelated mitigation or redesign.
+7. If a fix is authorized, use the existing reproduction or add a regression signal at the observable seam. Add a persistent test when it gives durable protection beyond existing evidence. Make the smallest repair that removes the cause, without unrelated mitigation or redesign. The repair passes `engineering`'s grill, shape, and verification gates and records its `gates:` line.
 8. Run the reproduction, required surrounding checks, and runtime observations needed to prove the fix. Reuse unaffected proof after checking its inputs; repeat or broaden checks for new edits, failures, changed relevant state, or unresolved risks. Remove temporary probes and harnesses before completion, and resume any remaining authorized work.
 
 ## Reference Routing

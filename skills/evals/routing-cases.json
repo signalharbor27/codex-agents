@@ -1412,6 +1412,70 @@
         "stop": ["after-verification", "after-requested-scope", "findings"]
       },
       "optional_references": ["review-and-simplify-changes/references/delegated-review.md"]
+    },
+    {
+      "id": "small-change-one-user-choice",
+      "prompt": "Add CSV export to the orders report. Nobody has said whether the export contains only the rows matching the current filters or every order, and that changes what customers download.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "optional_modifier_skills": ["grill-me"],
+      "expected_references": [
+        "grill-me/references/frontier.md"
+      ],
+      "required_actions": [
+        "inspect-before-editing",
+        "resolve-facts-before-asking",
+        "ask-dependency-frontier-round"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "after-user-choice",
+        "question": "dependency-frontier",
+        "stop": "wait-for-answer"
+      }
+    },
+    {
+      "id": "settled-cross-boundary-shape",
+      "prompt": "Move session-token validation out of the web app into the shared auth package that the web app and the billing service both import. The function signature is obvious, so just do it and run the tests.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "optional_modifier_skills": ["review-and-simplify-changes"],
+      "optional_references": ["engineering/references/boundary-design.md", "engineering/references/security.md", "engineering/references/compatibility-and-delivery.md", "review-and-simplify-changes/references/delegated-review.md", "review-and-simplify-changes/references/coding-standards.md", "describe-pr/references/merge-danger.md"],
+      "expected_references": [
+        "engineering/references/feature-shape.md"
+      ],
+      "required_actions": [
+        "inspect-before-editing",
+        "verify-before-completion"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
+    },
+    {
+      "id": "behavior-change-no-recipe",
+      "prompt": "Add a --json flag to this CLI's list command and run the unit tests. The project has unit tests but no verification runbook.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [
+        "project-verification"
+      ],
+      "optional_modifier_skills": ["review-and-simplify-changes"],
+      "expected_references": [
+        "project-verification/references/authoring.md"
+      ],
+      "required_actions": [
+        "inspect-before-editing",
+        "verify-before-completion"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
     }
-  ]
+]
 }

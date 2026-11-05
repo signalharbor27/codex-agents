@@ -1,6 +1,6 @@
 ---
 name: project-verification
-description: "Use when creating, auditing, or repairing a project's repeatable verification runbook, harness, or feature map. Excludes routine check execution, product fixes, and test design."
+description: "Use when creating, auditing, or repairing a project's repeatable verification runbook, harness, or feature map, including when a change adds behavior no recipe covers. Excludes routine check execution, product fixes, and test design."
 ---
 
 # Project verification
@@ -14,6 +14,7 @@ Audit requests stay read-only. Authoring and maintenance requests authorize scop
 ## When to Use
 
 - Making a feature's verification repeatable by another agent: authoring or maintenance.
+- Engineering's verification gate found no recipe covering a change's behavior: authoring or maintenance for that behavior.
 - Checking whether an existing runbook, harness, or feature map still matches the project: audit.
 
 ## When Not to Use

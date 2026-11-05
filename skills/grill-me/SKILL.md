@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: "Use when the user asks to be grilled or interviewed, or coupled user-owned choices materially affect the deliverable, acceptance criteria, or costly commitments. Excludes routine, factual, or settled choices."
+description: "Use when the user asks to be grilled or interviewed, or any unresolved user-owned choice materially affects the deliverable, acceptance criteria, or costly commitments. Excludes routine, factual, or settled choices."
 ---
 
 # Grill me
@@ -11,12 +11,12 @@ Settle consequential user-owned decisions through a dependency-frontier intervie
 
 ## When to Use
 
-- Several coupled consequential user-owned choices about product, scope, architecture, or behavior, including plausible interpretations that change the deliverable or acceptance criteria, even when coding is technically possible
+- One or more unresolved consequential user-owned choices about product, scope, architecture, or behavior, including plausible interpretations that change the deliverable or acceptance criteria, even when coding is technically possible
 - Explicit requests, including `$grill-me` and requests to pressure-test a plan interactively
 
 ## When Not to Use
 
-- Routine choices, already-settled work, and one unresolved user-owned decision: stay with the current primary skill.
+- Routine choices and already-settled work: stay with the current primary skill.
 - Factual unknowns: use the relevant research, review, or debugging skill.
 - Implementation work: the interview is read-only.
 

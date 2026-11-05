@@ -1,6 +1,6 @@
 # Dependency-frontier grilling
 
-Use this procedure whenever `grill-me` is selected, or when inspection under the current primary skill reveals coupled user-owned choices that materially affect the deliverable, acceptance criteria, or costly commitments, even when coding is technically possible. Resolve them before dependent planning or implementation. Handle a single unresolved user-owned decision inline, keep routine choices agent-owned, and resolve factual uncertainty through the relevant research, review, or debugging workflow instead of manufacturing a decision.
+Use this procedure whenever `grill-me` is selected, or when inspection under the current primary skill reveals unresolved user-owned choices that materially affect the deliverable, acceptance criteria, or costly commitments, even when coding is technically possible. Resolve them before dependent planning or implementation. A single decision is a one-question frontier. Keep routine choices agent-owned, and resolve factual uncertainty through the relevant research, review, or debugging workflow instead of manufacturing a decision.
 
 The interview is interactive and read-only. Its procedure authorizes no changes to code, plans, artifacts, branch state, external services, or live state. When a primary skill loads it during authorized work, that skill can continue unaffected work while answers are pending; keep dependent work open.
 
