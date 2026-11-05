@@ -1478,6 +1478,23 @@
         "question": "only-if-blocked",
         "stop": "after-verification"
       }
+    },
+    {
+      "id": "cheap-choice-no-grill",
+      "prompt": "Add a --verbose flag to this CLI's sync command that prints each file as it is copied. Pick the short alias and message wording yourself, then run the focused tests.",
+      "primary_skill": "engineering",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": [
+        "inspect-before-editing",
+        "verify-before-completion"
+      ],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "only-if-blocked",
+        "stop": "after-verification"
+      }
     }
 ]
 }

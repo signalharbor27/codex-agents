@@ -120,7 +120,7 @@ Skills load when their invocation conditions match the task. They can also be re
 - `writing-skills`: skill descriptions, instructions, references, and evaluations.
 - `retro` (user-invoked only): turns agent sessions and PR reviews into ranked environment fixes (checks, standards, pointers, access, pruning). It skips T3 delegated children and applies pstack's `correct` method to recurring mistakes. Run from a T3 `schedule_task`, it implements accepted fixes on a local Worktrunk branch with a private `RETRO.md` report outside the repository for Q to review, and never pushes or opens a PR.
 
-Start with the relevant entrypoint, such as [engineering/SKILL.md](skills/engineering/SKILL.md). It links to detailed guidance for the task. Substantial engineering starts with a working path through the system, then continues through the remaining vertical slices. Every change, small ones included, passes three gates in `engineering` and records them on a `gates:` line: grill (any unresolved user-owned choice goes to the `grill-me` interview), shape (one-way or cross-boundary changes get the architect contract), and verification (the project's recipe runs for the changed behavior, and `project-verification` adds one when none covers it).
+Start with the relevant entrypoint, such as [engineering/SKILL.md](skills/engineering/SKILL.md). It links to detailed guidance for the task. Substantial engineering starts with a working path through the system, then continues through the remaining vertical slices. Every change passes three gates in `engineering`, sized to the change, and records them on a `gates:` line: grill (a user-owned choice that changes the result goes to the `grill-me` interview; cheap-to-reverse choices become stated assumptions), shape (one architect for a two-way cross-boundary change, two architects and a judge for a one-way change, none for local work), and verification (the project's recipe runs for the changed behavior, through a `verifier` for cross-boundary or one-way changes; `project-verification` adds a recipe when new user-visible or contract behavior has none).
 
 ### From idea to merge-ready PR
 
@@ -136,13 +136,15 @@ flowchart TD
     Amb -- yes --> GM["grill-me or to-questionnaire, then Q"]
     GM --> Sh
     Amb -- no --> Sh{Shape gate}
-    Sh -- "one-way or cross-boundary" --> AR["feature-shape: two architects,<br/>judge, one contract"]
+    Sh -- "cross-boundary, two-way" --> AR1["one architect drafts the contract"]
+    Sh -- one-way --> AR["feature-shape: two architects,<br/>judge, one contract"]
+    AR1 --> WT
     Sh -- uncertain fact --> PT["prototype (throwaway)"]
     PT --> AR
     Sh -- "local, two-way" --> WT
     AR --> WT["using-git-worktrees<br/>isolated branch"]
     WT --> IM["implementer slices, tracer bullet first"]
-    IM --> PF["proof.md: tests, formal verification for ordering and state bugs<br/>verification gate: verifier runs the project recipe,<br/>project-verification adds one when none covers it"]
+    IM --> PF["proof.md: tests, formal verification for ordering and state bugs<br/>verification gate sized to the change: project recipe,<br/>verifier for cross-boundary or one-way,<br/>project-verification adds a recipe for new behavior"]
     PF --> R1["review-and-simplify-changes round 1<br/>cited findings with IDs"]
     R1 --> FX["one fix wave"]
     FX --> R2["round 2: verifier reruns checks and repros<br/>targeted reviewer only on failure,<br/>new behavior, redesign, or large diff"]
