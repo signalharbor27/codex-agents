@@ -20,9 +20,6 @@
       "CronDelete",
       "CronList"
     ],
-    "ask": [
-      "Bash(sudo *)"
-    ],
     "additionalDirectories": [
       "/srv/data/workspaces",
       "/srv/data/tmp/ubuntu"
@@ -63,7 +60,20 @@
           },
           {
             "type": "command",
+            "command": "bun \"$HOME/.claude/hooks/prod-guard.ts\""
+          },
+          {
+            "type": "command",
             "command": "bun \"$HOME/.claude/hooks/review-gate.ts\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$HOME/.claude/hooks/prod-guard.ts\""
           }
         ]
       }
