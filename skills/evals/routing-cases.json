@@ -16,13 +16,16 @@
     "retro",
     "review-and-simplify-changes",
     "test-design",
+    "tutor",
     "using-git-worktrees",
     "writing-rust",
     "writing-skills"
   ],
-  "explicit_only_skills": ["retro"],
+  "explicit_only_skills": ["retro", "tutor"],
   "host_skills": ["humanizer", "show-me", "review-agent"],
   "skill_references": [
+    "tutor/references/workspace.md",
+    "tutor/references/lessons.md",
     "engineering/references/typescript-contracts.md",
     "writing-skills/SESSION-LESSONS.md",
     "codebase-investigation/references/historical-evidence.md",
@@ -69,6 +72,7 @@
     "retro": {"positive": ["retro-explicit-weekly"], "near_negative": ["retro-implicit-session-question", "wip-cleanup-quality"]},
     "receiving-code-review": {"positive": ["review-feedback"], "near_negative": ["small-coupled-review"]},
     "review-and-simplify-changes": {"positive": ["wip-cleanup-quality", "implementation-complete-needs-review", "commit-ready-needs-review", "refiner-clear-standards-findings", "refiner-mixed-with-defect-fix", "review-judgement-only-findings", "hot-path-one-way-review", "verifier-fail-targeted-review", "round-cap-escalates", "leads-only-review-closes"], "near_negative": ["repo-architecture-review"]},
+    "tutor": {"positive": ["tutor-explicit-new-topic", "tutor-explicit-next-lesson"], "near_negative": ["tutor-implicit-one-off-explain"]},
     "test-design": {"positive": ["test-strategy"], "near_negative": ["unknown-flaky-failure"]},
     "using-git-worktrees": {"positive": ["worktree-isolation"], "near_negative": ["merge-conflict-safe-resolution"]},
     "writing-rust": {"positive": ["rust-api"], "near_negative": ["boundary-change"]},
@@ -1494,6 +1498,48 @@
         "mutation": "requested-repo-writes",
         "question": "only-if-blocked",
         "stop": "after-verification"
+      }
+    },
+    {
+      "id": "tutor-explicit-new-topic",
+      "prompt": "$tutor I want to learn SQL window functions so I can write the weekly retention queries at work myself. This folder is empty.",
+      "primary_skill": "tutor",
+      "expected_modifier_skills": [],
+      "expected_references": ["tutor/references/workspace.md"],
+      "required_actions": ["ask-exactly-one-question"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "one-at-a-time",
+        "stop": "wait-for-answer"
+      }
+    },
+    {
+      "id": "tutor-explicit-next-lesson",
+      "prompt": "$tutor next lesson. This workspace already has MISSION.md, RESOURCES.md with sources for every subskill, and SKILL-MAP.md showing frame clauses at 2/5 and no reviews due today.",
+      "primary_skill": "tutor",
+      "expected_modifier_skills": [],
+      "expected_references": ["tutor/references/workspace.md", "tutor/references/lessons.md"],
+      "required_actions": ["cite-authoritative-sources", "ask-exactly-one-question"],
+      "expectations": {
+        "first_action": "inspect-current-state",
+        "mutation": "requested-repo-writes",
+        "question": "one-at-a-time",
+        "stop": ["wait-for-answer", "after-artifact"]
+      }
+    },
+    {
+      "id": "tutor-implicit-one-off-explain",
+      "prompt": "Explain what a SQL window function is.",
+      "primary_skill": "none",
+      "expected_modifier_skills": [],
+      "expected_references": [],
+      "required_actions": [],
+      "expectations": {
+        "first_action": ["answer-directly", "inspect-current-state"],
+        "mutation": "none",
+        "question": ["none", "only-if-blocked"],
+        "stop": ["after-requested-scope", "findings"]
       }
     }
 ]

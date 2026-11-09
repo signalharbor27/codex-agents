@@ -12,7 +12,7 @@ npx skills add https://github.com/signalharbor27/codex-agents.git \
   review-and-simplify-changes receiving-code-review improve-codebase-architecture \
   improve-test-suite using-git-worktrees finishing-a-development-branch \
   describe-pr grill-me effect-ts writing-rust designing-data-intensive-systems \
-  writing-skills project-verification codebase-investigation retro --yes
+  writing-skills project-verification codebase-investigation retro tutor --yes
 ```
 
 The installer keeps one copy per skill in `~/.agents/skills`, which Codex reads, and links it from `~/.claude/skills` for Claude Code. These scripts assume Claude Code's default `~/.claude` directory, so leave `CLAUDE_CONFIG_DIR` unset when installing or checking. After updates, rerun the command; `generate-hosts.ts --check-installed` fails when a repo skill is not installed, differs from its source, or is not linked for Claude Code, and when an installed skill no longer exists in the repo. Keep sibling skills together when their references depend on one another. The evaluation harness stays in this repository.
@@ -119,6 +119,7 @@ Skills load when their invocation conditions match the task. They can also be re
 - `describe-pr`: PR descriptions based on the final diff and verification.
 - `writing-skills`: skill descriptions, instructions, references, and evaluations.
 - `retro` (user-invoked only): turns agent sessions and PR reviews into ranked environment fixes (checks, standards, pointers, access, pruning). It skips T3 delegated children and applies pstack's `correct` method to recurring mistakes. Run from a T3 `schedule_task`, it implements accepted fixes on a local Worktrunk branch with a private `RETRO.md` report outside the repository for Q to review, and never pushes or opens a PR.
+- `tutor` (user-invoked only): teaches a topic over many sessions in a study workspace, with cited sources, HTML lessons, a diagnostic, Socratic practice, an evidence-based skill map, and scheduled spaced review. Combines Matt Pocock's `teach` and Jane Street's `socratic-tutor`.
 
 Start with the relevant entrypoint, such as [engineering/SKILL.md](skills/engineering/SKILL.md). It links to detailed guidance for the task. Substantial engineering starts with a working path through the system, then continues through the remaining vertical slices. Every change passes three gates in `engineering`, sized to the change, and records them on a `gates:` line: grill (a user-owned choice that changes the result goes to the `grill-me` interview; cheap-to-reverse choices become stated assumptions), shape (one architect for a two-way cross-boundary change, two architects and a judge for a one-way change, none for local work), and verification (the project's recipe runs for the changed behavior, through a `verifier` for cross-boundary or one-way changes; `project-verification` adds a recipe when new user-visible or contract behavior has none).
 
