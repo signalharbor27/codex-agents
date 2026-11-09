@@ -96,3 +96,4 @@ These rules cover replies to Q.
 
 - Prefer concise idioms and `bun` when supported.
 - For Python with non-stdlib dependencies, prefer a virtual environment.
+- Before reading a screenshot or other image, downscale it to at most 1280px on the long side and crop to the region under review. Read each image once and work from your notes afterwards.

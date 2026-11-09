@@ -29,7 +29,7 @@ On hosts shared with production, run resource-pressure proofs in CPU- and memory
 - Cover the changed failure mode, not an exhaustive matrix.
 - Keep incident tests unless stronger evidence subsumes the same contract.
 - Screenshots, successful acknowledgements, typechecks, and mocked calls prove only their own narrow claim.
-- Where ordering, retries, or state transitions decide correctness and tests reach few interleavings, check the property formally with the installed formal-verification skills that engineering's `external-skills.md` names.
+- Where ordering, retries, or state transitions decide correctness and tests reach few interleavings, check the property formally as engineering's Reference Routing and verification gate describe.
 
 ## Completion
 
