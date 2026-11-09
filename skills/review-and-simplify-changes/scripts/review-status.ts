@@ -42,11 +42,17 @@ export function reviewStatus(dir = process.cwd()): Result {
     return { ok: false, message: `review-status: ${recordPath} is not valid JSON; rewrite the review record` }
   }
 
-  const upstream = run(root, "rev-parse", "--verify", "--quiet", "@{u}")
+  const configuredUpstream = run(root, "rev-parse", "--verify", "--quiet", "@{u}")
+  const branchName = run(root, "symbolic-ref", "--quiet", "--short", "HEAD")
+  const pushRemote = branchName && (run(root, "config", `branch.${branchName}.pushRemote`) ?? run(root, "config", "remote.pushDefault") ?? run(root, "config", `branch.${branchName}.remote`) ?? "origin")
+  const fallbackRef = branchName && `refs/remotes/${pushRemote}/${branchName}`
+  const fallback = fallbackRef && run(root, "rev-parse", "--verify", "--quiet", fallbackRef)
+  const upstream = configuredUpstream ?? fallback
   if (upstream && upstream !== head) {
-    return { ok: false, message: `review-status: HEAD ${head} differs from upstream ${upstream}; push the reviewed commit before publishing` }
+    const name = configuredUpstream ? "upstream" : fallbackRef
+    return { ok: false, message: `review-status: HEAD ${head} differs from ${name} ${upstream}; push the reviewed commit before publishing` }
   }
-  const branch = run(root, "symbolic-ref", "--quiet", "--short", "HEAD") ?? "(detached HEAD)"
+  const branch = branchName ?? "(detached HEAD)"
   return { ok: true, message: `review-status: ready to publish ${branch} at HEAD ${head} (tree ${tree})` }
 }
 

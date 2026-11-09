@@ -56,4 +56,31 @@ describe("reviewStatus", () => {
     writeRecord(repo, 1)
     expect(reviewStatus(repo)).toEqual(expect.objectContaining({ ok: false, message: expect.stringContaining("0 open findings") }))
   }))
+
+  test("falls back to the push remote when no tracking upstream is configured", () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "review-status-remote-")))
+    const repo = join(root, "repo")
+    const bare = join(root, "origin.git")
+    try {
+      mkdirSync(repo)
+      run(root, "git", "init", "-q", "--bare", "origin.git")
+      run(repo, "git", "init", "-q", "-b", "feat")
+      run(repo, "git", "config", "user.email", "test@example.com")
+      run(repo, "git", "config", "user.name", "Test")
+      run(repo, "git", "remote", "add", "origin", bare)
+      writeFileSync(join(repo, "a.txt"), "a\n")
+      run(repo, "git", "add", ".")
+      run(repo, "git", "commit", "-qm", "init")
+      run(repo, "git", "push", "-q", "-u", "origin", "feat")
+      run(repo, "git", "branch", "--unset-upstream")
+      writeFileSync(join(repo, "a.txt"), "b\n")
+      run(repo, "git", "commit", "-qam", "ahead")
+      writeRecord(repo)
+      const result = reviewStatus(repo)
+      expect(result.ok).toBe(false)
+      expect(result.message).toContain("refs/remotes/origin/feat")
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
 })
