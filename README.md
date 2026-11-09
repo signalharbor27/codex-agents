@@ -221,6 +221,7 @@ The local suite validates skill metadata, references, generated role artifacts, 
 bash skills/evals/check-skill-surface.sh
 bash skills/evals/check-skill-surface.sh --installed   # also checks the live install
 bun test skills/evals scripts claude skills/retro
+bun skills/review-and-simplify-changes/scripts/review-status.ts  # preflight the current tree before gh pr create/ready
 bun skills/evals/run-routing-evals.ts dry-run
 ```
 
