@@ -10,7 +10,8 @@ import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync,
 import { dirname, join, resolve } from "node:path"
 
 // `source` is the owner/repo the skills lock records; `subpath` narrows the install to one directory of it.
-export type Source = { source: string; subpath?: string; hidden: boolean; skills: string[] }
+// `requires` names other manifest skills that a listed skill invokes at runtime.
+export type Source = { source: string; subpath?: string; hidden: boolean; skills: string[]; requires?: Record<string, string[]> }
 
 export function readManifest(repo: string): Source[] {
   const manifest = JSON.parse(readFileSync(join(repo, "external/skills.json"), "utf8")) as { sources?: Source[] }
@@ -18,6 +19,14 @@ export function readManifest(repo: string): Source[] {
   const names = sources.flatMap(source => source.skills)
   const duplicate = names.find((name, i) => names.indexOf(name) !== i)
   if (duplicate) throw new Error(`external/skills.json lists ${duplicate} twice`)
+  const declared = new Set(names)
+  for (const source of sources) {
+    for (const [skill, dependencies] of Object.entries(source.requires ?? {})) {
+      if (!source.skills.includes(skill)) throw new Error(`external/skills.json requires ${skill} to be listed by its source`)
+      const missing = dependencies.find(dependency => !declared.has(dependency))
+      if (missing) throw new Error(`external/skills.json: ${skill} requires ${missing}, but it is not listed in any source`)
+    }
+  }
   const ours = new Set(existsSync(join(repo, "skills")) ? readdirSync(join(repo, "skills")) : [])
   const clash = names.find(name => ours.has(name))
   if (clash) throw new Error(`external/skills.json: ${clash} would replace this repo's own skill`)

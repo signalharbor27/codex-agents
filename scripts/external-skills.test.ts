@@ -94,6 +94,12 @@ describe("manifest", () => {
       expect(() => readManifest(repo)).toThrow("shown would replace this repo's own skill")
     })
   })
+
+  test("a declared skill dependency must be present in the manifest", () => {
+    withRoot(({ repo }) => {
+      expect(() => readManifest(repo)).toThrow("alpha requires missing, but it is not listed in any source")
+    }, [{ source: "a/b", hidden: true, skills: ["alpha"], requires: { alpha: ["missing"] } }])
+  })
 })
 
 describe("paths", () => {
