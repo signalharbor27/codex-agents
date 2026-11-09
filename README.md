@@ -83,7 +83,7 @@ Edit the registry and role files, not the generated outputs.
 - `implementer`: Opus 5.5 `medium`, implementation slices with agreed contracts and acceptance criteria.
 - `reviewer`: GPT-6.1 Sol `high`, independent correctness, simplification, and Standards/Intent review.
 - `design_reviewer`: Opus 5.5 `medium`, second-family review of abstractions and boundaries in round 1 of large, one-way, or hot-path changes.
-- `oracle`: Claude Fable 5.1 `high` + GPT-6 Astra `high` in parallel, explicit requests, one-way-door review, or blockers that remain after investigation or ordinary review; a `judge` reconciles them.
+- `oracle`: Claude Fable 5.2 `xhigh` + GPT-6 Astra `high` in parallel, explicit requests, one-way-door review, or blockers that remain after investigation or ordinary review; a `judge` reconciles them.
 - `refiner`: Opus 5.5 `medium`, applies clear Standards fixes from independent review in its own context; a `verifier` checks its edits.
 - `verifier`: GPT-6.1 Sol `high`, running checks and reporting command evidence.
 - `explorer`: GPT-6.1 Sol `medium`, repository structure, callers, and existing tests.

@@ -1,8 +1,8 @@
 ---
 name: oracle
 description: "Use when the user explicitly requests Oracle, a one-way door needs its review, or investigation or ordinary review has stalled on a concrete technical blocker. Excludes routine review."
-model: claude-fable-5-1
-effort: high
+model: claude-fable-5-2
+effort: xhigh
 disallowedTools: Edit, Write, NotebookEdit, Agent
 color: purple
 skills:

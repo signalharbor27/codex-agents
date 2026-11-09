@@ -7,8 +7,9 @@
 // review pass per change.
 
 export type Provider = "codex" | "claude"
-// Q (2026-10-04): no role runs above high; xhigh costs too much for what it adds.
-export type Effort = "low" | "medium" | "high"
+// Q (2026-10-04): roles run at high or below; xhigh costs too much for what it adds.
+// Exception, Q (2026-11-10): the Fable seat runs Fable 5.2 at xhigh.
+export type Effort = "low" | "medium" | "high" | "xhigh"
 /** read-only: never edits or runs mutating commands. run: runs commands that may write caches but never edits sources. write: edits files. */
 export type Authority = "read-only" | "run" | "write"
 /** One model a role runs on. A role with two seats runs both in parallel and a judge reconciles them. */
@@ -33,7 +34,7 @@ export type Role = {
 }
 
 const opus = (effort: Effort): Seat => ({ provider: "claude", model: "claude-opus-5-5", effort })
-const fable = (effort: Effort): Seat => ({ provider: "claude", model: "claude-fable-5-1", effort })
+const fable = (effort: Effort): Seat => ({ provider: "claude", model: "claude-fable-5-2", effort })
 const sol = (effort: Effort): Seat => ({ provider: "codex", model: "gpt-6.1-sol", effort })
 const astra = (effort: Effort): Seat => ({ provider: "codex", model: "gpt-6-astra", effort })
 
@@ -98,7 +99,7 @@ export const roles: Record<string, Role> = {
   oracle: {
     description: "Use when the user explicitly requests Oracle, a one-way door needs its review, or investigation or ordinary review has stalled on a concrete technical blocker. Excludes routine review.",
     // Q runs both strongest models anyway; the judge reconciles them.
-    seats: [fable("high"), astra("high")],
+    seats: [fable("xhigh"), astra("high")],
     authority: "read-only",
     skills: ["review-agent"],
     toolNotes: ["grep_app"],

@@ -2,7 +2,7 @@
 # oracle
 
 Launch both seats in parallel with the same assignment, and a `judge` reconciles them, unless the calling skill asks for one seat; then launch the seat native to your host.
-- claude-fable-5-1 at high: the native `oracle` agent in Claude Code; from Codex, `delegate_task` with target `{"providerInstanceId":"claudeAgent","model":"claude-fable-5-1","options":{"effort":"high"}}`.
+- claude-fable-5-2 at xhigh: the native `oracle` agent in Claude Code; from Codex, `delegate_task` with target `{"providerInstanceId":"claudeAgent","model":"claude-fable-5-2","options":{"effort":"xhigh"}}`.
 - gpt-6-astra at high: the native `oracle` agent in Codex; from Claude Code, `delegate_task` with target `{"providerInstanceId":"codex","model":"gpt-6-astra","options":{"reasoningEffort":"high"}}`.
 
 Every `delegate_task` call passes `runtimeMode: "full-access"` and `interactionMode: "plan"`.
