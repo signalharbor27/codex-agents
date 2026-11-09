@@ -31,7 +31,7 @@ When a skill names Cursor `Task`, `subagent_type`, or `pstack-models.mdc`, read 
 - Before declaring done (check the real artifact, not a proxy): `principle-prove-it-works`
 - Trusting, reporting, or acting on a measured number: `principle-explain-the-number`
 - Running a benchmark or reporting a measured speedup or regression: `benchmark-checklist`
-- Concurrency, retries, state machines, parsers, or unsafe code where a bug costs the most and tests reach least: `create-formal-verification-skill`; after changes to code a project's formal check covers: `maintain-formal-verification-skill`; reading a TLA+ result or showing a bug as a path through states: `statechart`
+- Updating a project's formal check after the code it covers changed: `maintain-formal-verification-skill`; reading a TLA+ result or showing a bug as a path through states: `statechart`. Engineering's Reference Routing owns when to propose `create-formal-verification-skill`.
 - Q asks to interrogate, stress-test, or adversarially review a change, or a review risk finding needs a run to settle: `interrogate`, which needs `in-your-own-words`
 
 ## Design
