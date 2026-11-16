@@ -392,10 +392,16 @@ function ownHookFile(command: string): string | undefined {
 }
 
 /** An installed hook group without this repo's commands, or undefined when only ours were in it. Other shapes pass through. */
-function withoutOwnHooks(group: unknown): unknown {
+function withoutOwnHooks(group: unknown, managedFiles: Set<string>): unknown {
   const hooks = asObject(group).hooks
   if (!Array.isArray(hooks)) return group
-  const foreign = hooks.filter(hook => !ownHookFile(String(asObject(hook).command ?? "")))
+  const foreign = hooks.filter(hook => {
+    const command = String(asObject(hook).command ?? "")
+    if (ownHookFile(command)) return false
+    const alternate = ownHookFile(command.replace(/^bun\s+--no-env-file\s+/, "bun "))
+    // Local hooks can share this directory; only normalize variants of managed scripts.
+    return !alternate || !managedFiles.has(alternate)
+  })
   if (foreign.length === hooks.length) return group
   return foreign.length ? { ...asObject(group), hooks: foreign } : undefined
 }
@@ -404,10 +410,18 @@ function withoutOwnHooks(group: unknown): unknown {
 function mergeHooks(installed: unknown, fragment: unknown): Json {
   const theirs = asObject(installed)
   const ours = asObject(fragment)
+  const managedFiles = new Set(Object.values(ours).flatMap(groups =>
+    [groups].flat().flatMap(group => {
+      const hooks = asObject(group).hooks
+      return (Array.isArray(hooks) ? hooks : []).flatMap(hook => {
+        const file = ownHookFile(String(asObject(hook).command ?? ""))
+        return file ? [file] : []
+      })
+    })))
   const merged: Json = {}
   for (const event of new Set([...Object.keys(theirs), ...Object.keys(ours)])) {
     const own = [ours[event] ?? []].flat()
-    const kept = [theirs[event] ?? []].flat().map(withoutOwnHooks)
+    const kept = [theirs[event] ?? []].flat().map(group => withoutOwnHooks(group, managedFiles))
       .filter(group => group !== undefined && !own.some(g => canonical(g) === canonical(group)))
     if (own.length || kept.length) merged[event] = [...own, ...kept]
   }

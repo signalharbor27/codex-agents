@@ -208,6 +208,17 @@ describe("hooks merge", () => {
     expect(mergeSettings(merged, fragment)).toEqual(merged)
   })
 
+  test("replaces an owned hook's alternate Bun invocation and preserves local hooks", () => {
+    const alternate = (file: string) => ({ type: "command", command: `bun --no-env-file "$HOME/.claude/hooks/${file}"` })
+    const foreign = alternate("local-guard.ts")
+    const installed = { hooks: { Stop: [own("reply-guard.ts"), { hooks: [alternate("reply-guard.ts"), foreign] }, tool("Stop")] } }
+    const merged = mergeSettings(installed, fragment)
+    expect(merged.hooks.Stop).toEqual([own("reply-guard.ts"), { hooks: [foreign] }, tool("Stop")])
+    expect(settingsDrift(installed, fragment)).toEqual(["hooks"])
+    expect(settingsDrift(merged, fragment)).toEqual([])
+    expect(mergeSettings(merged, fragment)).toEqual(merged)
+  })
+
   test("keeps another tool's command that shares a group with this repo's", () => {
     const toolHook = { type: "command", command: "cmux-hook Stop" }
     const installed = { hooks: { Stop: [{ hooks: [own("old-guard.ts").hooks[0], toolHook] }] } }
@@ -347,7 +358,7 @@ describe("generator subprocess", () => {
     expect(installed.stdout).toContain("settings: permissions.allow added: ")
     expect(installed.stdout).toContain("settings: hooks changed: PreToolUse, Stop, UserPromptSubmit\n")
     // Hooks and their shared module are linked, test files are not, and unrelated hooks stay.
-    expect(readdirSync(join(home, ".claude/hooks")).sort()).toEqual(["destructive-guard.ts", "mine.sh", "reply-guard.ts", "review-gate.ts", "shell.ts"])
+    expect(readdirSync(join(home, ".claude/hooks")).sort()).toEqual(["destructive-guard.ts", "mine.sh", "prod-guard.ts", "reply-guard.ts", "review-gate.ts", "shell.ts"])
     expect(installed.stdout).toContain("settings: replaced theme\n")
     expect(installed.stdout).not.toContain("replaced mine")
     const backupDir = join(home, ".claude/backups")
