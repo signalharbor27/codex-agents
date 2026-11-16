@@ -342,6 +342,29 @@ describe("retro extract.py", () => {
     expect(sessions["codex:codex-tui"]!.digest).toContain("L5\n" + batchSteering)
   })
 
+  test("operational notifications cannot crowd human steering out of the digest", () => {
+    const completion = "Delegated task node:delegated-task:synthetic (Check the change) [completed]:\nNo findings."
+    const update = "Update on pull request #1 (https://github.com/example/example/pull/1), which T3 Code is watching for you:\n- Checks passed.\n\nLook into each item and act on it as your task requires. This PR stays linked and watched, so do not link, watch, or list it again. End your turn when you are done, and T3 Code wakes you on the next change. When you hand the work back to the user, call unwatch_pull_request first so the thread returns to their inbox."
+    const messages = [...Array.from({ length: 501 }, (_, i) => i % 2 ? completion : update), "Please finish the requested work."]
+    const say = (message: string) => ({ type: "user", timestamp: ts(1), message: { content: message } })
+    const user = (message: string) => ({ type: "event_msg", timestamp: ts(1), payload: { type: "user_message", message } })
+    const sessions = extractOnly(messages.map(say), [meta("codex-tui", "cli"), ...messages.map(user)])
+    for (const result of [sessions.claude!, sessions["codex:codex-tui"]!]) {
+      expect(result.user_msgs).toBe("1")
+      expect(result.digest).toContain("Please finish the requested work.")
+      expect(result.digest).toContain("notifications: 501")
+      expect(result.digest).toContain("## Operational notifications")
+      expect(result.digest).not.toContain("later user messages omitted")
+    }
+    expect(sessions.claude!.digest).toContain("L502\nPlease finish")
+    expect(sessions["codex:codex-tui"]!.digest).toContain("L503\nPlease finish")
+
+    const ordinary = ["Please inspect this: " + completion, update + "\nPlease fix this now.", "Keep the existing behavior."]
+    const nearby = extractOnly(ordinary.map(say), [])
+    expect(nearby.claude!.user_msgs).toBe("3")
+    expect(nearby.claude!.digest).toContain("notifications: 0")
+  })
+
   test("mixed exec failures retain counts without blaming the first successful tool", () => {
     const sessions = extractOnly([], [
       meta("codex-tui", "cli"),

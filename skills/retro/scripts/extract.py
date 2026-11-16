@@ -45,6 +45,25 @@ T3_NOTICE = re.compile(
     r"(?:Delegated task (node:delegated-task:\S+) reached a terminal state\.\s+"
     r"Use task_status with taskId \1 to read the result\.\s*)+"
 )
+DELEGATED_RESULT = re.compile(
+    r"^Delegated task node:delegated-task:\S+ \([^\n]*\) \[(?:completed|failed|cancelled)\]:\n"
+)
+PR_UPDATE = re.compile(
+    r"^Update on pull request #\d+ \(https://github\.com/[^/\s]+/[^/\s]+/pull/\d+\), "
+    r"which T3 Code is watching for you:\n"
+)
+PR_UPDATE_END = (
+    "Look into each item and act on it as your task requires. This PR stays linked and watched, "
+    "so do not link, watch, or list it again. End your turn when you are done, and T3 Code wakes "
+    "you on the next change. When you hand the work back to the user, call unwatch_pull_request "
+    "first so the thread returns to their inbox."
+)
+
+
+def operational_notice(msg):
+    """Recognize generated result envelopes; retain their evidence outside user steering."""
+    msg = msg.strip()
+    return bool(DELEGATED_RESULT.match(msg) or (PR_UPDATE.match(msg) and msg.endswith(PR_UPDATE_END)))
 
 
 def skip_user(msg):
@@ -56,6 +75,7 @@ HEADER_EXIT = re.compile(r"^(?:Process exited with code|Exit code:)\s*(-?\d+)\s*
 MAX_USER = 500
 MAX_ERRORS = 60
 MAX_HOOKS = 40
+MAX_NOTIFICATIONS = 30
 
 JWT = re.compile(r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b")
 AUTH_URL = re.compile(r"((?:https?|socks5h?|postgres(?:ql)?|redis)://)[^\s/@:]+:[^\s/@]+@", re.I)
@@ -143,6 +163,8 @@ class Session:
         self.interrupts = 0
         self.compactions = 0
         self.first_user = None
+        self.notifications = []
+        self.nnotifications = 0
         self.bytes = os.path.getsize(path)
 
     def seen(self, ts):
@@ -164,6 +186,11 @@ class Session:
             if same_turn:
                 self.last_user_rep = None
                 return
+        if operational_notice(msg):
+            self.nnotifications += 1
+            if len(self.notifications) < MAX_NOTIFICATIONS:
+                self.notifications.append((ts, line, one_line(msg, 300)))
+            return
         if len(self.user) < MAX_USER:
             self.user.append((ts, line, trunc(msg)))
         else:
@@ -172,7 +199,7 @@ class Session:
     def note_first_user(self, msg):
         """Keep the first human-visible user message, read regardless of the window."""
         msg = (msg or "").strip()
-        if self.first_user is None and msg and not skip_user(msg):
+        if self.first_user is None and msg and not skip_user(msg) and not operational_notice(msg):
             self.first_user = msg
 
     def role(self):
@@ -465,6 +492,7 @@ def write_outputs(sessions, out):
                 w.write("delegated child: %s\n" % s.role())
             w.write("file: %s\ncwd: %s\nspan: %s → %s\n" % (s.path, s.cwd, s.start, s.end))
             w.write("compactions: %d interrupts: %d tool_errors: %d hook_hits: %d hook_nudges: %d\n" % (s.compactions, s.interrupts, s.nerr, s.nhooks, s.nudges))
+            w.write("notifications: %d\n" % s.nnotifications)
             w.write("tools: %s\nskills: %s\nagents: %s\n" % (dict(s.tools.most_common(15)), dict(s.skills), dict(s.agents)))
             w.write("\nEntries cite `L<n>`, the raw-log line number; read around it with `sed -n '<n>p' <file> | cut -c1-2000`.\n")
             w.write("\n## User messages\n")
@@ -472,6 +500,8 @@ def write_outputs(sessions, out):
                 w.write("\n### %s L%d\n%s\n" % (ts, line, msg))
             if s.user_dropped:
                 w.write("\n(%d later user messages omitted)\n" % s.user_dropped)
+            w.write("\n## Operational notifications (first %d of %d)\n" % (len(s.notifications), s.nnotifications))
+            w.write("".join("- %s L%d %s\n" % entry for entry in s.notifications))
             w.write("\n## Hook and guard blocks\n")
             w.write("".join("- %s L%d %s\n" % entry for entry in s.hooks))
             w.write("\n## Tool errors (first %d of %d)\n" % (len(s.errors), s.nerr))
