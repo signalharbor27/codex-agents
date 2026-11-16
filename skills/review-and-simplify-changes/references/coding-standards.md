@@ -48,6 +48,8 @@ A test lies when it can pass while the behaviour it names is broken, or fails wh
 - **Can't-fail**: stubs the unit's own risky dependency or the thing under test, or asserts something true of any implementation (`toBeDefined`, a lone `not.toThrow`, the mock returning what it was told).
   Stubbing `AudioContext` in a playback test, then asserting the stub was called.
   Fix: exercise the real dependency or a faithful fake, name a plausible broken implementation, and confirm the test rejects it. Keep doubles for an uncontrollable external edge when the test asserts the unit's own handling of the response.
+- **Early negative assertion**: checks that an asynchronous effect did not happen before the responsible consumer or scheduled cycle finished. Sender completion, a queued callback, or a generic event-loop turn may leave the behavior unexercised.
+  Fix: observe completion at the responsible boundary before asserting absence. When replacing a timing test, show that the replacement still rejects the original forbidden behavior; a timer-free rewrite alone proves nothing about that contract.
 - **Private-path**: reaches internals (helpers exported only for tests, casts to read private fields) while a public seam can observe the behaviour. Fix: test through that seam and un-export the helper. Keep it when no public seam observes the behaviour cheaply, or as a labelled characterization test while legacy code gains a seam.
 
 Keep incident-regression and contract tests even when they look awkward; removal and replacement rules live in `engineering/references/proof.md`. A rewrite keeps the incident's failing input.
@@ -74,6 +76,10 @@ These requirements govern review coverage and correctness findings. Standards ta
 ### Dependency and runtime behavior
 
 Before reporting a defect that depends on library, asynchronous, or deployment behavior, follow the dependency guidance in `engineering/references/proof.md` and trace the actual callers. Identify the operation or state that violates the contract; a type signature, handler attachment, or remembered platform behavior alone is insufficient. Reproduce when the trace leaves uncertainty. Report unverified assumptions as proof gaps.
+
+### Formal-model claims
+
+Before treating a model-checker result as evidence about production, map consequential model actions and guards to the source operations they represent. Preserve separate decision, asynchronous effect, and persistence steps when production can interleave them. Check initial and recovered state against the real lifecycle, and justify omitted transitions. A model that excludes a legal execution cannot establish safety for that execution. Distinguish a model counterexample from a product defect until the source correspondence is established.
 
 ### Rendered UI
 

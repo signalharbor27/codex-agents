@@ -74,6 +74,26 @@ export const CASES: JudgmentCase[] = [
     rubric: ["Reopens authorization and cache isolation assumptions invalidated by the new hit path.", "Requires independent review of the affected contract and warm unauthorized-hit regression evidence; does not accept earlier cold-cache proof as sufficient or repeat unrelated full review without cause."],
   },
   {
+    id: "async-negative-rewrite",
+    prompt: "We replaced the sleep in this negative-delivery test with one event-loop yield. Does the rewrite still prove that blocked messages are never delivered? Inspect the fixture and assess it; do not edit.",
+    files: {
+      "check.mjs": "let delivered = 0;\nfunction receive() { queueMicrotask(() => queueMicrotask(() => { delivered++; })); }\nreceive();\nawait Promise.resolve();\nif (delivered !== 0) throw Error('blocked message delivered');\nconsole.log('PASS rewritten test');\n",
+      "contract.md": "A blocked message must never reach the consumer. The old regression failed when the consumer delivered a blocked message. Sender dispatch does not imply consumer completion.\n",
+    },
+    inspect: ["check.mjs", "contract.md"],
+    rubric: ["Identifies that the assertion precedes the second queued microtask and can pass even though delivery happens afterward.", "Requires an observable consumer-completion boundary and evidence that the rewritten test rejects the original forbidden delivery; does not propose a fixed number of generic yields as proof."],
+  },
+  {
+    id: "model-source-interleaving",
+    prompt: "The model checker passed. Can we claim this worker sends each item at most once? Inspect the source and model notes; report the evidence and any gap without editing.",
+    files: {
+      "worker.mjs": "export async function process(store, send) { const done = await store.readDone(); if (!done) { await send(); await store.writeDone(true); } }\n",
+      "model.md": "Two workers may process the same item. The model represents each worker's entire read/check/send/write as one atomic transition: if done is false, increment sent and set done=true. Initial done=false, sent=0. Exhaustive exploration establishes sent <= 1 for that model.\n",
+    },
+    inspect: ["worker.mjs", "model.md"],
+    rubric: ["Explains that the atomic modeled action excludes the legal interleaving in which both workers read false before either writes true.", "Distinguishes safety of the supplied model from production safety, maps decision/effect/persistence boundaries, and gives the two-read/two-send execution as the missing case."],
+  },
+  {
     id: "trivial-control",
     prompt: "What is the default retry count in this config?",
     files: { "config.json": '{"retryCount":3}\n' },
