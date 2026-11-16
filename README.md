@@ -149,7 +149,8 @@ flowchart TD
     PF --> R1["review-and-simplify-changes round 1<br/>cited findings with IDs"]
     R1 --> FX["one fix wave"]
     FX --> R2["round 2: verifier reruns checks and repros<br/>targeted reviewer only on failure,<br/>new behavior, redesign, or large diff"]
-    R2 -- blocker still open --> QQ["Needs Q, no round 3"]
+    R2 -- known authorized repair --> FX
+    R2 -- material choice or new authority --> QQ["Needs Q"]
     R2 -- pass --> HZ["humanizer on user-visible copy,<br/>record-review with rounds and leads"]
     HZ --> PRB["describe-pr, open PR<br/>finishing-a-development-branch"]
     PRB --> BOT{CI and bot comments}
@@ -170,7 +171,7 @@ Every implementation handoff or intended commit requires independent subagent re
 
 `describe-pr` ends every PR body with a Merge danger footer (`Door: one-way|two-way`, `Blast radius: localized|service|customers|data`). Agents merge without asking only under a standing grant from Q that names the repo (project instructions or a memory entry quoting Q), when the footer and the review record both say two-way and localized, and checks and reviews pass on the current head. Everything else, including every one-way door, goes to Q. When Q says the work is merged, `skills/finishing-a-development-branch/scripts/cleanup-merged.sh [--dry-run] <branch>` removes the agent-owned worktree, deletes the branch and its stale remote ref, and fast-forwards a clean main checkout. It needs `wt` and `jq`, runs only hooks with persisted Worktrunk approvals, and refuses dirty, untracked, unmerged, or host-owned workspaces (any worktree other than the one `wt list` reports at the branch's template path). A branch with no worktree is deleted only after the merge proof.
 
-Review runs two rounds: a full review of the intended diff, one fix wave, then a `verifier` that reruns the checks and each blocker's repro. A targeted re-review joins only when the verifier fails or the fixes add new behavior, redesign a boundary, or change more than about 200 lines. Blockers still open after round 2 go to Q. The main agent coordinates the rounds; its own review cannot satisfy the independent-review requirement.
+Review runs two rounds: a full review of the intended diff, one fix wave, then a `verifier` that reruns the checks and each blocker's repro. A targeted re-review joins only when the verifier fails or the fixes add new behavior, redesign a boundary, or change more than about 200 lines. After round 2, concrete repairs within existing authority receive focused verification; material choices or new authority go to Q. The main agent coordinates the rounds; its own review cannot satisfy the independent-review requirement.
 
 ## Claude Code
 

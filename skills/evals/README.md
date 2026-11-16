@@ -1,6 +1,6 @@
 # Skill evals
 
-The validator checks inventory, invocation metadata, frontmatter, description and line limits, local links, one-level references, agent profile names/descriptions, and fixture/schema contracts. Prose and headings may change without breaking static checks. The fixture has 94 routing cases, including `primary_skill: "none"` routes. Each of the 19 skill descriptions has positive and near-negative coverage mapped to cases in `invocation_coverage`. A skill is explicit-only when its `agents/openai.yaml` sets `allow_implicit_invocation: false`; its `SKILL.md` must then set `disable-model-invocation: true` (the Claude Code equivalent), and the validator rejects a mismatch in either direction.
+The validator checks inventory, invocation metadata, frontmatter, description and line limits, local links, one-level references, agent profile names/descriptions, and fixture/schema contracts. Prose and headings may change without breaking static checks. Routing cases include `primary_skill: "none"` routes. Each of the 19 skill descriptions has positive and near-negative coverage mapped to cases in `invocation_coverage`. A skill is explicit-only when its `agents/openai.yaml` sets `allow_implicit_invocation: false`; its `SKILL.md` must then set `disable-model-invocation: true` (the Claude Code equivalent), and the validator rejects a mismatch in either direction.
 
 ```bash
 bash skills/evals/check-skill-surface.sh
@@ -83,7 +83,8 @@ Review round cases cover:
 - `implementation-complete-needs-review` and `commit-ready-needs-review`: require the full initial review without the user naming a skill.
 - `follow-up-review-delta`: after a fix wave that adds no behavior, the verifier checks the fixed IDs (`verify-fix-wave`); a targeted delta review or a full repeat fails this case.
 - `verifier-fail-targeted-review`: a failed repro earns one targeted non-author review of the fix delta and its open IDs, not a full repeat.
-- `round-cap-escalates`: a blocker still open after round 2 goes to Q (`escalate-after-round-cap`); another review round fails.
+- `round-cap-escalates`: an unresolved customer-behavior choice after round 2 goes to Q (`escalate-after-round-cap`); guessing the choice fails.
+- `known-repair-after-round-two`: a concrete authorized repair receives focused verification; requesting permission solely because of round count fails.
 - `leads-only-review-closes`: uncited leads are listed once and the review closes; a refiner dispatch or delta review fails.
 - `follow-up-review-missing-snapshot`: recover coverage or review the full identifiable intended diff. The fixture makes recovery unavailable, so an assumed delta is insufficient.
 - `combined-slice-review`: inspect previously unreviewed wiring before relying on completed slice reviews.

@@ -1387,7 +1387,7 @@
     },
     {
       "id": "round-cap-escalates",
-      "prompt": "Continue the review of this WIP implementation. Round 1 reviewed the full intended diff at snapshot R1. After the fix wave, round 2 ran at snapshot R2: the verifier's repro for blocker F2 still fails, and a targeted reviewer confirmed the fix is incomplete. No other finding is open, and Q has not authorized another round. Existing authorization covers local fixes; do not commit.",
+      "prompt": "Continue the review of this WIP implementation. Round 1 reviewed the full intended diff at snapshot R1. After the fix wave, round 2 ran at snapshot R2: the verifier's repro for blocker F2 still fails, and a targeted reviewer confirmed the fix is incomplete. No other finding is open. Focused diagnosis found two fixes with different customer behavior: reject queued work or replay it after recovery. Q has not chosen that behavior; existing authority does not settle it. Do not commit.",
       "primary_skill": "review-and-simplify-changes",
       "expected_modifier_skills": [],
       "expected_references": [],
@@ -1400,6 +1400,22 @@
         "stop": ["blocked", "wait-for-answer"]
       },
       "optional_references": ["review-and-simplify-changes/references/delegated-review.md", "review-and-simplify-changes/references/coding-standards.md"]
+    },
+    {
+      "id": "known-repair-after-round-two",
+      "prompt": "Finish this authorized local bug fix. Round 1 independently reviewed the entire intended diff at R1. Round 2 verified all findings except F2: one caller still discards the Promise returned by saveDraft. The reviewer identified the exact remaining fix: await saveDraft at that caller, preserving its existing error propagation. This changes no contract, scope, or external effects; the focused regression already reproduces the failure. Apply the fix and finish verification. Do not commit.",
+      "primary_skill": "review-and-simplify-changes",
+      "expected_modifier_skills": [],
+      "expected_references": ["review-and-simplify-changes/references/delegated-review.md"],
+      "optional_references": ["review-and-simplify-changes/references/coding-standards.md"],
+      "required_actions": ["verify-fix-wave", "carry-unresolved-findings-forward", "retain-main-review-ownership", "keep-reviewers-nonrecursive"],
+      "forbidden_actions": ["escalate-after-round-cap", "review-entire-intended-diff", "keep-coupled-review-local", "delegate-design-reviewer-review", "run-large-change-audits"],
+      "expectations": {
+        "first_action": ["pin-review-scope", "evaluate-feedback", "inspect-current-state"],
+        "mutation": ["requested-repo-writes"],
+        "question": ["none"],
+        "stop": ["after-verification"]
+      }
     },
     {
       "id": "leads-only-review-closes",
