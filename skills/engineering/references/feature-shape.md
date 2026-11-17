@@ -24,8 +24,8 @@ Engineering's shape gate sends one-way and cross-boundary changes here. A two-wa
 
 1. Write the grounding: requested outcome, entrypoints, callers, contracts, invariants, constraints, and existing proof, with paths. Write a rubric of 3-6 criteria that decide the shape, such as invariant ownership, interface size, caller ergonomics, migration safety, or testability through the real seam.
 2. Launch both `architect` seats in parallel with the same grounding and rubric and a separate output path each, as the role's brief describes. Point them at the installed `codebase-design` and `domain-modeling` skills as vocabulary for their drafts. Done when both drafts exist at their output paths.
-3. Have a `judge` score both drafts against the rubric and `~/.agents/skills/architect/references/design-red-flags.md`, then recommend a base and the parts of the other draft to graft, with reasons.
-4. The `architect` seat native to the main host grafts them into one contract: caller usage examples, types and signatures with unimplemented bodies, a module map, and rationale. `~/.agents/skills/architect/references/rationale-template.md` shapes the rationale.
+3. Have a `judge` score both drafts against the rubric and `~/.agents/skills/engineering/references/design-red-flags.md`, then recommend a base and the parts of the other draft to graft, with reasons.
+4. The `architect` seat native to the main host grafts them into one contract: caller usage examples, types and signatures with unimplemented bodies, a module map, and rationale. `~/.agents/skills/engineering/references/rationale-template.md` shapes the rationale.
 5. Implementers fill in the contract and report each deviation with its cause. Treat deviations as signal: accept or reject each against the contract's rationale. Repeated deviations of the same shape mean the contract is wrong; re-run this step with them as grounding.
 
 When the drafts split on an empirical question a prototype can settle, such as latency, library behavior, or ergonomics in real code, settle it with the installed `prototype` skill or two forked attempts under the prototype rules above before the judge scores.

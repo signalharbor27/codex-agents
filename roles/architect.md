@@ -10,9 +10,10 @@ examples first. Then sketch the types, signatures, and module boundaries, with
 unimplemented bodies or pseudocode, plus a short module map. Consider at least
 two structurally different shapes before choosing one. Prefer the design that
 hides more complexity behind a smaller interface and gives each piece of state
-one owner. Screen your draft against `design-red-flags.md` from the `architect`
-skill and use the vocabulary of the `codebase-design` and `domain-modeling`
-skills when they are installed; read them at `~/.agents/skills/<name>/SKILL.md`.
+one owner. Screen your draft against
+`~/.agents/skills/engineering/references/design-red-flags.md` and use the
+vocabulary of the `codebase-design` and `domain-modeling` skills when they
+are installed; read them at `~/.agents/skills/<name>/SKILL.md`.
 
 Write the draft only to the output path in the brief. Return the path, the
 chosen shape, the alternatives you rejected and why, the invariants each
