@@ -72,7 +72,7 @@ Routing live mode classifies tasks in a read-only sandbox. The prompt specifies 
 
 Reference output uses exact paths relative to the supplied skills root, beginning with the owning skill folder. Root Markdown files, `references/` paths, and nested reference folders preserve their filename case. The validated fixture allowlist still rejects unknown or invented references.
 
-`host_skills` lists skills the host supplies outside this tree (`humanizer`, `show-me`, `review-agent`). A result may name them as modifiers, for example when `describe-pr` applies `humanizer`; the parser accepts them and the comparison ignores them, so naming one neither fails nor is required. Cases may not expect them.
+`host_skills` lists skills the host supplies outside this tree (`humanizer`, `show-me`, `review-agent`, `writing-for-agents`). A result may name them as modifiers, for example when `describe-pr` applies `humanizer`; the parser accepts them and the comparison ignores them, so naming one neither fails nor is required. Cases may not expect them.
 
 A case may list `optional_references`: references a correct route may load but need not. Every first-pass review case lists `describe-pr/references/merge-danger.md` this way, one-way and hot-path cases included: the skill has reviewers classify Merge danger against it, and the main agent may pick the one-way or hot-path lane from the task alone, so the skill text supports loading it without requiring it. The comparison ignores them; any other extra or missing reference still fails. Read-only review cases accept question `none` or `only-if-blocked`, since a findings-only review has no decision to block on.
 

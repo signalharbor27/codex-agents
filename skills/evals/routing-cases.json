@@ -22,7 +22,7 @@
     "writing-skills"
   ],
   "explicit_only_skills": ["retro", "tutor"],
-  "host_skills": ["humanizer", "show-me", "review-agent"],
+  "host_skills": ["humanizer", "show-me", "review-agent", "writing-for-agents"],
   "skill_references": [
     "tutor/references/workspace.md",
     "tutor/references/lessons.md",

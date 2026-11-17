@@ -1248,7 +1248,7 @@ describe("result comparison", () => {
 
   test("host skills parse as modifiers and are ignored by comparison, so naming them neither fails nor is required", () => {
     const describePr = fixture.cases.find(candidate => candidate.id === "describe-pr")!
-    const named = { ...resultFor(describePr), modifier_skills: ["humanizer", "show-me"] }
+    const named = { ...resultFor(describePr), modifier_skills: ["humanizer", "show-me", "writing-for-agents"] }
     expect(parseLiveResult(JSON.stringify(named), fixture, resultSchema)).toEqual(named)
     expect(compareResult(describePr, named, fixture.host_skills)).toEqual([])
     expect(compareResult(describePr, resultFor(describePr), fixture.host_skills)).toEqual([])
