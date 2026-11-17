@@ -66,7 +66,70 @@ describe("offer detection", () => {
   })
 })
 
+describe("UTC-only time detection", () => {
+  const reasonFor = (message: string): string | undefined => {
+    const dir = mkdtempSync(join(tmpdir(), "reply-guard-"))
+    try {
+      const output = handle(stop(message), dir)
+      return output === undefined ? undefined : JSON.parse(output).reason
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  }
+  const blocksUtc = (message: string) => reasonFor(message)?.includes("Sydney time") ?? false
+
+  const utcOnly = [
+    "Deploy finished at 03:23 UTC.",
+    "The job failed at 18:07Z.",
+    "Last write: 2026-11-17T03:23:38Z",
+    "Last write: 2026-11-17T03:23Z",
+    "Restarted at 9:05:12 gmt",
+    "Paged at 3:23 PM UTC.",
+    "Paged at 03:23 (UTC).",
+  ]
+  for (const message of utcOnly) test(`blocks: ${message}`, () => {
+    expect(blocksUtc(message)).toBe(true)
+  })
+
+  const sydney = [
+    "Deploy finished at 14:23 AEDT (03:23 UTC).",
+    "Deploy finished at 14:23 AEDT.",
+    "Window closes 10:00 AEST.",
+    "Ran 767 tests in 19:57 minutes.",
+    "Log line:\n```\n2026-11-17T03:23:38Z error\n```",
+    "Evidence: https://example.com/logs/2026-11-17T03:23:38Z",
+    "The hook now catches `03:23Z` in ISO dates.",
+  ]
+  for (const message of sydney) test(`passes: ${message.split("\n")[0]}`, () => {
+    expect(blocksUtc(message)).toBe(false)
+  })
+
+  test("judges each line on its own", () => {
+    expect(blocksUtc("Started 14:23 AEDT.\nFinished 03:40 UTC.")).toBe(true)
+  })
+
+  test("still blocks a prose time beside inline code", () => {
+    expect(blocksUtc("Format `HH:MMZ`; it failed at 03:23 UTC.")).toBe(true)
+  })
+
+  test("still blocks a prose time beside a URL", () => {
+    expect(blocksUtc("Failed at 03:23 UTC: https://example.com/logs/2026-11-17T03:23:38Z")).toBe(true)
+  })
+
+  test("reports the UTC time before an offer to continue", () => {
+    expect(reasonFor("Done at 03:23 UTC.\n\nWant me to continue?")).toContain("Sydney time")
+  })
+})
+
 describe("Stop and UserPromptSubmit", () => {
+  test("blocks a UTC-only time with the Sydney-time reason unless stop_hook_active", () => withDir(dir => {
+    const blocked = JSON.parse(handle(stop("Done at 03:23 UTC."), dir)!)
+    expect(blocked.decision).toBe("block")
+    expect(blocked.reason).toContain("Sydney time")
+    expect(handle(stop("Done at 03:23 UTC.", true), dir)).toBeUndefined()
+    expect(handle(stop("Done at 14:23 AEDT."), dir)).toBeUndefined()
+  }))
+
   test("blocks an offer unless stop_hook_active", () => withDir(dir => {
     expect(JSON.parse(handle(stop("Want me to continue?"), dir)!)).toEqual({ decision: "block", reason: "Your reply ended with an offer to continue. If work Q asked for remains and nothing blocks it, do it now. If you need Q, end with `Needs Q:` lines per the reply rules." })
     expect(handle(stop("Want me to continue?", true), dir)).toBeUndefined()

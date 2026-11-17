@@ -8,6 +8,20 @@ import { join } from "node:path"
 const longReply = 300
 const blockReason = "Your reply ended with an offer to continue. If work Q asked for remains and nothing blocks it, do it now. If you need Q, end with `Needs Q:` lines per the reply rules."
 
+const utcReason = "Your reply gives a time in UTC without its Sydney time. Q's rule: report times in Sydney time (Australia/Sydney), labelled AEST or AEDT. Convert every UTC time and rewrite the reply."
+
+// A clock time labelled UTC, GMT or a Z suffix: 03:23 UTC, 3:23 PM (UTC), 18:07Z, 2026-11-17T03:23Z.
+const utcTime = /(?<![\d:])\d{1,2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:\s*[ap]\.?m\.?)?\s*(?:Z\b|\(?(?:UTC|GMT)\b)/i
+
+/** True when a prose line outside code, inline code and URLs gives a UTC time and no AEST/AEDT time beside it. */
+function hasUtcOnlyTime(text: string): boolean {
+  return stripCodeBlocks(text)
+    .replace(/`[^`\n]*`/g, "")
+    .replace(/\bhttps?:\/\/\S+/g, "")
+    .split("\n")
+    .some(line => utcTime.test(line) && !/\bAE[DS]T\b/.test(line))
+}
+
 const offers = [
   /^(?:so,?\s+)?(?:do you\s+)?want me to\b.*\?$/i,
   /^would you like(?: me)? to\b.*\?$/i,
@@ -78,7 +92,9 @@ export function handle(input: HookInput, stateDir: string): string | undefined {
       mkdirSync(stateDir, { recursive: true })
       writeFileSync(stateFile(stateDir, sessionId), JSON.stringify({ words }))
     }
-    if (!input.stop_hook_active && endsWithOffer(message)) return JSON.stringify({ decision: "block", reason: blockReason })
+    if (input.stop_hook_active) return
+    if (hasUtcOnlyTime(message)) return JSON.stringify({ decision: "block", reason: utcReason })
+    if (endsWithOffer(message)) return JSON.stringify({ decision: "block", reason: blockReason })
     return
   }
   if (input.hook_event_name === "UserPromptSubmit") {
