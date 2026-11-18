@@ -79,17 +79,17 @@ Every subagent role comes from one registry: [roles/roles.ts](roles/roles.ts) se
 
 Edit the registry and role files, not the generated outputs.
 
-- `architect`: Opus 5.5 `high` + GPT-6 Astra `high`, design contracts for one-way or cross-boundary changes. Both seats draft, a `judge` picks a base and the parts to graft, and the seat native to the main host grafts them.
+- `architect`: Opus 5.5 `high` + GPT-6.2 Astra `high`, design contracts for one-way or cross-boundary changes. Both seats draft, a `judge` picks a base and the parts to graft, and the seat native to the main host grafts them.
 - `implementer`: Opus 5.5 `medium`, implementation slices with agreed contracts and acceptance criteria.
-- `reviewer`: GPT-6.1 Sol `high`, independent correctness, simplification, and Standards/Intent review.
+- `reviewer`: GPT-6.2 Sol `high`, independent correctness, simplification, and Standards/Intent review.
 - `design_reviewer`: Opus 5.5 `medium`, second-family review of abstractions and boundaries in round 1 of large, one-way, or hot-path changes.
-- `oracle`: Claude Fable 5.2 `xhigh` + GPT-6 Astra `high` in parallel, explicit requests, one-way-door review, or blockers that remain after investigation or ordinary review; a `judge` reconciles them.
+- `oracle`: Claude Fable 5.2 `xhigh` + GPT-6.2 Astra `high` in parallel, explicit requests, one-way-door review, or blockers that remain after investigation or ordinary review; a `judge` reconciles them.
 - `refiner`: Opus 5.5 `medium`, applies clear Standards fixes from independent review in its own context; a `verifier` checks its edits.
-- `verifier`: GPT-6.1 Sol `high`, running checks and reporting command evidence.
-- `explorer`: GPT-6.1 Sol `medium`, repository structure, callers, and existing tests.
-- `librarian`: GPT-6.1 Sol `medium`, external documentation and public code.
-- `fast_reviewer`: GPT-6.1 Sol `low`, bounded checks for unused code, dependency cycles, stale comments, and stubs.
-- `judge`: GPT-6.1 Sol `high`, reconciles two architect drafts or two oracle answers against evidence.
+- `verifier`: GPT-6.2 Sol `high`, running checks and reporting command evidence.
+- `explorer`: GPT-6.2 Sol `medium`, repository structure, callers, and existing tests.
+- `librarian`: GPT-6.2 Sol `medium`, external documentation and public code.
+- `fast_reviewer`: GPT-6.2 Sol `low`, bounded checks for unused code, dependency cycles, stale comments, and stubs.
+- `judge`: GPT-6.2 Sol `high`, reconciles two architect drafts or two oracle answers against evidence.
 
 Q's rationale: Astra is the strongest model, Fable is next, Opus is best at code and abstractions, Sol is the most careful reviewer, and Opus credits are scarce.
 
@@ -226,7 +226,7 @@ bun skills/review-and-simplify-changes/scripts/review-status.ts  # preflight the
 bun skills/evals/run-routing-evals.ts dry-run
 ```
 
-Live evaluations require `--allow-live` and an explicit case or `--all`. Their default is GPT-6 Astra at `high`, separate from the main thread setting; `--harness claude` runs routing cases through Claude Code, and `run-standards-evals.ts` checks that review flags planted standards violations. Routing evaluations test skill selection; execution evaluations inspect edits and tool activity. Neither static checks nor a successful agent launch establishes code quality. See [the eval README](skills/evals/README.md) for live commands, comparisons, and limits.
+Live evaluations require `--allow-live` and an explicit case or `--all`. Their default is GPT-6.2 Astra at `high`, separate from the main thread setting; `--harness claude` runs routing cases through Claude Code, and `run-standards-evals.ts` checks that review flags planted standards violations. Routing evaluations test skill selection; execution evaluations inspect edits and tool activity. Neither static checks nor a successful agent launch establishes code quality. See [the eval README](skills/evals/README.md) for live commands, comparisons, and limits.
 
 ## Sources
 

@@ -35,8 +35,8 @@ export type Role = {
 
 const opus = (effort: Effort): Seat => ({ provider: "claude", model: "claude-opus-5-5", effort })
 const fable = (effort: Effort): Seat => ({ provider: "claude", model: "claude-fable-5-2", effort })
-const sol = (effort: Effort): Seat => ({ provider: "codex", model: "gpt-6.1-sol", effort })
-const astra = (effort: Effort): Seat => ({ provider: "codex", model: "gpt-6-astra", effort })
+const sol = (effort: Effort): Seat => ({ provider: "codex", model: "gpt-6.2-sol", effort })
+const astra = (effort: Effort): Seat => ({ provider: "codex", model: "gpt-6.2-astra", effort })
 
 export const roles: Record<string, Role> = {
   architect: {

@@ -1,7 +1,7 @@
 # Generated from roles/ by scripts/generate-hosts.ts. Edit the source, then regenerate.
 name = "reviewer"
 description = "Use when a completed change or subsequent fix needs independent correctness, simplification, or Standards/Intent review. Excludes implementation and command-only verification."
-model = "gpt-6.1-sol"
+model = "gpt-6.2-sol"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = '''

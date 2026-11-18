@@ -19,7 +19,7 @@ describe("execution boundaries", () => {
     expect(() => parseArgs(["live", "--all", "--case", "authorized-implementation", "--allow-live"])).toThrow("choose exactly one")
     expect(() => parseArgs(["live", "--case", "unknown", "--allow-live"])).toThrow("unknown case")
     expect(() => parseArgs(["dry-run", "--all", "--effort", 'high"\nfoo=true'])).toThrow("invalid reasoning")
-    expect(parseArgs(["dry-run", "--all"]).model).toBe("gpt-6-astra")
+    expect(parseArgs(["dry-run", "--all"]).model).toBe("gpt-6.2-astra")
     expect(parseArgs(["dry-run", "--all", "--model", "gpt-5.6-sol", "--effort", "xhigh"]).effort).toBe("xhigh")
   })
   test("writes stay in a temporary workspace with no model tool network", () => {
@@ -320,7 +320,7 @@ describe("automatic independent review", () => {
     expect(taskPrompts("automatic-independent-review")).toEqual(taskPrompts("authorized-implementation"))
     expect(executionScope(true)).not.toMatch(/review|subagent/i)
     expect(executionScope(false)).toContain("subagents")
-    const args = executionArgs("/tmp/example", "task", "gpt-6-astra", "high", false, true)
+    const args = executionArgs("/tmp/example", "task", "gpt-6.2-astra", "high", false, true)
     expect(args).not.toContain("--ephemeral")
     expect(args).toContain("workspace-write")
     expect(args).toContain("sandbox_workspace_write.network_access=false")

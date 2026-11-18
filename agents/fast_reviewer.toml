@@ -1,7 +1,7 @@
 # Generated from roles/ by scripts/generate-hosts.ts. Edit the source, then regenerate.
 name = "fast_reviewer"
 description = "Use when a review needs a bounded check for unused code, dependency cycles, stale comments, or stubs. Excludes behavioral or architectural judgment."
-model = "gpt-6.1-sol"
+model = "gpt-6.2-sol"
 model_reasoning_effort = "low"
 sandbox_mode = "read-only"
 developer_instructions = '''

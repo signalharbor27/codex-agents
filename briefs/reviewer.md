@@ -2,7 +2,7 @@
 # reviewer
 
 Launch this seat:
-- gpt-6.1-sol at high: the native `reviewer` agent in Codex; from Claude Code, `delegate_task` with target `{"providerInstanceId":"codex","model":"gpt-6.1-sol","options":{"reasoningEffort":"high"}}`.
+- gpt-6.2-sol at high: the native `reviewer` agent in Codex; from Claude Code, `delegate_task` with target `{"providerInstanceId":"codex","model":"gpt-6.2-sol","options":{"reasoningEffort":"high"}}`.
 
 Every `delegate_task` call passes `runtimeMode: "full-access"` and `interactionMode: "plan"`.
 After each launch, read `t3_thread_configuration` for the child. If its model, effort option, runtime mode, or interaction mode differs from this brief, cancel it with `task_cancel` and relaunch once; report a second mismatch instead of retrying.

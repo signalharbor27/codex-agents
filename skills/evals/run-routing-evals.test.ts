@@ -305,7 +305,7 @@ test("the surface check reports rg execution failures", async () => {
 describe("eval model selection", () => {
   test("defaults to deployed model and accepts explicit comparison runs", () => {
     const defaults = parseArgs(["dry-run"])
-    expect(defaults.model).toBe("gpt-6-astra")
+    expect(defaults.model).toBe("gpt-6.2-astra")
     expect(defaults.effort).toBe("high")
     const comparison = parseArgs(["dry-run", "--model", "gpt-5.6-sol", "--effort", "xhigh"])
     const args = codexExecArgs("/tmp/example", "task", comparison.model, comparison.effort)

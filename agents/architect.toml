@@ -1,7 +1,7 @@
 # Generated from roles/ by scripts/generate-hosts.ts. Edit the source, then regenerate.
 name = "architect"
 description = "Use when a one-way or cross-boundary change needs its types, signatures, and module boundaries designed before implementation. Excludes slices whose shape is already settled."
-model = "gpt-6-astra"
+model = "gpt-6.2-astra"
 model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = '''

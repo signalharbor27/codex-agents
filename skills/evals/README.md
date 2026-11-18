@@ -17,7 +17,7 @@ See [the September 19 validation results](RESULTS-2026-09-19.md) for the Astra m
 
 ## Live checks and comparisons
 
-Both runners default to `gpt-6-astra` at `high`. Live calls require permission, `--allow-live`, and one explicit case or `--all`. `--model` and `--effort` override the defaults; unsupported pairs fail at the provider.
+Both runners default to `gpt-6.2-astra` at `high`. Live calls require permission, `--allow-live`, and one explicit case or `--all`. `--model` and `--effort` override the defaults; unsupported pairs fail at the provider.
 
 `--source-root` selects a tree containing `AGENTS.md` and `skills/`. Add `--previous-source-root` to run each selected case against both trees with the same runner, fixtures, model, effort, and catalog variant. The earlier tree does not need the new runner. Source order is previous then candidate; these are paired observations, without randomized order or statistical claims.
 

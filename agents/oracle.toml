@@ -1,7 +1,7 @@
 # Generated from roles/ by scripts/generate-hosts.ts. Edit the source, then regenerate.
 name = "oracle"
 description = "Use when the user explicitly requests Oracle, a one-way door needs its review, or investigation or ordinary review has stalled on a concrete technical blocker. Excludes routine review."
-model = "gpt-6-astra"
+model = "gpt-6.2-astra"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = '''
