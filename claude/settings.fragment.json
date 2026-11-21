@@ -78,6 +78,16 @@
         ]
       }
     ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$HOME/.claude/hooks/session-date.ts\""
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
