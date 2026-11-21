@@ -308,7 +308,80 @@ export function hookFiles(repo: string): string[] {
   return readdirSync(join(repo, "claude/hooks")).filter(f => f.endsWith(".ts") && !f.endsWith(".test.ts")).sort()
 }
 
+const codexSessionDateHook: Json = {
+  type: "command",
+  command: 'bun "$HOME/.claude/hooks/session-date.ts"',
+  timeout: 5,
+}
+
+/** Managed SessionStart hook group appended to Codex's hooks.json after existing hooks so prior hook indices stay stable. */
+const codexSessionDateGroup: Json = {
+  hooks: [codexSessionDateHook],
+}
+
+/** Managed named hook merged into Antigravity's ~/.gemini/config/hooks.json alongside other hooks. */
+const antigravitySessionDateHook: Json = {
+  SessionStart: [
+    {
+      type: "command",
+      command: 'bun "$HOME/.claude/hooks/session-date.ts" --format antigravity',
+      timeout: 5,
+    },
+  ],
+}
+
+function isCodexSessionDateCommand(command: string): boolean {
+  const normalized = command.replace(/^bun\s+--no-env-file\s+/, "bun ")
+  return ownHookFile(normalized) === "session-date.ts"
+}
+
+export function mergeCodexHooks(installed: Json): Json {
+  const existing = asObject(installed.hooks)
+  const groups = [existing.SessionStart ?? []].flat()
+  let matches = 0
+  for (const group of groups) {
+    const hooks = asObject(group).hooks
+    if (!Array.isArray(hooks)) continue
+    for (const hook of hooks) {
+      if (isCodexSessionDateCommand(String(asObject(hook).command ?? ""))) matches++
+    }
+  }
+  if (matches > 1) {
+    throw new Error("codex hooks.json has duplicate session-date.ts entries; remove duplicates manually so existing hook indices stay stable")
+  }
+  const next = groups.map(group => {
+    const hooks = asObject(group).hooks
+    if (!Array.isArray(hooks)) return group
+    const idx = hooks.findIndex(hook => isCodexSessionDateCommand(String(asObject(hook).command ?? "")))
+    if (idx === -1) return group
+    return { ...asObject(group), hooks: hooks.map((hook, i) => (i === idx ? codexSessionDateHook : hook)) }
+  })
+  if (matches === 0) next.push(codexSessionDateGroup)
+  return { ...installed, hooks: { ...existing, SessionStart: next } }
+}
+
+export function mergeAntigravityHooks(installed: Json): Json {
+  return { ...installed, "session-date": antigravitySessionDateHook }
+}
+
+/** Existing T3 Antigravity per-instance config directories under ~/.t3/userdata/providers/antigravity. */
+function t3AntigravityInstances(home: string): { name: string; hooksPath: string }[] {
+  const root = join(home, ".t3/userdata/providers/antigravity")
+  if (!existsSync(root)) return []
+  return readdirSync(root, { withFileTypes: true })
+    .filter(entry => entry.isDirectory())
+    .map(entry => ({ name: entry.name, dir: join(root, entry.name, "config") }))
+    .filter(({ dir }) => existsSync(dir))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(({ name, dir }) => ({ name, hooksPath: join(dir, "hooks.json") }))
+}
+
 function links(repo: string, home: string, codexHome = join(home, ".codex")): Link[] {
+  const antigravityHooksTarget = join(home, ".gemini/config/hooks.json")
+  const t3Links = t3AntigravityInstances(home)
+    // Link when absent or already a symlink; preserve regular instance-specific hooks.json by merging in place instead.
+    .filter(({ hooksPath }) => !pathExists(hooksPath) || isLink(hooksPath))
+    .map(({ hooksPath }) => ({ path: hooksPath, target: antigravityHooksTarget }))
   return [
     { path: join(home, ".claude/CLAUDE.md"), target: join(repo, "claude/CLAUDE.md") },
     { path: join(home, ".claude/agents"), target: join(repo, "claude/agents") },
@@ -318,6 +391,7 @@ function links(repo: string, home: string, codexHome = join(home, ".codex")): Li
     { path: join(home, ".claude/output-styles/q.md"), target: join(repo, "claude/output-styles/q.md") },
     ...hookFiles(repo).map(f => ({ path: join(home, ".claude/hooks", f), target: join(repo, "claude/hooks", f) })),
     { path: join(home, ".claude/skills/review-agent"), target: join(codexHome, "skills/.system/review-agent"), optional: true },
+    ...t3Links,
   ]
 }
 
@@ -486,24 +560,50 @@ function assertMainWorktree(repo: string) {
   }
 }
 
-export function install(repo: string, home: string, { codexHome, stamp = new Date().toISOString().replace(/[:.]/g, "-"), onLine }: InstallOptions = {}): string[] {
+type PreparedJsonWrite = {
+  path: string
+  destination: string
+  backupName: string
+  hadFile: boolean
+  installed: Json
+  merged: Json
+  summaryLines: string[]
+  noteLabel: string
+}
+
+function prepareJsonWrite(path: string, backupName: string, noteLabel: string, merge: (installed: Json) => Json, summarize: (installed: Json) => string[] = () => []): PreparedJsonWrite {
+  if (isLink(path) && !existsSync(path)) throw new Error(`${path} is a dangling symlink; fix or remove it, then rerun`)
+  const destination = isLink(path) ? realpathSync(path) : path
+  const hadFile = existsSync(path)
+  const installed = hadFile ? readJsonObject(path) : {}
+  return { path, destination, backupName, hadFile, installed, merged: merge(installed), summaryLines: summarize(installed), noteLabel }
+}
+
+export function install(repo: string, home: string, { codexHome = join(home, ".codex"), stamp = new Date().toISOString().replace(/[:.]/g, "-"), onLine }: InstallOptions = {}): string[] {
   const stale = checkArtifacts(repo)
   if (stale.length) throw new Error(`regenerate before installing:\n${stale.join("\n")}`)
   assertMainWorktree(repo)
   // Parse everything before any link changes so a bad file leaves the install untouched.
-  const settingsPath = join(home, ".claude/settings.json")
-  if (isLink(settingsPath) && !existsSync(settingsPath)) throw new Error(`${settingsPath} is a dangling symlink; fix or remove it, then rerun`)
-  // Write through a symlinked settings.json so a dotfiles link survives.
-  const destination = isLink(settingsPath) ? realpathSync(settingsPath) : settingsPath
-  const hadSettings = existsSync(settingsPath)
-  const installed = hadSettings ? readJsonObject(settingsPath) : {}
   const fragment = readFragment(repo)
-  const merged = mergeSettings(installed, fragment)
+  const t3RegularHooks = t3AntigravityInstances(home).filter(({ hooksPath }) => pathExists(hooksPath) && !isLink(hooksPath))
+  const jsonWrites = [
+    prepareJsonWrite(
+      join(home, ".claude/settings.json"),
+      "settings.json",
+      "merged settings",
+      installed => mergeSettings(installed, fragment),
+      installed => settingsChanges(installed, fragment),
+    ),
+    prepareJsonWrite(join(codexHome, "hooks.json"), "codex-hooks.json", "merged codex hooks", mergeCodexHooks),
+    prepareJsonWrite(join(home, ".gemini/config/hooks.json"), "antigravity-hooks.json", "merged antigravity hooks", mergeAntigravityHooks),
+    ...t3RegularHooks.map(({ name, hooksPath }) =>
+      prepareJsonWrite(hooksPath, `t3-antigravity-${name}-hooks.json`, "merged t3 antigravity hooks", mergeAntigravityHooks)),
+  ]
 
   const backups = join(home, ".claude/backups")
-  const backupPath = (path: string) => {
+  const backupPath = (name: string) => {
     mkdirSync(backups, { recursive: true, mode: 0o700 })
-    return join(backups, `${basename(path)}.${stamp}`)
+    return join(backups, `${name}.${stamp}`)
   }
   const log: string[] = []
   const note = (line: string) => {
@@ -521,7 +621,7 @@ export function install(repo: string, home: string, { codexHome, stamp = new Dat
       note(`replaced link: ${path} (was -> ${readlinkSync(path)})`)
       unlinkSync(path)
     } else if (pathExists(path)) {
-      const backup = backupPath(path)
+      const backup = backupPath(basename(path))
       renameSync(path, backup)
       note(`backed up: ${path} -> ${backup}`)
     }
@@ -529,24 +629,26 @@ export function install(repo: string, home: string, { codexHome, stamp = new Dat
     note(`linked: ${path} -> ${target}`)
   }
 
-  if (canonical(merged) !== canonical(installed) || !hadSettings) {
-    if (hadSettings) {
-      const backup = backupPath(settingsPath)
-      copyFileSync(settingsPath, backup)
+  for (const write of jsonWrites) {
+    if (canonical(write.merged) === canonical(write.installed) && write.hadFile) continue
+    mkdirSync(dirname(write.destination), { recursive: true })
+    if (write.hadFile) {
+      const backup = backupPath(write.backupName)
+      copyFileSync(write.path, backup)
       chmodSync(backup, 0o600)
-      note(`backed up: ${settingsPath} -> ${backup}`)
+      note(`backed up: ${write.path} -> ${backup}`)
     }
-    for (const line of settingsChanges(installed, fragment)) note(line)
-    const temp = `${destination}.tmp-${process.pid}`
-    writeFileSync(temp, JSON.stringify(merged, null, 2) + "\n", { mode: 0o600 })
+    for (const line of write.summaryLines) note(line)
+    const temp = `${write.destination}.tmp-${process.pid}`
+    writeFileSync(temp, JSON.stringify(write.merged, null, 2) + "\n", { mode: 0o600 })
     chmodSync(temp, 0o600)
-    renameSync(temp, destination)
-    note(`merged settings: ${settingsPath}`)
+    renameSync(temp, write.destination)
+    note(`${write.noteLabel}: ${write.path}`)
   }
   return log
 }
 
-export function checkInstalled(repo: string, home: string, { codexHome }: InstallOptions = {}): { problems: string[]; warnings: string[] } {
+export function checkInstalled(repo: string, home: string, { codexHome = join(home, ".codex") }: InstallOptions = {}): { problems: string[]; warnings: string[] } {
   const problems: string[] = []
   const warnings: string[] = []
   for (const { path, target, optional } of links(repo, home, codexHome)) {
@@ -565,6 +667,32 @@ export function checkInstalled(repo: string, home: string, { codexHome }: Instal
   else {
     for (const key of settingsDrift(readJsonObject(settingsPath), fragment)) {
       problems.push(`settings: key differs from claude/settings.fragment.json: ${key}`)
+    }
+  }
+
+  const codexHooksPath = join(codexHome, "hooks.json")
+  if (!existsSync(codexHooksPath)) problems.push(`codex hooks: ${codexHooksPath} is missing`)
+  else {
+    const installed = readJsonObject(codexHooksPath)
+    if (canonical(installed) !== canonical(mergeCodexHooks(installed))) {
+      problems.push(`codex hooks: ${codexHooksPath} differs from managed SessionStart hook`)
+    }
+  }
+
+  const antigravityHooksPath = join(home, ".gemini/config/hooks.json")
+  if (!existsSync(antigravityHooksPath)) problems.push(`antigravity hooks: ${antigravityHooksPath} is missing`)
+  else {
+    const installed = readJsonObject(antigravityHooksPath)
+    if (canonical(installed) !== canonical(mergeAntigravityHooks(installed))) {
+      problems.push(`antigravity hooks: ${antigravityHooksPath} differs from managed session-date hook`)
+    }
+  }
+
+  for (const { hooksPath } of t3AntigravityInstances(home)) {
+    if (!pathExists(hooksPath) || isLink(hooksPath)) continue
+    const installed = readJsonObject(hooksPath)
+    if (canonical(installed) !== canonical(mergeAntigravityHooks(installed))) {
+      problems.push(`antigravity hooks: ${hooksPath} differs from managed session-date hook`)
     }
   }
 

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { cpSync, existsSync, symlinkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { buildArtifacts, delegateModes, hookFiles, renderPstackModels, mergeSettings, renderBriefs, renderClaudeAgents, renderCodexProfiles, renderInstructions, renderRoleTable, settingsChanges, settingsDrift, skillsLockSource } from "./generate-hosts.ts"
+import { buildArtifacts, delegateModes, hookFiles, mergeAntigravityHooks, mergeCodexHooks, renderPstackModels, mergeSettings, renderBriefs, renderClaudeAgents, renderCodexProfiles, renderInstructions, renderRoleTable, settingsChanges, settingsDrift, skillsLockSource } from "./generate-hosts.ts"
 import { roles as registry, toolNotes, type Role } from "../roles/roles.ts"
 
 const repoRoot = join(import.meta.dir, "..")
@@ -227,6 +227,48 @@ describe("hooks merge", () => {
     expect(settingsDrift(merged, fragment)).toEqual([])
     expect(mergeSettings(merged, fragment)).toEqual(merged)
   })
+
+  test("mergeCodexHooks preserves foreign hook positions, unrelated ~/.claude/hooks scripts, and updates in place on reinstall", () => {
+    const cmuxStart = tool("SessionStart")
+    const cmuxStop = tool("Stop")
+    const localAudit = { hooks: [{ type: "command", command: 'bun "$HOME/.claude/hooks/local-audit.ts"', timeout: 5 }] }
+    const later = { hooks: [{ type: "command", command: "later-hook", timeout: 5 }] }
+    const installed = { hooks: { SessionStart: [cmuxStart, localAudit], Stop: [cmuxStop] } }
+    const once = mergeCodexHooks(installed)
+    expect(once).toEqual({
+      hooks: {
+        SessionStart: [cmuxStart, localAudit, { hooks: [{ type: "command", command: 'bun "$HOME/.claude/hooks/session-date.ts"', timeout: 5 }] }],
+        Stop: [cmuxStop],
+      },
+    })
+    // Reinstalling after another hook was appended must keep every existing hook at its original index.
+    const withLater = { hooks: { ...once.hooks as Record<string, unknown>, SessionStart: [...(once.hooks as { SessionStart: unknown[] }).SessionStart, later] } }
+    const twice = mergeCodexHooks(withLater)
+    expect(twice).toEqual(withLater)
+    expect(mergeCodexHooks(twice)).toEqual(twice)
+    // Shared-group update replaces only session-date in place without shifting neighbours.
+    const shared = { hooks: { SessionStart: [{ hooks: [cmuxStart.hooks[0], { type: "command", command: 'bun --no-env-file "$HOME/.claude/hooks/session-date.ts"' }, later.hooks[0]] }] } }
+    expect(mergeCodexHooks(shared)).toEqual({
+      hooks: { SessionStart: [{ hooks: [cmuxStart.hooks[0], { type: "command", command: 'bun "$HOME/.claude/hooks/session-date.ts"', timeout: 5 }, later.hooks[0]] }] },
+    })
+    // Duplicate session-date entries fail fast rather than deleting and shifting later hook indices.
+    const dupAcross = { hooks: { SessionStart: [{ hooks: [{ type: "command", command: 'bun "$HOME/.claude/hooks/session-date.ts"' }] }, { hooks: [{ type: "command", command: 'bun "$HOME/.claude/hooks/session-date.ts"' }] }, cmuxStart] } }
+    const dupWithin = { hooks: { SessionStart: [{ hooks: [{ type: "command", command: 'bun "$HOME/.claude/hooks/session-date.ts"' }, { type: "command", command: 'bun "$HOME/.claude/hooks/session-date.ts"' }, cmuxStart.hooks[0]] }] } }
+    expect(() => mergeCodexHooks(dupAcross)).toThrow("duplicate session-date.ts")
+    expect(() => mergeCodexHooks(dupWithin)).toThrow("duplicate session-date.ts")
+  })
+
+  test("mergeAntigravityHooks keeps unrelated named hooks and writes explicit --format antigravity", () => {
+    const installed = { "my-lint": { PostToolUse: [{ matcher: "run_command", hooks: [{ command: "./lint.sh" }] }] } }
+    const merged = mergeAntigravityHooks(installed)
+    expect(merged).toEqual({
+      ...installed,
+      "session-date": {
+        SessionStart: [{ type: "command", command: 'bun "$HOME/.claude/hooks/session-date.ts" --format antigravity', timeout: 5 }],
+      },
+    })
+    expect(mergeAntigravityHooks(merged)).toEqual(merged)
+  })
 })
 
 function copyRepo() {
@@ -356,9 +398,9 @@ describe("generator subprocess", () => {
     expect(installed.stdout).toContain(`replaced link: ${join(home, ".claude/output-styles/q.md")} (was -> ${join(root, "elsewhere.md")})`)
     expect(installed.stdout).toContain(`settings: permissions.deny removed: SendMessage\nsettings: permissions.deny added: ${fragment.permissions.deny[0]}\n`)
     expect(installed.stdout).toContain("settings: permissions.allow added: ")
-    expect(installed.stdout).toContain("settings: hooks changed: PreToolUse, Stop, UserPromptSubmit\n")
+    expect(installed.stdout).toContain("settings: hooks changed: PreToolUse, SessionStart, Stop, UserPromptSubmit\n")
     // Hooks and their shared module are linked, test files are not, and unrelated hooks stay.
-    expect(readdirSync(join(home, ".claude/hooks")).sort()).toEqual(["destructive-guard.ts", "mine.sh", "prod-guard.ts", "reply-guard.ts", "review-gate.ts", "shell.ts"])
+    expect(readdirSync(join(home, ".claude/hooks")).sort()).toEqual(["destructive-guard.ts", "mine.sh", "prod-guard.ts", "reply-guard.ts", "review-gate.ts", "session-date.ts", "shell.ts"])
     expect(installed.stdout).toContain("settings: replaced theme\n")
     expect(installed.stdout).not.toContain("replaced mine")
     const backupDir = join(home, ".claude/backups")
@@ -432,8 +474,57 @@ describe("generator subprocess", () => {
     await run(repo)
     const codexHome = join(root, "codex")
     mkdirSync(join(codexHome, "skills/.system/review-agent"), { recursive: true })
+    writeFileSync(join(codexHome, "hooks.json"), JSON.stringify({ hooks: { SessionStart: [{ hooks: [{ type: "command", command: "cmux-hook SessionStart", timeout: 5 }] }] } }))
+    const t3AgyConfig = join(home, ".t3/userdata/providers/antigravity/instance1/config")
+    const t3CustomA = join(home, ".t3/userdata/providers/antigravity/instance2/config")
+    const t3CustomB = join(home, ".t3/userdata/providers/antigravity/instance3/config")
+    mkdirSync(t3AgyConfig, { recursive: true })
+    mkdirSync(t3CustomA, { recursive: true })
+    mkdirSync(t3CustomB, { recursive: true })
+    writeFileSync(join(t3CustomA, "hooks.json"), JSON.stringify({ "inst-a": { Stop: [] } }))
+    writeFileSync(join(t3CustomB, "hooks.json"), JSON.stringify({ "inst-b": { Stop: [] } }))
+    mkdirSync(join(home, ".gemini/config"), { recursive: true })
+    writeFileSync(join(home, ".gemini/config/hooks.json"), JSON.stringify({ other: { Stop: [] } }))
+
     expect((await runWith(repo, { HOME: root, CODEX_HOME: codexHome }, "--install", "--home", home)).exitCode).toBe(0)
     expect(readlinkSync(join(home, ".claude/skills/review-agent"))).toBe(join(codexHome, "skills/.system/review-agent"))
+    expect(readlinkSync(join(t3AgyConfig, "hooks.json"))).toBe(join(home, ".gemini/config/hooks.json"))
+    // Pre-existing regular instance hooks.json files are merged in place, preserving instance hooks and distinct backups.
+    expect(lstatSync(join(t3CustomA, "hooks.json")).isSymbolicLink()).toBe(false)
+    expect(lstatSync(join(t3CustomB, "hooks.json")).isSymbolicLink()).toBe(false)
+    expect(JSON.parse(readFileSync(join(t3CustomA, "hooks.json"), "utf8"))).toEqual({
+      "inst-a": { Stop: [] },
+      "session-date": { SessionStart: [{ type: "command", command: 'bun "$HOME/.claude/hooks/session-date.ts" --format antigravity', timeout: 5 }] },
+    })
+    expect(JSON.parse(readFileSync(join(t3CustomB, "hooks.json"), "utf8"))).toEqual({
+      "inst-b": { Stop: [] },
+      "session-date": { SessionStart: [{ type: "command", command: 'bun "$HOME/.claude/hooks/session-date.ts" --format antigravity', timeout: 5 }] },
+    })
+
+    const codexHooks = JSON.parse(readFileSync(join(codexHome, "hooks.json"), "utf8"))
+    expect(codexHooks.hooks.SessionStart).toEqual([
+      { hooks: [{ type: "command", command: "cmux-hook SessionStart", timeout: 5 }] },
+      { hooks: [{ type: "command", command: 'bun "$HOME/.claude/hooks/session-date.ts"', timeout: 5 }] },
+    ])
+    const agyHooks = JSON.parse(readFileSync(join(home, ".gemini/config/hooks.json"), "utf8"))
+    expect(agyHooks).toEqual({
+      other: { Stop: [] },
+      "session-date": { SessionStart: [{ type: "command", command: 'bun "$HOME/.claude/hooks/session-date.ts" --format antigravity', timeout: 5 }] },
+    })
+    // Every pre-existing hooks.json file got its own non-colliding backup.
+    const backups = readdirSync(join(home, ".claude/backups")).map(name => name.replace(/\.\d{4}-\d{2}-\d{2}T[^.]*$/, "")).sort()
+    expect(backups).toEqual(["antigravity-hooks.json", "codex-hooks.json", "t3-antigravity-instance2-hooks.json", "t3-antigravity-instance3-hooks.json"])
+
+    // Drift in Codex, global Antigravity, or custom T3 instance hooks is reported by --check-installed.
+    mkdirSync(join(repo, "skills"), { recursive: true })
+    writeFileSync(join(codexHome, "hooks.json"), JSON.stringify({ hooks: {} }))
+    writeFileSync(join(home, ".gemini/config/hooks.json"), JSON.stringify({}))
+    writeFileSync(join(t3CustomA, "hooks.json"), JSON.stringify({ "inst-a": { Stop: [] } }))
+    const drifted = await runWith(repo, { HOME: root, CODEX_HOME: codexHome }, "--check-installed", "--home", home)
+    expect(drifted.exitCode).toBe(1)
+    expect(drifted.stderr).toContain("codex hooks:")
+    expect(drifted.stderr).toContain("antigravity hooks: " + join(home, ".gemini/config/hooks.json"))
+    expect(drifted.stderr).toContain("antigravity hooks: " + join(t3CustomA, "hooks.json"))
   }))
 
   test("--install prints each step before a later failure", withRepo(async ({ root, repo, home }) => {
